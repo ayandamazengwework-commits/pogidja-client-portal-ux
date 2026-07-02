@@ -3,11 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { GoogleButton } from '@/components/brand/google-button'
 import { Loader2, AlertCircle } from 'lucide-react'
 
 export default function RegisterPage() {
@@ -15,12 +15,13 @@ export default function RegisterPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     if (password !== confirm) {
@@ -32,27 +33,7 @@ export default function RegisterPage() {
       return
     }
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo:
-          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
-          `${window.location.origin}/auth/callback`,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role: 'client',
-        },
-      },
-    })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-    router.push('/auth/sign-up-success')
+    setTimeout(() => router.push('/portal'), 800)
   }
 
   return (
@@ -60,8 +41,27 @@ export default function RegisterPage() {
       <div className="space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">Create your account</h2>
         <p className="text-sm text-muted-foreground">
-          Join the POG Advisory client portal in a few steps.
+          Join the Pogidja client portal in a few steps.
         </p>
+      </div>
+
+      <GoogleButton
+        label="Sign up with Google"
+        onClick={() => {
+          setLoading(true)
+          setTimeout(() => router.push('/portal'), 800)
+        }}
+      />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            or sign up with email
+          </span>
+        </div>
       </div>
 
       {error && (
@@ -105,26 +105,40 @@ export default function RegisterPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="phone">Phone number</Label>
           <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            id="phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="+27 82 000 0000"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             required
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm password</Label>
-          <Input
-            id="confirm"
-            type="password"
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm">Confirm</Label>
+            <Input
+              id="confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+          </div>
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

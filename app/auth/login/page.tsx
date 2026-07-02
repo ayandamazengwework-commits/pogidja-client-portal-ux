@@ -1,41 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { GoogleButton } from '@/components/brand/google-button'
+import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/portal'
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('john.smith@brightwave.co.za')
+  const [password, setPassword] = useState('demo1234')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  function signIn(e?: React.FormEvent) {
+    e?.preventDefault()
     setLoading(true)
-    setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-      return
-    }
-    router.push(redirect)
-    router.refresh()
+    setTimeout(() => router.push('/portal'), 700)
   }
 
   return (
@@ -43,18 +26,24 @@ export default function LoginPage() {
       <div className="space-y-2">
         <h2 className="text-2xl font-bold tracking-tight">Welcome back</h2>
         <p className="text-sm text-muted-foreground">
-          Sign in to access your POG client portal.
+          Sign in to access your Pogidja client portal.
         </p>
       </div>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+      <GoogleButton onClick={signIn} />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            or continue with email
+          </span>
+        </div>
+      </div>
+
+      <form onSubmit={signIn} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email address</Label>
           <Input
@@ -94,12 +83,19 @@ export default function LoginPage() {
       </form>
 
       <p className="text-center text-sm text-muted-foreground">
-        New to POG Advisory?{' '}
+        New to Pogidja?{' '}
         <Link
           href="/auth/register"
           className="font-medium text-primary hover:underline"
         >
           Create an account
+        </Link>
+      </p>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Are you a staff member?{' '}
+        <Link href="/staff/login" className="font-medium text-primary hover:underline">
+          Staff sign in
         </Link>
       </p>
     </div>

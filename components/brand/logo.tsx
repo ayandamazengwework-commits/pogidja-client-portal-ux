@@ -18,15 +18,15 @@ export function Logo({
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-        <span className="font-serif text-lg font-bold tracking-tight">POG</span>
+        <span className="font-serif text-lg font-bold tracking-tight">P</span>
       </div>
       {showText && (
         <div className="flex flex-col leading-none">
           <span className={cn('font-serif text-base font-bold', textColor)}>
-            POG Advisory
+            Pogidja
           </span>
           <span className={cn('text-[11px] font-medium tracking-wide', subColor)}>
-            Chartered Accountants
+            Tax Practice
           </span>
         </div>
       )}
