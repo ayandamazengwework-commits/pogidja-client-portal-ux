@@ -1,33 +1,25 @@
 import type { ReactNode } from 'react'
-import {
-  Bell,
-  FileText,
-  FolderOpen,
-  LayoutDashboard,
-  MessageSquare,
-  PlusCircle,
-  User,
-} from 'lucide-react'
 import { AppShell, type NavItem } from '@/components/shared/app-shell'
 import { currentClient, notifications } from '@/lib/demo-data'
 
 const nav: NavItem[] = [
-  { label: 'Dashboard', href: '/portal', icon: LayoutDashboard },
-  { label: 'My Cases', href: '/portal/cases', icon: FolderOpen },
-  { label: 'Request Service', href: '/portal/request-service', icon: PlusCircle },
-  { label: 'Messages', href: '/portal/messages', icon: MessageSquare, badge: 2 },
-  { label: 'Documents', href: '/portal/documents', icon: FileText },
+  { label: 'Dashboard', href: '/portal', icon: 'dashboard' },
+  { label: 'My Cases', href: '/portal/cases', icon: 'folder' },
+  { label: 'Request Service', href: '/portal/request-service', icon: 'plus' },
+  { label: 'Messages', href: '/portal/messages', icon: 'message', badge: 2 },
+  { label: 'Documents', href: '/portal/documents', icon: 'file' },
   {
     label: 'Notifications',
     href: '/portal/notifications',
-    icon: Bell,
+    icon: 'bell',
     badge: notifications.filter((n) => !n.read).length,
   },
-  { label: 'Profile', href: '/portal/profile', icon: User },
+  { label: 'Profile', href: '/portal/profile', icon: 'user' },
 ]
 
 export default function PortalLayout({ children }: { children: ReactNode }) {
   const unread = notifications.filter((n) => !n.read).length
+
   return (
     <AppShell
       nav={nav}
