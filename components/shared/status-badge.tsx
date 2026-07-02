@@ -1,20 +1,18 @@
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils"
 
-export function StatusBadge({
-  label,
-  tone,
-  className,
-}: {
+type StatusBadgeProps = {
   label: string
   tone: string
   className?: string
-}) {
+}
+
+export function StatusBadge({ label, tone, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
         tone,
-        className,
+        className
       )}
     >
       {label}
