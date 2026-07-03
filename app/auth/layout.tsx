@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react"
+import Image from "next/image"
 
 export default function AuthLayout({
   children,
@@ -6,96 +7,85 @@ export default function AuthLayout({
   children: ReactNode
 }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-4 py-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-8">
 
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
-
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-sky-50 to-blue-100" />
-
-        <div className="absolute -top-32 -left-24 h-[500px] w-[500px] animate-pulse rounded-full bg-sky-300/30 blur-3xl" />
+        <div className="absolute -top-52 -left-52 h-[700px] w-[700px] rounded-full bg-sky-300/25 blur-3xl animate-pulse" />
 
         <div
-          className="absolute bottom-[-150px] right-[-100px] h-[600px] w-[600px] rounded-full bg-blue-400/20 blur-3xl"
+          className="absolute -bottom-52 -right-52 h-[700px] w-[700px] rounded-full bg-blue-500/20 blur-3xl"
           style={{
-            animation: 'float 14s ease-in-out infinite',
+            animation: "float 14s ease-in-out infinite",
           }}
         />
 
         <div
-          className="absolute left-1/2 top-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/40 blur-3xl"
+          className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-200/20 blur-3xl"
           style={{
-            animation: 'float2 18s ease-in-out infinite',
+            animation: "float2 18s ease-in-out infinite",
           }}
         />
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-[420px]">
+      <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/40 bg-white/90 p-8 shadow-2xl backdrop-blur-xl">
 
-        <div className="rounded-3xl border border-white/70 bg-white/80 p-8 shadow-2xl backdrop-blur-xl md:p-10">
+        {/* Logo */}
+        <div className="mb-8 flex flex-col items-center">
 
-          {/* Logo */}
-          <div className="mb-8 flex justify-center">
-            <img
-              src="/logo.png"
-              alt="POG Advisory"
-              className="h-14 w-auto"
-            />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="POG Advisory"
+            width={60}
+            height={60}
+            priority
+          />
 
-          {/* Heading */}
-          <div className="mb-8 text-center">
+          <h1 className="mt-5 text-center text-4xl font-black tracking-tight text-slate-900">
+            POG <span className="text-sky-600">Advisory</span>
+          </h1>
 
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Client Portal
-            </h1>
+          <p className="mt-2 text-center text-lg text-slate-700">
+            Client Portal
+          </p>
 
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Securely access your tax documents, track your cases,
-              upload files and communicate with your accountant.
-            </p>
-
-          </div>
-
-          {/* Login Form */}
-          {children}
-
+          <p className="mt-4 max-w-xs text-center text-sm leading-6 text-slate-500">
+            Securely access your documents, monitor your cases and communicate
+            with your accountant.
+          </p>
         </div>
 
-        {/* Footer */}
-        <p className="mt-6 text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} POG Advisory & Chartered Accountants
-        </p>
+        {/* Login Form */}
+        {children}
 
       </div>
 
-      <style>{`
+      <style jsx global>{`
         @keyframes float {
           0% {
-            transform: translateY(0px) translateX(0px);
+            transform: translateY(0px);
           }
           50% {
-            transform: translateY(-40px) translateX(-20px);
+            transform: translateY(-45px);
           }
           100% {
-            transform: translateY(0px) translateX(0px);
+            transform: translateY(0px);
           }
         }
 
         @keyframes float2 {
           0% {
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%);
           }
           50% {
-            transform: translate(-50%, -50%) scale(1.08);
+            transform: translate(-50%, calc(-50% + 35px));
           }
           100% {
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate(-50%, -50%);
           }
         }
       `}</style>
-
     </div>
   )
 }
