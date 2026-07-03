@@ -1,62 +1,125 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { AlertCircle, Loader2 } from 'lucide-react'
+
+import { createClient } from '@/lib/supabase/client'
+
+import { GoogleButton } from '@/components/brand/google-button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { GoogleButton } from '@/components/brand/google-button'
-import { Loader2, AlertCircle } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const supabase = createClient()
+
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
     setError(null)
+
     if (password !== confirm) {
       setError('Passwords do not match.')
       return
     }
+
     if (password.length < 6) {
       setError('Password must be at least 6 characters.')
       return
     }
+
     setLoading(true)
-    setTimeout(() => router.push('/portal'), 800)
+
+    try {
+      // Create Auth User
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
+        },
+      })
+
+      if (error) throw error
+
+      if (!data.user) {
+        throw new Error('Unable to create account.')
+      }
+
+      // Create Profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone,
+          role: 'client',
+        })
+
+      if (profileError) throw profileError
+
+      router.push('/auth/login?registered=true')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function signUpWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+
+    if (error) {
+      setError(error.message)
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">Create your account</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Create your account
+        </h2>
+
         <p className="text-sm text-muted-foreground">
-          Join the Pogidja client portal in a few steps.
+          Join the Pogidja Client Portal.
         </p>
       </div>
 
       <GoogleButton
         label="Sign up with Google"
-        onClick={() => {
-          setLoading(true)
-          setTimeout(() => router.push('/portal'), 800)
-        }}
+        onClick={signUpWithGoogle}
       />
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-border" />
         </div>
+
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-background px-2 text-muted-foreground">
             or sign up with email
@@ -71,10 +134,16 @@ export default function RegisterPage() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-4"
+      >
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="firstName">First name</Label>
+            <Label htmlFor="firstName">
+              First Name
+            </Label>
+
             <Input
               id="firstName"
               value={firstName}
@@ -82,8 +151,12 @@ export default function RegisterPage() {
               required
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="lastName">Last name</Label>
+            <Label htmlFor="lastName">
+              Last Name
+            </Label>
+
             <Input
               id="lastName"
               value={lastName}
@@ -92,33 +165,44 @@ export default function RegisterPage() {
             />
           </div>
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="email">Email address</Label>
+          <Label htmlFor="email">
+            Email Address
+          </Label>
+
           <Input
             id="email"
             type="email"
             autoComplete="email"
-            placeholder="you@company.co.za"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
             required
           />
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone number</Label>
+          <Label htmlFor="phone">
+            Phone Number
+          </Label>
+
           <Input
             id="phone"
             type="tel"
-            autoComplete="tel"
-            placeholder="+27 82 000 0000"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            placeholder="+27..."
             required
           />
         </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">
+              Password
+            </Label>
+
             <Input
               id="password"
               type="password"
@@ -128,8 +212,12 @@ export default function RegisterPage() {
               required
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="confirm">Confirm</Label>
+            <Label htmlFor="confirm">
+              Confirm Password
+            </Label>
+
             <Input
               id="confirm"
               type="password"
@@ -140,9 +228,17 @@ export default function RegisterPage() {
             />
           </div>
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create account
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loading}
+        >
+          {loading && (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          )}
+
+          Create Account
         </Button>
       </form>
 
@@ -152,7 +248,7 @@ export default function RegisterPage() {
           href="/auth/login"
           className="font-medium text-primary hover:underline"
         >
-          Sign in
+          Sign In
         </Link>
       </p>
     </div>
