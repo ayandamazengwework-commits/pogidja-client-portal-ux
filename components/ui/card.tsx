@@ -8,37 +8,19 @@ import { StatusBadge } from '@/components/shared/status-badge'
 import { cases, PRIORITY_META, STATUS_META } from '@/lib/demo-data'
 import { formatDate } from '@/lib/format'
 
-function getAccent(status: string) {
-  switch (status) {
-    case 'completed':
-      return 'border-l-emerald-500'
-    case 'in_progress':
-      return 'border-l-amber-500'
-    case 'awaiting_client':
-      return 'border-l-purple-500'
-    case 'awaiting_sars':
-      return 'border-l-orange-500'
-    case 'review':
-      return 'border-l-cyan-500'
-    case 'on_hold':
-      return 'border-l-slate-400'
-    default:
-      return 'border-l-blue-500'
-  }
-}
-
 export default function ClientCasesPage() {
   const myCases = cases.filter((c) => c.clientId === 'client-001')
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="rounded-2xl border bg-gradient-to-r from-primary/5 via-background to-accent/10 p-6">
+
+      {/* Header (clean, no gradient noise) */}
+      <div className="border-b pb-5">
         <PageHeader
           title="My Cases"
-          description="Track your tax, bookkeeping and compliance work in real time."
+          description="Track all active engagements, submissions, and compliance work in one place."
           actions={
-            <Button asChild className="bg-primary text-primary-foreground">
+            <Button asChild>
               <Link href="/portal/request-service">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 New request
@@ -48,43 +30,43 @@ export default function ClientCasesPage() {
         />
       </div>
 
-      {/* Cards */}
-      <div className="grid gap-5 md:grid-cols-2">
+      {/* Grid */}
+      <div className="grid gap-6 md:grid-cols-2">
+
         {myCases.map((c) => (
           <Link key={c.id} href={`/portal/cases/${c.id}`}>
-            <Card
-              className={[
-                'group relative border-l-4 transition-all duration-200',
-                'hover:-translate-y-0.5 hover:shadow-lg',
-                getAccent(c.status),
-              ].join(' ')}
-            >
-              <CardContent className="space-y-4 p-5">
-                {/* Top */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="font-medium leading-snug group-hover:text-primary transition-colors">
+            <Card className="group border bg-card transition-all duration-200 hover:shadow-md hover:border-primary/30">
+
+              <CardContent className="space-y-5 p-6">
+
+                {/* Title row */}
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-base font-semibold leading-snug group-hover:text-primary transition-colors">
                       {c.title}
                     </p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {c.reference}
-                    </p>
+                    <StatusBadge {...STATUS_META[c.status]} />
                   </div>
 
-                  <StatusBadge {...STATUS_META[c.status]} />
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {c.reference}
+                  </p>
                 </div>
 
                 {/* Progress */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-semibold">{c.progress}%</span>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Progress</span>
+                    <span className="font-medium text-foreground">
+                      {c.progress}%
+                    </span>
                   </div>
                   <Progress value={c.progress} className="h-1.5" />
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between border-t pt-3 text-xs">
+                <div className="flex items-center justify-between pt-2 text-xs">
+
                   <div className="flex items-center gap-2">
                     <StatusBadge {...PRIORITY_META[c.priority]} />
                     <span className="text-muted-foreground">
@@ -96,11 +78,14 @@ export default function ClientCasesPage() {
                     Open
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                   </span>
+
                 </div>
+
               </CardContent>
             </Card>
           </Link>
         ))}
+
       </div>
     </div>
   )
