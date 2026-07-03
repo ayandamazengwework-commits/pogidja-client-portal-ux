@@ -60,32 +60,6 @@ export default function AuthLayout({
         {children}
 
       </div>
-
-      <style jsx global>{`
-        @keyframes float {
-          0% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-45px);
-          }
-          100% {
-            transform: translateY(0px);
-          }
-        }
-
-        @keyframes float2 {
-          0% {
-            transform: translate(-50%, -50%);
-          }
-          50% {
-            transform: translate(-50%, calc(-50% + 35px));
-          }
-          100% {
-            transform: translate(-50%, -50%);
-          }
-        }
-      `}</style>
     </div>
   )
 }
