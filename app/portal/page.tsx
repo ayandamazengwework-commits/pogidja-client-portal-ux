@@ -19,6 +19,10 @@ import {
   clientActiveCases,
   currentClient,
   notifications,
+  documents,
+  threads,
+  clientOutstandingInvoice,
+  INVOICE_META,
   STATUS_META,
 } from '@/lib/demo-data'
 
