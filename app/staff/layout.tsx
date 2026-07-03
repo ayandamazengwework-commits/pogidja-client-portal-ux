@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { StaffSidebar } from '@/components/staff/sidebar'
+import { StaffTopbar } from '@/components/staff/topbar'
 
 export default function StaffLayout({
   children,
@@ -8,12 +9,20 @@ export default function StaffLayout({
   children: ReactNode
 }) {
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex h-screen bg-slate-100">
+
       <StaffSidebar />
 
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col">
+
+        <StaffTopbar />
+
+        <main className="flex-1 overflow-y-auto p-8">
+          {children}
+        </main>
+
+      </div>
+
     </div>
   )
 }
