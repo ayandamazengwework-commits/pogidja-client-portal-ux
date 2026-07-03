@@ -7,7 +7,7 @@ export async function getDashboardStats() {
     clients,
     services,
     documents,
-    messages,
+    unreadMessages,
   ] = await Promise.all([
     supabase
       .from('profiles')
@@ -16,8 +16,7 @@ export async function getDashboardStats() {
 
     supabase
       .from('cases')
-      .select('*', { count: 'exact', head: true })
-      .neq('status', 'completed'),
+      .select('*', { count: 'exact', head: true }),
 
     supabase
       .from('documents')
@@ -33,6 +32,6 @@ export async function getDashboardStats() {
     clients: clients.count ?? 0,
     services: services.count ?? 0,
     documents: documents.count ?? 0,
-    messages: messages.count ?? 0,
+    messages: unreadMessages.count ?? 0,
   }
 }
