@@ -12,12 +12,13 @@ export default function ClientCasesPage() {
   const myCases = cases.filter((c) => c.clientId === 'client-001')
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
+      {/* Header */}
       <PageHeader
         title="My Cases"
-        description="Track the progress of every engagement with Pogidja."
+        description="Track progress, documents, and outstanding actions across all engagements."
         actions={
-          <Button asChild>
+          <Button asChild className="shadow-sm">
             <Link href="/portal/request-service">
               <PlusCircle className="mr-2 h-4 w-4" />
               New request
@@ -26,39 +27,59 @@ export default function ClientCasesPage() {
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Grid */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {myCases.map((c) => (
-          <Link key={c.id} href={`/portal/cases/${c.id}`}>
-            <Card className="h-full transition-shadow hover:shadow-md">
-              <CardContent className="space-y-4 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-1">
-                    <p className="truncate font-medium">{c.title}</p>
-                    <p className="font-mono text-xs text-muted-foreground">
-                      {c.reference}
+          <Link key={c.id} href={`/portal/cases/${c.id}`} className="group">
+            <Card
+              className="
+                relative overflow-hidden
+                border border-border/60
+                bg-card/70 backdrop-blur-sm
+                transition-all duration-300
+                hover:-translate-y-1 hover:shadow-lg hover:border-primary/20
+              "
+            >
+              {/* subtle accent line */}
+              <div className="absolute left-0 top-0 h-full w-[3px] bg-gradient-to-b from-primary/40 to-accent/40 opacity-0 transition-opacity group-hover:opacity-100" />
+
+              <CardContent className="space-y-5 p-6">
+                {/* Top */}
+                <div className="space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-medium leading-snug text-foreground">
+                      {c.title}
                     </p>
+                    <StatusBadge {...STATUS_META[c.status]} />
                   </div>
-                  <StatusBadge {...STATUS_META[c.status]} />
+
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {c.reference}
+                  </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Progress</span>
+                {/* Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Progress</span>
                     <span className="font-medium text-foreground">
                       {c.progress}%
                     </span>
                   </div>
+
                   <Progress value={c.progress} className="h-1.5" />
                 </div>
 
-                <div className="flex items-center justify-between border-t border-border pt-3 text-xs">
+                {/* Bottom */}
+                <div className="flex items-center justify-between border-t border-border/40 pt-4 text-xs">
                   <div className="flex items-center gap-2">
                     <StatusBadge {...PRIORITY_META[c.priority]} />
                     <span className="text-muted-foreground">
                       Due {formatDate(c.dueDate)}
                     </span>
                   </div>
-                  <span className="flex items-center gap-1 font-medium text-primary">
+
+                  <span className="flex items-center gap-1 font-medium text-primary transition-transform group-hover:translate-x-0.5">
                     Details
                     <ArrowRight className="h-3.5 w-3.5" />
                   </span>
