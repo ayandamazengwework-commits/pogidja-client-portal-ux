@@ -10,7 +10,7 @@ import {
 import { createClient } from '@/lib/supabase/server'
 
 import { Button } from '@/components/ui/button'
-import { Card, { CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { StatusBadge } from '@/components/shared/status-badge'
 
