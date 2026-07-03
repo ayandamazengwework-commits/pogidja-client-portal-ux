@@ -1,3 +1,5 @@
+import { getRecentActivity } from '@/lib/dashboard/activity'
+const activity = await getRecentActivity()
 export default function StaffDashboard() {
   return (
     <div className="p-10">
