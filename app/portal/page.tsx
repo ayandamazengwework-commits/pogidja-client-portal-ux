@@ -1,61 +1,51 @@
 import Link from 'next/link'
 import {
   ArrowRight,
-  Bell,
-  Download,
-  FileText,
   FolderOpen,
-  LifeBuoy,
-  MessageSquare,
   PlusCircle,
-  Receipt,
+  Bell,
+  FileText,
 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { StatusBadge } from '@/components/shared/status-badge'
+
 import {
   clientActiveCases,
-  clientOutstandingInvoice,
   currentClient,
-  documents,
-  INVOICE_META,
   notifications,
   STATUS_META,
-  threads,
 } from '@/lib/demo-data'
-import { formatCurrency, formatDate, initials, relativeTime } from '@/lib/format'
+
+import {
+  formatDate,
+} from '@/lib/format'
 
 const quickActions = [
   {
-    label: 'Request a Service',
-    description: 'Start a new engagement',
+    title: 'New Service',
     href: '/portal/request-service',
     icon: PlusCircle,
   },
   {
-    label: 'Track Progress',
-    description: 'View your active cases',
+    title: 'My Cases',
     href: '/portal/cases',
     icon: FolderOpen,
   },
   {
-    label: 'Download Documents',
-    description: 'Access your files',
+    title: 'Documents',
     href: '/portal/documents',
-    icon: Download,
+    icon: FileText,
   },
   {
-    label: 'Support',
-    description: 'Message your accountant',
-    href: '/portal/messages',
-    icon: LifeBuoy,
+    title: 'Notifications',
+    href: '/portal/notifications',
+    icon: Bell,
   },
 ]
 
