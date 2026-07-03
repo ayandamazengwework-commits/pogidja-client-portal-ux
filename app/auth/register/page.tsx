@@ -45,7 +45,6 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // Create Auth User
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -53,6 +52,7 @@ export default function RegisterPage() {
           data: {
             first_name: firstName,
             last_name: lastName,
+            phone,
           },
         },
       })
@@ -62,20 +62,6 @@ export default function RegisterPage() {
       if (!data.user) {
         throw new Error('Unable to create account.')
       }
-
-      // Create Profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          phone,
-          role: 'client',
-        })
-
-      if (profileError) throw profileError
 
       router.push('/auth/login?registered=true')
     } catch (err: any) {
@@ -134,15 +120,10 @@ export default function RegisterPage() {
         </Alert>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="firstName">
-              First Name
-            </Label>
+            <Label htmlFor="firstName">First Name</Label>
 
             <Input
               id="firstName"
@@ -153,9 +134,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lastName">
-              Last Name
-            </Label>
+            <Label htmlFor="lastName">Last Name</Label>
 
             <Input
               id="lastName"
@@ -167,9 +146,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">
-            Email Address
-          </Label>
+          <Label htmlFor="email">Email Address</Label>
 
           <Input
             id="email"
@@ -183,9 +160,7 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">
-            Phone Number
-          </Label>
+          <Label htmlFor="phone">Phone Number</Label>
 
           <Input
             id="phone"
@@ -199,9 +174,7 @@ export default function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label htmlFor="password">
-              Password
-            </Label>
+            <Label htmlFor="password">Password</Label>
 
             <Input
               id="password"
@@ -214,9 +187,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm">
-              Confirm Password
-            </Label>
+            <Label htmlFor="confirm">Confirm Password</Label>
 
             <Input
               id="confirm"
