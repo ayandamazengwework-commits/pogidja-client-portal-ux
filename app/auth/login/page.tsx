@@ -72,7 +72,7 @@ export default function LoginPage() {
         <p className="mt-3 text-lg text-slate-600">
           Client Portal —
           <Link
-            href="/staff/login"
+            href="/auth/staff-login"
             className="ml-2 font-semibold text-[#1E88E5] hover:underline"
           >
             Staff login
@@ -103,14 +103,9 @@ export default function LoginPage() {
           </Alert>
         )}
 
-        <form
-          onSubmit={signIn}
-          className="space-y-6"
-        >
+        <form onSubmit={signIn} className="space-y-6">
           <div>
-            <Label htmlFor="email">
-              Email address
-            </Label>
+            <Label htmlFor="email">Email address</Label>
 
             <div className="relative mt-2">
               <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -130,9 +125,7 @@ export default function LoginPage() {
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <Label htmlFor="password">
-                Password
-              </Label>
+              <Label htmlFor="password">Password</Label>
 
               <Link
                 href="/auth/forgot-password"
