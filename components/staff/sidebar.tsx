@@ -84,6 +84,18 @@ export function StaffSidebar({
 
   const [loggingOut, setLoggingOut] = useState(false)
 
+  const initials = profile
+    ? `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
+    : '??'
+
+  const fullName = profile
+    ? `${profile.first_name} ${profile.last_name}`
+    : 'Unknown User'
+
+  const role = profile
+    ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+    : 'Staff'
+
   async function handleLogout() {
     setLoggingOut(true)
 
@@ -141,25 +153,24 @@ export function StaffSidebar({
         })}
       </nav>
 
-      {/* User */}
+      {/* Logged-in User */}
 
       <div className="border-t border-slate-200 p-5">
-
         <div className="rounded-2xl bg-slate-50 p-4">
 
           <div className="mb-4 flex items-center gap-3">
 
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1E88E5] font-bold text-white">
-              T
+              {initials}
             </div>
 
             <div>
               <p className="font-semibold">
-                Thandiwe
+                {fullName}
               </p>
 
               <p className="text-sm text-slate-500">
-                Administrator
+                {role}
               </p>
             </div>
 
@@ -172,16 +183,19 @@ export function StaffSidebar({
             disabled={loggingOut}
           >
             {loggingOut ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging out...
+              </>
             ) : (
-              <LogOut className="mr-2 h-4 w-4" />
+              <>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </>
             )}
-
-            Logout
           </Button>
 
         </div>
-
       </div>
 
     </aside>
