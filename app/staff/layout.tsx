@@ -1,28 +1,44 @@
 import type { ReactNode } from 'react'
+import { redirect } from 'next/navigation'
+
+import { createClient } from '@/lib/supabase/server'
 
 import { StaffSidebar } from '@/components/staff/sidebar'
-import { StaffTopbar } from '@/components/staff/topbar' 
+import { StaffTopbar } from '@/components/staff/topbar'
 
-export default function StaffLayout({
+export default async function StaffLayout({
   children,
 }: {
   children: ReactNode
 }) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Protect all staff pages
+  if (!user) {
+    redirect('/auth/staff-login')
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
   return (
     <div className="flex h-screen bg-slate-100">
-
-      <StaffSidebar />
+      <StaffSidebar profile={profile} />
 
       <div className="flex flex-1 flex-col">
-
-        <StaffTopbar />
+        <StaffTopbar profile={profile} />
 
         <main className="flex-1 overflow-y-auto p-8">
           {children}
         </main>
-
       </div>
-
     </div>
   )
 }
