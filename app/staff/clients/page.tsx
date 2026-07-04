@@ -18,6 +18,9 @@ console.log('Error:', error)
 
       <h1 className="text-3xl font-bold">
         Clients
+        <pre className="rounded bg-slate-100 p-4 text-xs">
+  {JSON.stringify(clients, null, 2)}
+</pre>
       </h1>
 
       {/* Search (UI only for now) */}
