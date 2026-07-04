@@ -16,10 +16,17 @@ export default async function ClientProfilePage({
 
   const supabase = await createClient()
 
-  // Client
   const { data: client } = await supabase
-    .from('profiles')
-    .select('*')
+    .from('clients')
+    .select(`
+      *,
+      profile:profiles(
+        *
+      ),
+      company:companies(
+        *
+      )
+    `)
     .eq('id', id)
     .single()
 
@@ -27,375 +34,154 @@ export default async function ClientProfilePage({
     notFound()
   }
 
-  // Services
-const { data: services } = await supabase
-  .from('services')
-  .select('*')
-  .eq('client_id', id)
-
-  // Documents
-  const { data: documents } = await supabase
-    .from('documents')
+  const { data: services } = await supabase
+    .from('services')
     .select('*')
     .eq('client_id', id)
+    .order('created_at', { ascending: false })
 
-  // Activity
   const { data: activity } = await supabase
     .from('activity_logs')
     .select('*')
-    .eq('user_id', id)
+    .eq('user_id', client.profile.id)
     .order('created_at', { ascending: false })
 
   return (
     <div className="space-y-8">
 
-      {/* Client Header */}
+      {/* Header */}
 
-     <Card>
-  <CardContent className="p-8">
+      <Card>
+        <CardContent className="p-8">
 
-    <div className="flex items-start justify-between">
+          <div className="flex items-start gap-5">
 
-      <div className="flex items-center gap-5">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#1E88E5] text-2xl font-bold text-white">
+              {client.profile.first_name.charAt(0)}
+              {client.profile.last_name.charAt(0)}
+            </div>
 
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#1E88E5] text-2xl font-bold text-white">
-          {client.first_name.charAt(0)}
-          {client.last_name.charAt(0)}
-        </div>
+            <div>
 
-        <div>
+              <h1 className="text-3xl font-bold">
+                {client.profile.first_name} {client.profile.last_name}
+              </h1>
 
-          <h1 className="text-3xl font-bold">
-            {client.first_name} {client.last_name}
-          </h1>
+              <p className="text-slate-500">
+                {client.company?.name}
+              </p>
 
-          {client.company_name && (
-            <p className="mt-1 text-lg text-slate-600">
-              {client.company_name}
-            </p>
-          )}
+              <div className="mt-3 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+                {client.status}
+              </div>
 
-          <div className="mt-3 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-            {client.client_status ?? 'Active'}
+            </div>
+
           </div>
 
-        </div>
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+
+            <div>
+              <p className="text-sm text-slate-500">Email</p>
+              <p>{client.profile.email}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-slate-500">Phone</p>
+              <p>{client.profile.phone || '-'}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-slate-500">Company</p>
+              <p>{client.company?.name || '-'}</p>
+            </div>
+
+            <div>
+              <p className="text-sm text-slate-500">Client Code</p>
+              <p>{client.client_code || '-'}</p>
+            </div>
+
+          </div>
+
+        </CardContent>
+      </Card>
+
+      {/* Quick Stats */}
+
+      <div className="grid gap-6 md:grid-cols-2">
+
+        <Card>
+          <CardContent className="p-6">
+
+            <p className="text-sm text-slate-500">
+              Services
+            </p>
+
+            <p className="mt-2 text-4xl font-bold">
+              {services?.length ?? 0}
+            </p>
+
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+
+            <p className="text-sm text-slate-500">
+              Activity
+            </p>
+
+            <p className="mt-2 text-4xl font-bold">
+              {activity?.length ?? 0}
+            </p>
+
+          </CardContent>
+        </Card>
 
       </div>
 
-    </div>
-
-    <div className="mt-8 grid gap-6 md:grid-cols-2">
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          Email
-        </p>
-
-        <p className="mt-1">
-          {client.email}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          Phone
-        </p>
-
-        <p className="mt-1">
-          {client.phone || '-'}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          Address
-        </p>
-
-        <p className="mt-1">
-          {[
-            client.address,
-            client.city,
-            client.province,
-            client.postal_code,
-          ]
-            .filter(Boolean)
-            .join(', ') || '-'}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          Country
-        </p>
-
-        <p className="mt-1">
-          {client.country}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          Company Registration
-        </p>
-
-        <p className="mt-1">
-          {client.company_registration || '-'}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          VAT Number
-        </p>
-
-        <p className="mt-1">
-          {client.vat_number || '-'}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          Tax Number
-        </p>
-
-        <p className="mt-1">
-          {client.tax_number || '-'}
-        </p>
-
-      </div>
-
-      <div>
-
-        <p className="text-sm font-medium text-slate-500">
-          ID Number
-        </p>
-
-        <p className="mt-1">
-          {client.id_number || '-'}
-        </p>
-
-      </div>
-
-    </div>
-
-  </CardContent>
-</Card>
-
-<div className="grid gap-6 md:grid-cols-3">
-
-  <Card>
-    <CardContent className="p-6">
-
-      <p className="text-sm text-slate-500">
-        Services
-      </p>
-
-      <p className="mt-2 text-4xl font-bold">
-        {services?.length ?? 0}
-      </p>
-
-    </CardContent>
-  </Card>
-
-  <Card>
-    <CardContent className="p-6">
-
-      <p className="text-sm text-slate-500">
-        Documents
-      </p>
-
-      <p className="mt-2 text-4xl font-bold">
-        {documents?.length ?? 0}
-      </p>
-
-    </CardContent>
-  </Card>
-
-  <Card>
-    <CardContent className="p-6">
-
-      <p className="text-sm text-slate-500">
-        Activity
-      </p>
-
-      <p className="mt-2 text-4xl font-bold">
-        {activity?.length ?? 0}
-      </p>
-
-    </CardContent>
-  </Card>
-
-</div>
-      
       {/* Services */}
 
       <Card>
         <CardContent className="p-6">
 
           <h2 className="mb-4 text-xl font-semibold">
-            Active Services
+            Services
           </h2>
 
-         {services && services.length > 0 ? (
-  <div className="space-y-3">
-    {services.map((item) => (
-  <div
-    key={item.id}
-    className="rounded-xl border bg-white p-5 transition hover:shadow-md"
-  >
-    <div className="flex items-start justify-between">
+          {services?.length ? (
+            <div className="space-y-4">
 
-      <div>
-
-        <h3 className="text-lg font-semibold">
-          {item.title}
-        </h3>
-
-        <p className="mt-1 text-sm text-slate-500">
-          {item.service_type}
-        </p>
-
-      </div>
-
-      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
-        {item.status}
-      </span>
-
-    </div>
-
-    {item.description && (
-      <p className="mt-4 text-sm text-slate-600">
-        {item.description}
-      </p>
-    )}
-
-    <div className="mt-5 grid gap-4 md:grid-cols-3">
-
-      <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">
-          Priority
-        </p>
-
-        <p className="mt-1 font-medium">
-          {item.priority}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">
-          Progress
-        </p>
-
-        <p className="mt-1 font-medium">
-          {item.progress}%
-        </p>
-      </div>
-
-      <div>
-        <p className="text-xs uppercase tracking-wide text-slate-500">
-          Due Date
-        </p>
-
-        <p className="mt-1 font-medium">
-          {item.due_date ?? '-'}
-        </p>
-      </div>
-
-    </div>
-
-    <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
-      <div
-        className="h-full rounded-full bg-[#1E88E5]"
-        style={{ width: `${item.progress}%` }}
-      />
-    </div>
-
-  </div>
-))}
-            </div>
-          ) : (
-            <p className="text-slate-500">
-              No active services.
-            </p>
-          )}
-
-        </CardContent>
-      </Card>
-
-      {/* Documents */}
-
-      <Card>
-        <CardContent className="p-6">
-
-          <h2 className="mb-4 text-xl font-semibold">
-            Documents
-          </h2>
-
-          {documents && documents.length > 0 ? (
-            <div className="space-y-3">
-              {documents.map((doc) => (
+              {services.map((service) => (
                 <div
-                  key={doc.id}
+                  key={service.id}
                   className="rounded-xl border p-4"
                 >
-                  {doc.name}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-slate-500">
-              No documents uploaded.
-            </p>
-          )}
+                  <h3 className="font-semibold">
+                    {service.title}
+                  </h3>
 
-        </CardContent>
-      </Card>
-
-      {/* Activity */}
-
-      <Card>
-        <CardContent className="p-6">
-
-          <h2 className="mb-4 text-xl font-semibold">
-            Recent Activity
-          </h2>
-
-          {activity && activity.length > 0 ? (
-            <div className="space-y-3">
-              {activity.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl border p-4"
-                >
-                  <p className="font-medium">
-                    {item.action}
+                  <p className="text-sm text-slate-500">
+                    {service.service_type}
                   </p>
 
-                  {item.description && (
-                    <p className="text-sm text-slate-500">
-                      {item.description}
-                    </p>
-                  )}
+                  <div className="mt-3 flex gap-4 text-sm">
+
+                    <span>Status: {service.status}</span>
+
+                    <span>Priority: {service.priority}</span>
+
+                    <span>{service.progress}%</span>
+
+                  </div>
+
                 </div>
               ))}
+
             </div>
           ) : (
             <p className="text-slate-500">
-              No activity recorded.
+              No services found.
             </p>
           )}
 
