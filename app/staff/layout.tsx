@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { StaffSidebar } from '@/components/staff/sidebar'
 import { StaffTopbar } from '@/components/staff/topbar'
+import { LogoutButton } from '@/components/staff/logout-button' 
 
 export default function StaffLayout({
   children,
