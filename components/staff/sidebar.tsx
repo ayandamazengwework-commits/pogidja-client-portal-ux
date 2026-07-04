@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   Users,
@@ -13,8 +14,10 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Loader2,
 } from 'lucide-react'
 
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 
 const navigation = [
@@ -67,6 +70,20 @@ const navigation = [
 
 export function StaffSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  async function handleLogout() {
+    setLoggingOut(true)
+
+    const supabase = createClient()
+
+    await supabase.auth.signOut()
+
+    router.replace('/auth/staff-login')
+    router.refresh()
+  }
 
   return (
     <aside className="flex h-screen w-72 flex-col border-r border-slate-200 bg-white">
@@ -74,7 +91,6 @@ export function StaffSidebar() {
       {/* Logo */}
 
       <div className="border-b border-slate-200 p-8">
-
         <h1 className="text-2xl font-bold tracking-tight">
           POG
           <span className="text-[#1E88E5]"> Advisory</span>
@@ -83,15 +99,12 @@ export function StaffSidebar() {
         <p className="mt-1 text-sm text-slate-500">
           Staff Workspace
         </p>
-
       </div>
 
       {/* Navigation */}
 
       <nav className="flex-1 space-y-1 p-4">
-
         {navigation.map((item) => {
-
           const Icon = item.icon
 
           const active =
@@ -113,11 +126,9 @@ export function StaffSidebar() {
               <span className="font-medium">
                 {item.name}
               </span>
-
             </Link>
           )
         })}
-
       </nav>
 
       {/* User */}
@@ -129,13 +140,10 @@ export function StaffSidebar() {
           <div className="mb-4 flex items-center gap-3">
 
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1E88E5] font-bold text-white">
-
               T
-
             </div>
 
             <div>
-
               <p className="font-semibold">
                 Thandiwe
               </p>
@@ -143,7 +151,6 @@ export function StaffSidebar() {
               <p className="text-sm text-slate-500">
                 Administrator
               </p>
-
             </div>
 
           </div>
@@ -151,11 +158,16 @@ export function StaffSidebar() {
           <Button
             variant="outline"
             className="w-full justify-start"
+            onClick={handleLogout}
+            disabled={loggingOut}
           >
-            <LogOut className="mr-2 h-4 w-4" />
+            {loggingOut ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="mr-2 h-4 w-4" />
+            )}
 
             Logout
-
           </Button>
 
         </div>
