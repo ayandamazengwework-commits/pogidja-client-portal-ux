@@ -195,6 +195,52 @@ const { data: services } = await supabase
   </CardContent>
 </Card>
 
+<div className="grid gap-6 md:grid-cols-3">
+
+  <Card>
+    <CardContent className="p-6">
+
+      <p className="text-sm text-slate-500">
+        Services
+      </p>
+
+      <p className="mt-2 text-4xl font-bold">
+        {services?.length ?? 0}
+      </p>
+
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardContent className="p-6">
+
+      <p className="text-sm text-slate-500">
+        Documents
+      </p>
+
+      <p className="mt-2 text-4xl font-bold">
+        {documents?.length ?? 0}
+      </p>
+
+    </CardContent>
+  </Card>
+
+  <Card>
+    <CardContent className="p-6">
+
+      <p className="text-sm text-slate-500">
+        Activity
+      </p>
+
+      <p className="mt-2 text-4xl font-bold">
+        {activity?.length ?? 0}
+      </p>
+
+    </CardContent>
+  </Card>
+
+</div>
+      
       {/* Services */}
 
       <Card>
