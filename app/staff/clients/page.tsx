@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input'
 export default async function ClientsPage() {
   const supabase = await createClient()
 
-  const { data: clients } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'client')
-    .order('created_at', { ascending: false })
+  const { data: clients, error } = await supabase
+  .from('profiles')
+  .select('*')
+
+console.log('Clients:', clients)
+console.log('Error:', error)
 
   return (
     <div className="space-y-6 p-8">
