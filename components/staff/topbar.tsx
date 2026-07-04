@@ -5,13 +5,25 @@ import { Bell, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-export function StaffTopbar() {
+interface StaffTopbarProps {
+  profile: {
+    first_name?: string | null
+    last_name?: string | null
+    role?: string | null
+  } | null
+}
+
+export function StaffTopbar({
+  profile,
+}: StaffTopbarProps) {
   const today = new Date().toLocaleDateString('en-ZA', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
+
+  const firstName = profile?.first_name ?? 'Staff'
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
@@ -21,7 +33,7 @@ export function StaffTopbar() {
         <div>
 
           <h1 className="text-2xl font-bold">
-            Dashboard
+            Welcome back, {firstName}
           </h1>
 
           <p className="text-sm text-slate-500">
