@@ -27,11 +27,11 @@ export default async function ClientProfilePage({
     notFound()
   }
 
-  // Cases
-  const { data: cases } = await supabase
-    .from('cases')
-    .select('*')
-    .eq('client_id', id)
+  // Services
+const { data: services } = await supabase
+  .from('services')
+  .select('*')
+  .eq('client_id', id)
 
   // Documents
   const { data: documents } = await supabase
