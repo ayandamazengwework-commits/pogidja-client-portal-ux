@@ -68,7 +68,17 @@ const navigation = [
   },
 ]
 
-export function StaffSidebar() {
+interface StaffSidebarProps {
+  profile: {
+    first_name: string
+    last_name: string
+    role: string
+  } | null
+}
+
+export function StaffSidebar({
+  profile,
+}: StaffSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
