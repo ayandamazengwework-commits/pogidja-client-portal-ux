@@ -6,56 +6,77 @@ import { Input } from '@/components/ui/input'
 export default async function ClientsPage() {
   const supabase = await createClient()
 
-  const { data: clients, error } = await supabase
+  const { data: clients } = await supabase
     .from('profiles')
     .select('*')
-
-  console.log('Clients:', clients)
-  console.log('Error:', error)
+    .eq('role', 'client')
+    .order('created_at', { ascending: false })
 
   return (
     <div className="space-y-6 p-8">
-      <h1 className="text-3xl font-bold">
-        Clients
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">
+          Clients
+        </h1>
+      </div>
 
-      {/* DEBUG - REMOVE LATER */}
-      <pre className="overflow-auto rounded-lg bg-slate-100 p-4 text-xs">
-        {JSON.stringify({ clients, error }, null, 2)}
-      </pre>
-
+      {/* Search (we'll wire this up later) */}
       <div className="max-w-md">
         <Input placeholder="Search clients..." />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {clients?.map((client) => (
-          <Link
-            key={client.id}
-            href={`/staff/clients/${client.id}`}
-          >
-            <Card className="transition hover:shadow-lg">
-              <CardContent className="p-5">
-                <h2 className="text-lg font-semibold">
-                  {client.first_name} {client.last_name}
-                </h2>
+      {clients && clients.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {clients.map((client) => (
+            <Link
+              key={client.id}
+              href={`/staff/clients/${client.id}`}
+            >
+              <Card className="transition hover:shadow-lg hover:-translate-y-1 cursor-pointer">
+                <CardContent className="p-5">
+                  <h2 className="text-lg font-semibold">
+                    {client.first_name || 'Unnamed'} {client.last_name}
+                  </h2>
 
-                <p className="text-sm text-slate-500">
-                  {client.email}
-                </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {client.email}
+                  </p>
 
-                <p className="text-sm text-slate-400">
-                  Role: {client.role}
-                </p>
+                  {client.company_name && (
+                    <p className="mt-2 text-sm text-slate-600">
+                      {client.company_name}
+                    </p>
+                  )}
 
-                <p className="mt-2 text-xs text-slate-400">
-                  Click to view profile
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        client.active
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {client.active ? 'Active' : 'Inactive'}
+                    </span>
+
+                    <span className="text-xs text-slate-400">
+                      View Profile →
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="flex h-48 items-center justify-center">
+            <p className="text-slate-500">
+              No clients found.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
