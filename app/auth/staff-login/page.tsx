@@ -18,8 +18,8 @@ export default function StaffLoginPage() {
   const supabase = createClient()
 
   // Keep demo values pre-filled for now
-  const [email, setEmail] = useState('owner@pogadvisory.co.za')
-  const [password, setPassword] = useState('POGAdmin2026!')
+  const [email, setEmail] = useState('')
+const [password, setPassword] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
