@@ -78,9 +78,9 @@ const { data: services } = await supabase
             Active Services
           </h2>
 
-          {cases && cases.length > 0 ? (
-            <div className="space-y-3">
-              {cases.map((item) => (
+         {services && services.length > 0 ? (
+  <div className="space-y-3">
+    {services.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-xl border p-4"
