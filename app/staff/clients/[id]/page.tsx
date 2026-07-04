@@ -253,13 +253,79 @@ const { data: services } = await supabase
          {services && services.length > 0 ? (
   <div className="space-y-3">
     {services.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-xl border p-4"
-                >
-                  {item.title}
-                </div>
-              ))}
+  <div
+    key={item.id}
+    className="rounded-xl border bg-white p-5 transition hover:shadow-md"
+  >
+    <div className="flex items-start justify-between">
+
+      <div>
+
+        <h3 className="text-lg font-semibold">
+          {item.title}
+        </h3>
+
+        <p className="mt-1 text-sm text-slate-500">
+          {item.service_type}
+        </p>
+
+      </div>
+
+      <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+        {item.status}
+      </span>
+
+    </div>
+
+    {item.description && (
+      <p className="mt-4 text-sm text-slate-600">
+        {item.description}
+      </p>
+    )}
+
+    <div className="mt-5 grid gap-4 md:grid-cols-3">
+
+      <div>
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          Priority
+        </p>
+
+        <p className="mt-1 font-medium">
+          {item.priority}
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          Progress
+        </p>
+
+        <p className="mt-1 font-medium">
+          {item.progress}%
+        </p>
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-wide text-slate-500">
+          Due Date
+        </p>
+
+        <p className="mt-1 font-medium">
+          {item.due_date ?? '-'}
+        </p>
+      </div>
+
+    </div>
+
+    <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+      <div
+        className="h-full rounded-full bg-[#1E88E5]"
+        style={{ width: `${item.progress}%` }}
+      />
+    </div>
+
+  </div>
+))}
             </div>
           ) : (
             <p className="text-slate-500">
