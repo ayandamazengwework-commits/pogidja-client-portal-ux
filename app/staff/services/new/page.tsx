@@ -2,10 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 import { Button } from '@/components/ui/button'
-import { NewServiceForm } from '@/components/services/new-service-form''
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { NewServiceForm } from '@/components/services/new-service-form'
 
 export default async function NewServicePage() {
   const supabase = await createClient()
@@ -39,9 +36,7 @@ export default async function NewServicePage() {
 
   return (
     <div className="space-y-8">
-
       <div className="flex items-center justify-between">
-
         <div>
           <h1 className="text-3xl font-bold">
             New Service
@@ -50,7 +45,6 @@ export default async function NewServicePage() {
           <p className="text-slate-500">
             Create a new service.
           </p>
-
         </div>
 
         <Link href="/staff/services">
@@ -58,15 +52,13 @@ export default async function NewServicePage() {
             Back
           </Button>
         </Link>
-
       </div>
 
-     <NewServiceForm
-  clients={clients ?? []}
-  categories={categories ?? []}
-  staff={staff ?? []}
-/>
-
+      <NewServiceForm
+        clients={clients ?? []}
+        categories={categories ?? []}
+        staff={staff ?? []}
+      />
     </div>
   )
 }
