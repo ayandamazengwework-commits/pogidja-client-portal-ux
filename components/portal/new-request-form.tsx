@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 
+import { createRequest } from '@/app/portal/request-service/actions'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,10 +21,19 @@ interface Props {
 export function NewRequestForm({
   categories,
 }: Props) {
-  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [selectedCategory, setSelectedCategory] =
+    useState('')
 
   return (
-    <div className="space-y-8">
+    <form
+      action={createRequest}
+      className="space-y-8"
+    >
+      <input
+        type="hidden"
+        name="categoryId"
+        value={selectedCategory}
+      />
 
       {/* Service Selection */}
 
@@ -32,12 +43,13 @@ export function NewRequestForm({
         </h2>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-
           {categories.map((category) => (
             <button
               key={category.id}
               type="button"
-              onClick={() => setSelectedCategory(category.id)}
+              onClick={() =>
+                setSelectedCategory(category.id)
+              }
               className={`rounded-2xl border p-6 text-left transition ${
                 selectedCategory === category.id
                   ? 'border-[#1E88E5] bg-blue-50'
@@ -53,43 +65,50 @@ export function NewRequestForm({
               </p>
             </button>
           ))}
-
         </div>
       </div>
 
-      {/* Request Details */}
+      {/* Details */}
 
       <div className="space-y-6 rounded-2xl border bg-white p-8">
 
         <div>
-          <Label>
+          <Label htmlFor="title">
             Request Title
           </Label>
 
           <Input
+            id="title"
+            name="title"
+            required
             placeholder="Example: Annual Financial Statements"
           />
         </div>
 
         <div>
-          <Label>
-            Tell us about your request
+          <Label htmlFor="description">
+            Description
           </Label>
 
           <Textarea
+            id="description"
+            name="description"
             rows={6}
+            required
             placeholder="Describe what you need help with..."
           />
         </div>
 
         <div className="flex justify-end">
-          <Button disabled={!selectedCategory}>
+          <Button
+            type="submit"
+            disabled={!selectedCategory}
+          >
             Submit Request
           </Button>
         </div>
 
       </div>
-
-    </div>
+    </form>
   )
 }
