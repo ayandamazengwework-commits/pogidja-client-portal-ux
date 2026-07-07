@@ -11,14 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { StatusBadge } from '@/components/shared/status-badge'
-
-import {
-  clientActiveCases,
-  notifications,
-  STATUS_META,
-} from '@/lib/demo-data'
 
 export default async function ClientDashboard() {
   const supabase = await createClient()
@@ -37,12 +30,25 @@ export default async function ClientDashboard() {
     .eq('id', user.id)
     .single()
 
+  const { data: services } = await supabase
+    .from('services')
+    .select(`
+      *,
+      service_categories (
+        name
+      )
+    `)
+    .eq('client_id', user.id)
+    .order('created_at', { ascending: false })
+
   return (
     <div className="space-y-8">
+
       {/* Welcome */}
 
       <section className="rounded-3xl border bg-white p-8 shadow-sm">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+
           <div>
             <p className="text-sm text-muted-foreground">
               Welcome back,
@@ -53,8 +59,9 @@ export default async function ClientDashboard() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-muted-foreground">
-              View your active services, upload documents and stay informed
-              about your tax and accounting matters.
+              Request accounting, tax and advisory services,
+              upload documents securely and track every request
+              from submission through to completion.
             </p>
           </div>
 
@@ -64,26 +71,30 @@ export default async function ClientDashboard() {
               Request Service
             </Link>
           </Button>
+
         </div>
       </section>
 
-      {/* Quick actions */}
+      {/* Quick Actions */}
 
       <section className="grid gap-4 md:grid-cols-4">
+
         <Link href="/portal/request-service">
           <Card className="transition hover:shadow-md">
             <CardContent className="flex items-center gap-4 p-6">
+
               <PlusCircle className="h-6 w-6 text-primary" />
 
               <div>
                 <h3 className="font-semibold">
-                  New Service
+                  Request Service
                 </h3>
 
                 <p className="text-sm text-muted-foreground">
-                  Submit a request
+                  Submit a new request
                 </p>
               </div>
+
             </CardContent>
           </Card>
         </Link>
@@ -91,17 +102,19 @@ export default async function ClientDashboard() {
         <Link href="/portal/cases">
           <Card className="transition hover:shadow-md">
             <CardContent className="flex items-center gap-4 p-6">
+
               <FolderOpen className="h-6 w-6 text-primary" />
 
               <div>
                 <h3 className="font-semibold">
-                  My Cases
+                  My Requests
                 </h3>
 
                 <p className="text-sm text-muted-foreground">
-                  Track progress
+                  Track your requests
                 </p>
               </div>
+
             </CardContent>
           </Card>
         </Link>
@@ -109,6 +122,7 @@ export default async function ClientDashboard() {
         <Link href="/portal/documents">
           <Card className="transition hover:shadow-md">
             <CardContent className="flex items-center gap-4 p-6">
+
               <FileText className="h-6 w-6 text-primary" />
 
               <div>
@@ -117,9 +131,10 @@ export default async function ClientDashboard() {
                 </h3>
 
                 <p className="text-sm text-muted-foreground">
-                  View files
+                  View uploaded files
                 </p>
               </div>
+
             </CardContent>
           </Card>
         </Link>
@@ -127,82 +142,130 @@ export default async function ClientDashboard() {
         <Link href="/portal/notifications">
           <Card className="transition hover:shadow-md">
             <CardContent className="flex items-center gap-4 p-6">
+
               <Bell className="h-6 w-6 text-primary" />
 
               <div>
                 <h3 className="font-semibold">
                   Notifications
-
-                  {notifications.length > 0 && (
-                    <span className="ml-2 rounded-full bg-primary px-2 py-1 text-xs text-white">
-                      {notifications.length}
-                    </span>
-                  )}
                 </h3>
 
                 <p className="text-sm text-muted-foreground">
                   Latest updates
                 </p>
               </div>
+
             </CardContent>
           </Card>
         </Link>
+
       </section>
 
-      {/* Active Services */}
+      {/* My Requests */}
 
       <section>
+
         <div className="mb-5 flex items-center justify-between">
+
           <h2 className="text-2xl font-semibold">
-            Active Services
+            My Requests
           </h2>
 
           <Button variant="ghost" asChild>
             <Link href="/portal/cases">
-              View all
+              View All
 
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
+
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-2">
-          {clientActiveCases.map((c) => (
-            <Link
-              key={c.id}
-              href={`/portal/cases/${c.id}`}
-            >
-              <Card className="transition hover:border-primary hover:shadow-lg">
-                <CardContent className="space-y-5 p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">
-                        {c.title}
-                      </h3>
+        {services && services.length > 0 ? (
 
-                      <p className="text-sm text-muted-foreground">
-                        {c.reference}
-                      </p>
+          <div className="grid gap-5 lg:grid-cols-2">
+
+            {services.map((service) => (
+
+              <Link
+                key={service.id}
+                href={`/portal/cases/${service.id}`}
+              >
+
+                <Card className="transition hover:border-primary hover:shadow-lg">
+
+                  <CardContent className="space-y-4 p-6">
+
+                    <div className="flex items-start justify-between">
+
+                      <div>
+
+                        <h3 className="font-semibold">
+                          {service.title}
+                        </h3>
+
+                        <p className="text-sm text-muted-foreground">
+                          {service.service_categories?.name ??
+                            service.service_type}
+                        </p>
+
+                      </div>
+
+                      <StatusBadge
+                        status={service.status}
+                      />
+
                     </div>
 
-                    <StatusBadge {...STATUS_META[c.status]} />
-                  </div>
-
-                  <div>
-                    <div className="mb-2 flex justify-between text-sm">
-                      <span>Progress</span>
-
-                      <span>{c.progress}%</span>
+                    <div className="text-sm text-muted-foreground">
+                      Submitted{' '}
+                      {new Date(
+                        service.created_at
+                      ).toLocaleDateString()}
                     </div>
 
-                    <Progress value={c.progress} />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                  </CardContent>
+
+                </Card>
+
+              </Link>
+
+            ))}
+
+          </div>
+
+        ) : (
+
+          <Card>
+
+            <CardContent className="flex flex-col items-center justify-center py-16">
+
+              <FolderOpen className="mb-4 h-12 w-12 text-slate-300" />
+
+              <h3 className="text-xl font-semibold">
+                No Requests Yet
+              </h3>
+
+              <p className="mt-2 text-center text-muted-foreground">
+                Submit your first request and we'll begin
+                working on it as soon as possible.
+              </p>
+
+              <Button asChild className="mt-6">
+                <Link href="/portal/request-service">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Request a Service
+                </Link>
+              </Button>
+
+            </CardContent>
+
+          </Card>
+
+        )}
+
       </section>
+
     </div>
   )
 }
