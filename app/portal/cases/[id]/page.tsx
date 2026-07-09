@@ -10,7 +10,7 @@ import {
 import { notFound } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
-
+import { UploadDocument } from '@/components/portal/upload-document'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -225,9 +225,9 @@ export default async function RequestDetailsPage({
                     Documents
                   </h2>
 
-                  <Button>
-                    Upload
-                  </Button>
+                 <UploadDocument
+  serviceId={service.id}
+/>
 
                 </div>
 
