@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { updateRequestStatus } from './actions'
 
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -161,9 +162,36 @@ export default async function RequestDetailsPage({ params }: Props) {
               Actions
             </h2>
 
-            <Button className="w-full">
-              Change Status
-            </Button>
+       <form action={updateRequestStatus} className="space-y-3">
+
+  <input
+    type="hidden"
+    name="id"
+    value={request.id}
+  />
+
+  <select
+    name="status"
+    defaultValue={request.status}
+    className="w-full rounded-md border p-3"
+  >
+    <option>Submitted</option>
+    <option>Awaiting Documents</option>
+    <option>In Review</option>
+    <option>Working On It</option>
+    <option>Awaiting Client</option>
+    <option>Completed</option>
+    <option>Cancelled</option>
+  </select>
+
+  <Button
+    type="submit"
+    className="w-full"
+  >
+    Update Status
+  </Button>
+
+</form>
 
             <Button
               variant="outline"
