@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-
+import { StatCard } from '@/components/dashboard/stat-card'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { StatusBadge } from '@/components/shared/status-badge'
@@ -207,66 +207,45 @@ return (
 
     {/* Statistics */}
 
-    <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+   <section className="grid gap-6 lg:grid-cols-4">
 
-      <Card>
-        <CardContent className="p-6">
+  <StatCard
+    title="Active Requests"
+    value={activeRequests}
+    subtitle="Currently in progress"
+    icon={FolderOpen}
+    iconBg="bg-blue-100"
+    iconColor="text-blue-700"
+  />
 
-          <p className="text-sm text-muted-foreground">
-            Active Requests
-          </p>
+  <StatCard
+    title="Awaiting Response"
+    value={awaitingResponse}
+    subtitle="Needs your attention"
+    icon={Clock3}
+    iconBg="bg-amber-100"
+    iconColor="text-amber-700"
+  />
 
-          <h2 className="mt-2 text-4xl font-bold">
-            {activeRequests}
-          </h2>
+  <StatCard
+    title="Completed"
+    value={completedRequests}
+    subtitle="Successfully delivered"
+    icon={ArrowRight}
+    iconBg="bg-green-100"
+    iconColor="text-green-700"
+  />
 
-        </CardContent>
-      </Card>
+  <StatCard
+    title="Documents"
+    value={documentCount ?? 0}
+    subtitle="Securely stored"
+    icon={FileText}
+    iconBg="bg-purple-100"
+    iconColor="text-purple-700"
+  />
 
-      <Card>
-        <CardContent className="p-6">
-
-          <p className="text-sm text-muted-foreground">
-            Awaiting Response
-          </p>
-
-          <h2 className="mt-2 text-4xl font-bold">
-            {awaitingResponse}
-          </h2>
-
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-
-          <p className="text-sm text-muted-foreground">
-            Completed
-          </p>
-
-          <h2 className="mt-2 text-4xl font-bold">
-            {completedRequests}
-          </h2>
-
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-
-          <p className="text-sm text-muted-foreground">
-            Documents
-          </p>
-
-          <h2 className="mt-2 text-4xl font-bold">
-            {documentCount ?? 0}
-          </h2>
-
-        </CardContent>
-      </Card>
-
-    </section>
-
+</section>
     {/* Recent Requests */}
 
     <section>
