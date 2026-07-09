@@ -123,7 +123,48 @@ return (
 
     {/* Hero */}
 
-    <section className="rounded-3xl border bg-white p-8 shadow-sm">
+   <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-10 text-white shadow-xl">
+
+  <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+  <div className="absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-blue-400/10 blur-3xl" />
+
+  <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+
+    <div className="max-w-3xl">
+
+      <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-200">
+        POG ADVISORY CLIENT PORTAL
+      </p>
+
+      <h1 className="mt-4 text-5xl font-bold leading-tight">
+        {greeting},{' '}
+        {profile?.first_name ??
+          profile?.company_name ??
+          'Client'}
+      </h1>
+
+      <p className="mt-6 text-lg leading-8 text-slate-300">
+        Track every request, upload documents securely,
+        communicate directly with your accountant and
+        monitor progress in real time.
+      </p>
+
+    </div>
+
+    <Button
+      asChild
+      size="lg"
+      className="h-14 rounded-xl bg-white px-8 text-slate-900 hover:bg-slate-100"
+    >
+      <Link href="/portal/request-service">
+        <PlusCircle className="mr-2 h-5 w-5" />
+        New Request
+      </Link>
+    </Button>
+
+  </div>
+
+</section>
 
       <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
 
