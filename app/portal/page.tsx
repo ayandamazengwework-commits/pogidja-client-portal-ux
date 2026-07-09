@@ -208,124 +208,181 @@ return (
   />
 
 </section>
-    {/* Recent Requests */}
+  {/* Recent Requests */}
 
-    <section>
+<section className="space-y-6">
 
-      <div className="mb-6 flex items-center justify-between">
+  <div className="flex items-end justify-between">
 
-        <div>
+    <div>
+      <h2 className="text-3xl font-bold tracking-tight">
+        Recent Requests
+      </h2>
 
-          <h2 className="text-2xl font-semibold">
-            Recent Requests
-          </h2>
+      <p className="mt-1 text-muted-foreground">
+        Follow every service request from submission to completion.
+      </p>
+    </div>
 
-          <p className="text-muted-foreground">
-            Your latest service requests.
-          </p>
+    <Button
+      variant="ghost"
+      asChild
+      className="rounded-xl"
+    >
+      <Link href="/portal/cases">
+        View All
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </Link>
+    </Button>
 
-        </div>
+  </div>
 
-        <Button
-          variant="ghost"
-          asChild
+  {services && services.length > 0 ? (
+
+    <div className="grid gap-5 xl:grid-cols-2">
+
+      {services.map((service) => (
+
+        <Link
+          key={service.id}
+          href={`/portal/cases/${service.id}`}
         >
-          <Link href="/portal/my-requests">
-            View All
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
 
-      </div>
+          <Card className="group overflow-hidden rounded-3xl border-0 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
 
-      {recentRequests.length > 0 ? (
+            <div className="h-1 bg-gradient-to-r from-blue-600 to-sky-400" />
 
-        <div className="space-y-4">
+            <CardContent className="space-y-6 p-7">
 
-          {recentRequests.map((service) => (
+              <div className="flex items-start justify-between">
 
-            <Link
-              key={service.id}
-              href={`/portal/my-requests/${service.id}`}
-            >
+                <div>
 
-              <Card className="transition hover:shadow-md">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                    {service.service_categories?.name ??
+                      service.service_type}
+                  </p>
 
-                <CardContent className="flex items-center justify-between p-6">
+                  <h3 className="mt-2 text-xl font-bold text-slate-900">
+                    {service.title}
+                  </h3>
 
-                  <div>
+                </div>
 
-                    <h3 className="font-semibold text-lg">
-                      {service.title}
-                    </h3>
+                <StatusBadge
+                  status={service.status}
+                />
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {service.service_categories?.name ??
-                        service.service_type}
-                    </p>
+              </div>
 
-                    <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="space-y-3">
 
-                      <Clock3 className="h-4 w-4" />
+                <div>
 
-                      Submitted{' '}
-                      {new Date(
-                        service.created_at
-                      ).toLocaleDateString()}
+                  <div className="mb-2 flex justify-between text-sm">
 
-                    </div>
+                    <span className="text-slate-500">
+                      Progress
+                    </span>
+
+                    <span className="font-semibold">
+                      {service.progress ?? 0}%
+                    </span>
 
                   </div>
 
-                  <StatusBadge
-                    status={service.status}
-                  />
+                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
 
-                </CardContent>
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-400"
+                      style={{
+                        width: `${service.progress ?? 0}%`,
+                      }}
+                    />
 
-              </Card>
+                  </div>
 
-            </Link>
+                </div>
 
-          ))}
+              </div>
+
+              <div className="flex items-center justify-between border-t pt-5">
+
+                <div>
+
+                  <p className="text-xs uppercase tracking-wide text-slate-400">
+                    Submitted
+                  </p>
+
+                  <p className="font-medium">
+                    {new Date(
+                      service.created_at
+                    ).toLocaleDateString()}
+                  </p>
+
+                </div>
+
+                <span className="flex items-center gap-2 font-semibold text-blue-600 transition group-hover:gap-3">
+
+                  Open Request
+
+                  <ArrowRight className="h-4 w-4" />
+
+                </span>
+
+              </div>
+
+            </CardContent>
+
+          </Card>
+
+        </Link>
+
+      ))}
+
+    </div>
+
+  ) : (
+
+    <Card className="overflow-hidden rounded-3xl border-0 shadow-sm">
+
+      <CardContent className="flex flex-col items-center py-24">
+
+        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-slate-100">
+
+          <FolderOpen className="h-12 w-12 text-slate-400" />
 
         </div>
 
-      ) : (
+        <h3 className="text-3xl font-bold">
+          Your workspace is ready
+        </h3>
 
-        <Card>
+        <p className="mt-4 max-w-xl text-center text-lg leading-8 text-slate-500">
+          Once you submit your first service request,
+          you'll be able to track progress, upload
+          additional documents, communicate with your
+          accountant and receive updates in real time.
+        </p>
 
-          <CardContent className="flex flex-col items-center py-20">
+        <Button
+          asChild
+          size="lg"
+          className="mt-10 rounded-xl px-8"
+        >
+          <Link href="/portal/request-service">
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Create Your First Request
+          </Link>
+        </Button>
 
-            <FolderOpen className="mb-6 h-12 w-12 text-slate-300" />
+      </CardContent>
 
-            <h3 className="text-2xl font-semibold">
-              No Requests Yet
-            </h3>
+    </Card>
 
-            <p className="mt-3 max-w-md text-center text-muted-foreground">
-              When you submit your first service request it
-              will appear here together with its status,
-              documents and updates.
-            </p>
+  )}
 
-            <Button
-              asChild
-              className="mt-8"
-            >
-              <Link href="/portal/request-service">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Request Your First Service
-              </Link>
-            </Button>
-
-          </CardContent>
-
-        </Card>
-
-      )}
-
-    </section>
+</section>
 
     {/* Activity */}
 
