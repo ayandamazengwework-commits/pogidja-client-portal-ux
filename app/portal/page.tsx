@@ -166,45 +166,7 @@ return (
 
 </section>
 
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-
-        <div>
-
-          <p className="text-sm font-medium uppercase tracking-wide text-primary">
-            POG Advisory Client Portal
-          </p>
-
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            {greeting},{' '}
-            {profile?.first_name ??
-              profile?.company_name ??
-              'Client'}
-          </h1>
-
-          <p className="mt-4 max-w-2xl text-muted-foreground leading-7">
-            Welcome back to your secure client workspace.
-            Track your accounting, tax and advisory requests,
-            securely exchange documents and stay updated on
-            every stage of your work with POG Advisory.
-          </p>
-
-        </div>
-
-        <Button
-          asChild
-          size="lg"
-          className="h-12 px-8"
-        >
-          <Link href="/portal/request-service">
-            <PlusCircle className="mr-2 h-5 w-5" />
-            Request a Service
-          </Link>
-        </Button>
-
-      </div>
-
-    </section>
-
+   
     {/* Statistics */}
 
    <section className="grid gap-6 lg:grid-cols-4">
