@@ -28,6 +28,7 @@ export function NewRequestForm({
     <form
       action={createRequest}
       className="space-y-8"
+      encType="multipart/form-data"
     >
       <input
         type="hidden"
@@ -47,9 +48,7 @@ export function NewRequestForm({
             <button
               key={category.id}
               type="button"
-              onClick={() =>
-                setSelectedCategory(category.id)
-              }
+              onClick={() => setSelectedCategory(category.id)}
               className={`rounded-2xl border p-6 text-left transition ${
                 selectedCategory === category.id
                   ? 'border-[#1E88E5] bg-blue-50'
@@ -97,6 +96,27 @@ export function NewRequestForm({
             required
             placeholder="Describe what you need help with..."
           />
+        </div>
+
+        {/* Documents */}
+
+        <div>
+          <Label htmlFor="documents">
+            Supporting Documents
+          </Label>
+
+          <Input
+            id="documents"
+            name="documents"
+            type="file"
+            multiple
+            className="mt-2"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+          />
+
+          <p className="mt-2 text-sm text-slate-500">
+            Upload any supporting documents required for your request.
+          </p>
         </div>
 
         <div className="flex justify-end">
