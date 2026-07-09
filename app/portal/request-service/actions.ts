@@ -19,7 +19,6 @@ export async function createRequest(formData: FormData) {
   const description = formData.get('description') as string
   const categoryId = formData.get('categoryId') as string
 
-  // Find the client's record
   const { data: client, error: clientError } = await supabase
     .from('clients')
     .select('id')
@@ -30,7 +29,6 @@ export async function createRequest(formData: FormData) {
     throw new Error('Client profile not found.')
   }
 
-  // Create the request
   const { data: service, error } = await supabase
     .from('services')
     .insert({
@@ -47,10 +45,9 @@ export async function createRequest(formData: FormData) {
     .single()
 
   if (error) {
-    throw new Error(error.message)
+    throw error
   }
 
-  // Activity log
   await supabase.from('activity_logs').insert({
     user_id: user.id,
     role: 'client',
