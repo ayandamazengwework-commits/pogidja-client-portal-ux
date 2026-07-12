@@ -30,38 +30,38 @@ export function NewRequestForm({
       className="space-y-8"
       encType="multipart/form-data"
     >
-      <input
-        type="hidden"
-        name="categoryId"
-        value={selectedCategory}
-      />
 
-      {/* Service Selection */}
-<div>
-  <Label htmlFor="service">
-    Service
-  </Label>
+      {/* Service */}
 
-  <select
-    id="service"
-    className="mt-2 h-12 w-full rounded-xl border bg-white px-4"
-    value={selectedCategory}
-    onChange={(e) => setSelectedCategory(e.target.value)}
-  >
-    <option value="">
-      Select a service...
-    </option>
+      <div>
+        <Label htmlFor="service">
+          Service
+        </Label>
 
-    {categories.map((category) => (
-      <option
-        key={category.id}
-        value={category.id}
-      >
-        {category.name}
-      </option>
-    ))}
-  </select>
-</div>
+        <select
+          id="service"
+          name="categoryId"
+          required
+          value={selectedCategory}
+          onChange={(e) =>
+            setSelectedCategory(e.target.value)
+          }
+          className="mt-2 h-12 w-full rounded-xl border border-slate-300 bg-white px-4 outline-none focus:border-[#1E88E5]"
+        >
+          <option value="">
+            Select a service...
+          </option>
+
+          {categories.map((category) => (
+            <option
+              key={category.id}
+              value={category.id}
+            >
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Details */}
 
@@ -111,15 +111,13 @@ export function NewRequestForm({
           />
 
           <p className="mt-2 text-sm text-slate-500">
-            Upload any supporting documents required for your request.
+            Upload any supporting documents required for your
+            request.
           </p>
         </div>
 
         <div className="flex justify-end">
-          <Button
-            type="submit"
-            disabled={!selectedCategory}
-          >
+          <Button type="submit">
             Submit Request
           </Button>
         </div>
