@@ -258,12 +258,18 @@ export default async function RequestDetailsPage({
 
                         </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                        >
-                          View
-                        </Button>
+                       <Button
+  asChild
+  variant="outline"
+  size="sm"
+>
+  <Link
+    href={`/api/documents/${document.id}`}
+    target="_blank"
+  >
+    View
+  </Link>
+</Button>
 
                       </div>
 
