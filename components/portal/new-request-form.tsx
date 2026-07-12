@@ -37,35 +37,31 @@ export function NewRequestForm({
       />
 
       {/* Service Selection */}
+<div>
+  <Label htmlFor="service">
+    Service
+  </Label>
 
-      <div>
-        <h2 className="mb-4 text-2xl font-semibold">
-          Choose a Service
-        </h2>
+  <select
+    id="service"
+    className="mt-2 h-12 w-full rounded-xl border bg-white px-4"
+    value={selectedCategory}
+    onChange={(e) => setSelectedCategory(e.target.value)}
+  >
+    <option value="">
+      Select a service...
+    </option>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => setSelectedCategory(category.id)}
-              className={`rounded-2xl border p-6 text-left transition ${
-                selectedCategory === category.id
-                  ? 'border-[#1E88E5] bg-blue-50'
-                  : 'hover:border-slate-300'
-              }`}
-            >
-              <h3 className="font-semibold">
-                {category.name}
-              </h3>
-
-              <p className="mt-2 text-sm text-slate-500">
-                Select this service
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+    {categories.map((category) => (
+      <option
+        key={category.id}
+        value={category.id}
+      >
+        {category.name}
+      </option>
+    ))}
+  </select>
+</div>
 
       {/* Details */}
 
