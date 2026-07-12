@@ -1,7 +1,7 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
 
 import { createClient } from '@/lib/supabase/server'
 
@@ -32,17 +32,20 @@ export async function uploadDocument(
 
   const storagePath = `${serviceId}/${fileName}`
 
+  // Upload file to Supabase Storage
   const { error: uploadError } =
     await supabase.storage
-      .from('service_documents')
+      .from('service-documents')
       .upload(storagePath, file, {
         upsert: false,
       })
 
   if (uploadError) {
+    console.error(uploadError)
     throw uploadError
   }
 
+  // Save document record
   const { error: documentError } =
     await supabase
       .from('service_documents')
@@ -52,16 +55,18 @@ export async function uploadDocument(
         uploaded_by_role: 'client',
         file_name: file.name,
         storage_path: storagePath,
-        bucket_name: 'service_documents',
+        bucket_name: 'service-documents',
         mime_type: file.type,
         file_size: file.size,
         document_type: 'Supporting Document',
       })
 
   if (documentError) {
+    console.error(documentError)
     throw documentError
   }
 
+  // Activity Log
   await supabase
     .from('activity_logs')
     .insert({
