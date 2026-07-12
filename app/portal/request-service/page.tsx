@@ -15,7 +15,7 @@ export default async function RequestServicePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <pre>{JSON.stringify(categories, null, 2)}</pre>
+     
 
       <NewRequestForm
         categories={categories ?? []}
