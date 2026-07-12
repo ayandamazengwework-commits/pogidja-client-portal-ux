@@ -58,7 +58,7 @@ export async function uploadDocument(
         bucket_name: 'service-documents',
         mime_type: file.type,
         file_size: file.size,
-        document_type: 'Supporting Document',
+       document_type: 'client',
       })
 
   if (documentError) {
