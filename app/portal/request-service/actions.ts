@@ -57,5 +57,5 @@ export async function createRequest(formData: FormData) {
     entity_id: service.id,
   })
 
-  redirect('/portal/my-requests')
+  redirect('/portal/cases')
 }
