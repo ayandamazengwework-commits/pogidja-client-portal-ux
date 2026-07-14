@@ -54,18 +54,48 @@ export default async function DocumentsPage() {
 
   return (
     <div className="space-y-8">
+<section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
-      <div>
+  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
-        <h1 className="text-4xl font-bold">
-          Documents
-        </h1>
+    <div>
 
-        <p className="mt-2 text-muted-foreground">
-          View every document uploaded for your requests.
+      <p className="text-sm uppercase tracking-[0.3em] text-blue-200">
+        CLIENT DOCUMENTS
+      </p>
+
+      <h1 className="mt-3 text-3xl font-bold md:text-5xl">
+        Documents
+      </h1>
+
+      <p className="mt-4 max-w-2xl text-slate-300">
+        Securely access every document shared
+        between you and POG Advisory.
+      </p>
+
+    </div>
+
+    <Card className="border-0 bg-white/10 backdrop-blur">
+
+      <CardContent className="p-6 text-center">
+
+        <FileText className="mx-auto mb-3 h-10 w-10 text-blue-200" />
+
+        <p className="text-sm text-slate-300">
+          Total Documents
         </p>
 
-      </div>
+        <p className="mt-2 text-4xl font-bold">
+          {documents.length}
+        </p>
+
+      </CardContent>
+
+    </Card>
+
+  </div>
+
+</section>
 
       <div className="relative">
 
@@ -91,16 +121,19 @@ export default async function DocumentsPage() {
 
             return (
 
-              <Card
-                key={document.id}
-                className="rounded-2xl"
-              >
-
-                <CardContent className="flex items-center justify-between p-6">
+             <Card
+  key={document.id}
+  className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg"
+>
+                <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
 
                   <div className="flex items-center gap-4">
 
-                    <FileText className="h-10 w-10 text-[#1E88E5]" />
+                    <div className="rounded-2xl bg-blue-100 p-3">
+
+  <FileText className="h-7 w-7 text-blue-700" />
+
+</div>
 
                     <div>
 
@@ -111,7 +144,15 @@ export default async function DocumentsPage() {
                       <p className="text-sm text-muted-foreground">
                         {service?.title}
                       </p>
+<p className="mt-2 text-xs text-slate-500">
 
+  {Math.round(document.file_size / 1024)} KB
+
+  {" • "}
+
+  {document.mime_type}
+
+</p>
                       <p className="text-xs text-slate-400 mt-1">
 
                         Uploaded by{' '}
@@ -131,10 +172,10 @@ export default async function DocumentsPage() {
 
                   </div>
 
-                  <Button
-                    asChild
-                    variant="outline"
-                  >
+                 <Button
+  asChild
+  className="w-full md:w-auto"
+>
 
                     <Link
                       href={`/api/documents/${document.id}`}
