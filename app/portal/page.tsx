@@ -65,12 +65,24 @@ export default async function ClientDashboard() {
      Documents
   ------------------------------------------- */
 
-  const { count: documentCount } = await supabase
-    .from('service_documents')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
+ let documentCount = 0
+
+if (client) {
+  const serviceIds =
+    services?.map((service) => service.id) ?? []
+
+  if (serviceIds.length > 0) {
+    const { count } = await supabase
+      .from('service_documents')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .in('service_id', serviceIds)
+
+    documentCount = count ?? 0
+  }
+}
 
   /* ------------------------------------------
      Activity
@@ -123,7 +135,7 @@ return (
 
     {/* Hero */}
 
-   <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-10 text-white shadow-xl">
+  <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] px-6 py-8 text-white shadow-xl sm:px-8 sm:py-10 lg:px-10">
 
   <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
   <div className="absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-blue-400/10 blur-3xl" />
@@ -136,14 +148,14 @@ return (
         POG ADVISORY CLIENT PORTAL
       </p>
 
-      <h1 className="mt-4 text-5xl font-bold leading-tight">
+     <h1 className="mt-4 text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
         {greeting},{' '}
         {profile?.first_name ??
           profile?.company_name ??
           'Client'}
       </h1>
 
-      <p className="mt-6 text-lg leading-8 text-slate-300">
+     <p className="mt-4 text-base leading-7 text-slate-300 sm:text-lg">
         Track every request, upload documents securely,
         communicate directly with your accountant and
         monitor progress in real time.
@@ -151,10 +163,11 @@ return (
 
     </div>
 
-    <Button
-      asChild
-      size="lg"
-      className="h-14 rounded-xl bg-white px-8 text-slate-900 hover:bg-slate-100"
+   <Button
+  asChild
+  size="lg"
+  className="h-14 w-full rounded-xl bg-white px-8 text-slate-900 hover:bg-slate-100 sm:w-auto"
+
     >
       <Link href="/portal/request-service">
         <PlusCircle className="mr-2 h-5 w-5" />
@@ -169,7 +182,7 @@ return (
    
     {/* Statistics */}
 
-   <section className="grid gap-6 lg:grid-cols-4">
+   <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
   <StatCard
     title="Active Requests"
@@ -239,9 +252,9 @@ return (
 
   {services && services.length > 0 ? (
 
-    <div className="grid gap-5 xl:grid-cols-2">
+   <div className="grid gap-5 lg:grid-cols-2">
 
-      {services.map((service) => (
+   {recentRequests.map((service) => (
 
         <Link
           key={service.id}
@@ -252,9 +265,9 @@ return (
 
             <div className="h-1 bg-gradient-to-r from-blue-600 to-sky-400" />
 
-            <CardContent className="space-y-6 p-7">
+            <CardContent className="space-y-5 p-5 sm:p-7">
 
-              <div className="flex items-start justify-between">
+             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
                 <div>
 
