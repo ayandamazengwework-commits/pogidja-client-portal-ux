@@ -1,23 +1,77 @@
+import Link from 'next/link'
+import {
+  ArrowRight,
+  Briefcase,
+  CheckCircle2,
+  Clock3,
+  FileText,
+  Users,
+} from 'lucide-react'
+
 import { createClient } from '@/lib/supabase/server'
 import { getRecentActivity } from '@/lib/dashboard/activity'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default async function StaffDashboard() {
   const supabase = await createClient()
 
   const activity = await getRecentActivity()
 
-  const { count: totalClients } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('role', 'client')
+const { count: totalClients } = await supabase
+  .from('clients')
+  .select('*', {
+    count: 'exact',
+    head: true,
+  })
 
-  const { count: totalServices } = await supabase
-    .from('services')
-    .select('*', { count: 'exact', head: true })
+const { count: totalServices } = await supabase
+  .from('services')
+  .select('*', {
+    count: 'exact',
+    head: true,
+  })
 
-  const { count: totalDocuments } = await supabase
-    .from('documents')
-    .select('*', { count: 'exact', head: true })
+const { count: totalDocuments } = await supabase
+  .from('service_documents')
+  .select('*', {
+    count: 'exact',
+    head: true,
+  })
+
+const { count: activeCases } = await supabase
+  .from('services')
+  .select('*', {
+    count: 'exact',
+    head: true,
+  })
+  .neq('status', 'Completed')
+
+const { count: completedCases } = await supabase
+  .from('services')
+  .select('*', {
+    count: 'exact',
+    head: true,
+  })
+  .eq('status', 'Completed')
+
+const { data: recentClients } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('role', 'client')
+  .order('created_at', {
+    ascending: false,
+  })
+  .limit(5)
+
+const { data: recentServices } = await supabase
+  .from('services')
+  .select('*')
+  .order('created_at', {
+    ascending: false,
+  })
+  .limit(5)
 
   return (
     <div className="space-y-8 p-10">
