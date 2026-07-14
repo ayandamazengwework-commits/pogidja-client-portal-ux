@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { redirect } from 'next/navigation'
+
 import { createClient } from '@/lib/supabase/server'
 import { AppShell, type NavItem } from '@/components/shared/app-shell'
 
@@ -13,7 +15,9 @@ export default async function PortalLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return children
+  if (!user) {
+    redirect('/auth/login')
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -21,22 +25,31 @@ export default async function PortalLayout({
     .eq('id', user.id)
     .single()
 
-  const { count: unreadNotifications } = await supabase
-    .from('activity_logs')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq('user_id', user.id)
+  const { count: unreadNotifications = 0 } =
+    await supabase
+      .from('activity_logs')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('user_id', user.id)
 
-  const { count: unreadMessages } = await supabase
-    .from('messages')
-    .select('*', {
-      count: 'exact',
-      head: true,
-    })
-    .eq('recipient_id', user.id)
-    .eq('is_read', false)
+  const { count: unreadMessages = 0 } =
+    await supabase
+      .from('messages')
+      .select('*', {
+        count: 'exact',
+        head: true,
+      })
+      .eq('recipient_id', user.id)
+      .eq('read', false)
+
+  const fullName = [
+    profile?.first_name,
+    profile?.last_name,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   const nav: NavItem[] = [
     {
@@ -58,7 +71,7 @@ export default async function PortalLayout({
       label: 'Messages',
       href: '/portal/messages',
       icon: 'message',
-      badge: unreadMessages ?? 0,
+      badge: unreadMessages,
     },
     {
       label: 'Documents',
@@ -69,7 +82,7 @@ export default async function PortalLayout({
       label: 'Notifications',
       href: '/portal/notifications',
       icon: 'bell',
-      badge: unreadNotifications ?? 0,
+      badge: unreadNotifications,
     },
     {
       label: 'Profile',
@@ -83,13 +96,13 @@ export default async function PortalLayout({
       nav={nav}
       user={{
         name:
-          `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() ||
+          fullName ||
           profile?.company_name ||
           'Client',
         email: user.email ?? '',
         role: 'Client',
       }}
-      notifications={unreadNotifications ?? 0}
+      notifications={unreadNotifications}
       notificationsHref="/portal/notifications"
       profileHref="/portal/profile"
       searchPlaceholder="Search requests..."
