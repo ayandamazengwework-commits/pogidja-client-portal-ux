@@ -94,15 +94,19 @@ export default async function PortalLayout({
   return (
     <AppShell
       nav={nav}
-      user={{
-        name:
-          fullName ||
-          profile?.company_name ||
-          'Client',
-        email: user.email ?? '',
-        role: 'Client',
-      }}
-      notifications={unreadNotifications}
+     user={{
+  name:
+    `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() ||
+    profile?.company_name ||
+    (user.email?.split('@')[0] ?? 'User'),
+
+  email: user.email ?? '',
+
+  role:
+    profile?.company_name
+      ? profile.company_name
+      : 'Client',
+}}tions={unreadNotifications}
       notificationsHref="/portal/notifications"
       profileHref="/portal/profile"
       searchPlaceholder="Search requests..."
