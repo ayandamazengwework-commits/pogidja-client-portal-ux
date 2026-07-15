@@ -1,7 +1,5 @@
-import Link from 'next/link'
 import {
   ArrowRight,
-  Briefcase,
   CheckCircle2,
   Clock3,
   FileText,
@@ -418,4 +416,6 @@ return (
       </Card>
 
     </section>
+  </div>
+)
 }
