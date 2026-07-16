@@ -15,15 +15,28 @@ export default async function PortalLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Not logged in
   if (!user) {
     redirect('/auth/login')
   }
 
-  const { data: profile } = await supabase
+  // Get logged in profile
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
+
+  // Invalid profile
+  if (error || !profile) {
+    console.error(error)
+    redirect('/auth/login')
+  }
+
+  // Only clients may access the client portal
+  if (profile.role !== 'client') {
+    redirect('/staff')
+  }
 
   const { count: unreadNotifications = 0 } =
     await supabase
@@ -43,13 +56,6 @@ export default async function PortalLayout({
       })
       .eq('recipient_id', user.id)
       .eq('read', false)
-
-  const fullName = [
-    profile?.first_name,
-    profile?.last_name,
-  ]
-    .filter(Boolean)
-    .join(' ')
 
   const nav: NavItem[] = [
     {
@@ -94,19 +100,18 @@ export default async function PortalLayout({
   return (
     <AppShell
       nav={nav}
-     user={{
-  name:
-    `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() ||
-    profile?.company_name ||
-    (user.email?.split('@')[0] ?? 'User'),
+      user={{
+        name:
+          `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() ||
+          profile.company_name ||
+          user.email?.split('@')[0] ||
+          'Client',
 
-  email: user.email ?? '',
+        email: user.email ?? '',
 
-  role:
-    profile?.company_name
-      ? profile.company_name
-      : 'Client',
-}}tions={unreadNotifications}
+        role: profile.company_name ?? 'Client',
+      }}
+      notifications={unreadNotifications}
       notificationsHref="/portal/notifications"
       profileHref="/portal/profile"
       searchPlaceholder="Search requests..."
