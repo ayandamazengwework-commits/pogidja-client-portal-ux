@@ -16,7 +16,9 @@ export default async function StaffLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
+console.log('Logged in user ID:', user?.id)
+console.log('Logged in email:', user?.email)
+  
   // Protect all staff pages
   if (!user) {
     redirect('/auth/staff-login')
