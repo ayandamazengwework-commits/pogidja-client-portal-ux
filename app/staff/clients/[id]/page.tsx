@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { ClientActivity } from '@/components/staff/client-activity'
 
 interface Props {
   params: Promise<{
@@ -190,4 +191,7 @@ export default async function ClientProfilePage({
 
     </div>
   )
+  <ClientActivity
+  clientId={client.id}
+/>
 }
