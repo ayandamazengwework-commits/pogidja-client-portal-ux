@@ -1,199 +1,139 @@
-import {
-  Users,
-  Briefcase,
-  FileText,
-  MessageSquare,
-  ArrowRight,
-  PlusCircle,
-} from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
+import { ArrowLeft, Loader2, Mail, CheckCircle2 } from 'lucide-react'
+
+import { createClient } from '@/lib/supabase/client'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { StatCard } from '@/components/staff/stat-card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
-export default function StaffDashboard() {
+export default function ForgotPasswordPage() {
+  const supabase = createClient()
+
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    setLoading(true)
+    setError('')
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setSent(true)
+    }
+
+    setLoading(false)
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="mx-auto flex min-h-screen max-w-md items-center px-6">
+      <Card className="w-full rounded-3xl">
+        <CardHeader>
+          <CardTitle className="text-3xl">
+            Forgot Password
+          </CardTitle>
 
-      {/* Welcome */}
+          <CardDescription>
+            Enter your email and we'll send you a secure password reset link.
+          </CardDescription>
+        </CardHeader>
 
-      <section className="rounded-3xl border bg-white p-8 shadow-sm">
+        <CardContent>
+          {sent ? (
+            <div className="space-y-6 text-center">
 
-        <div className="flex items-center justify-between">
+              <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
 
-          <div>
-
-            <p className="text-sm text-slate-500">
-              Good morning 👋
-            </p>
-
-            <h1 className="mt-2 text-4xl font-bold">
-              Welcome back, Thandiwe
-            </h1>
-
-            <p className="mt-3 max-w-2xl text-slate-600">
-              Here's an overview of your practice today.
-            </p>
-
-          </div>
-
-          <Button asChild size="lg">
-
-            <Link href="/staff/services/new">
-
-              <PlusCircle className="mr-2 h-5 w-5" />
-
-              New Service
-
-            </Link>
-
-          </Button>
-
-        </div>
-
-      </section>
-
-      {/* Stats */}
-
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-
-        <StatCard
-          title="Clients"
-          value={124}
-          subtitle="Registered clients"
-          icon={<Users className="h-8 w-8 text-blue-600" />}
-        />
-
-        <StatCard
-          title="Active Services"
-          value={36}
-          subtitle="Currently in progress"
-          icon={<Briefcase className="h-8 w-8 text-blue-600" />}
-        />
-
-        <StatCard
-          title="Documents"
-          value={89}
-          subtitle="Awaiting review"
-          icon={<FileText className="h-8 w-8 text-blue-600" />}
-        />
-
-        <StatCard
-          title="Messages"
-          value={12}
-          subtitle="Unread conversations"
-          icon={<MessageSquare className="h-8 w-8 text-blue-600" />}
-        />
-
-      </section>
-
-      {/* Lower Section */}
-
-      <section className="grid gap-6 lg:grid-cols-2">
-
-        {/* Recent Activity */}
-
-        <Card>
-
-          <CardContent className="p-6">
-
-            <div className="mb-6 flex items-center justify-between">
-
-              <h2 className="text-xl font-semibold">
-                Recent Activity
+              <h2 className="text-2xl font-bold">
+                Email Sent
               </h2>
 
-              <Button variant="ghost" size="sm">
+              <p className="text-muted-foreground">
+                Check your inbox for your password reset email.
+              </p>
 
-                View All
-
-                <ArrowRight className="ml-2 h-4 w-4" />
-
+              <Button asChild className="w-full">
+                <Link href="/auth/login">
+                  Return to Login
+                </Link>
               </Button>
 
             </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
 
-            <div className="space-y-4">
+              <div>
+                <Label>Email Address</Label>
 
-              <div className="rounded-xl border p-4">
-                John Smith uploaded Company Registration.pdf
+                <div className="relative mt-2">
+
+                  <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+
+                  <Input
+                    type="email"
+                    required
+                    className="h-12 pl-12"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+
+                </div>
+
               </div>
 
-              <div className="rounded-xl border p-4">
-                Payroll service completed
-              </div>
-
-              <div className="rounded-xl border p-4">
-                New VAT Registration request received
-              </div>
-
-              <div className="rounded-xl border p-4">
-                Sarah Williams sent a new message
-              </div>
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-        {/* Upcoming */}
-
-        <Card>
-
-          <CardContent className="p-6">
-
-            <h2 className="mb-6 text-xl font-semibold">
-              Upcoming Deadlines
-            </h2>
-
-            <div className="space-y-4">
-
-              <div className="rounded-xl border p-4">
-
-                <p className="font-semibold">
-                  VAT Returns
+              {error && (
+                <p className="text-sm text-red-600">
+                  {error}
                 </p>
+              )}
 
-                <p className="text-sm text-slate-500">
-                  Due in 3 days
-                </p>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12"
+              >
+                {loading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
 
-              </div>
+                Send Reset Link
 
-              <div className="rounded-xl border p-4">
+              </Button>
 
-                <p className="font-semibold">
-                  Payroll Submission
-                </p>
+              <Button
+                asChild
+                variant="ghost"
+                className="w-full"
+              >
+                <Link href="/auth/login">
 
-                <p className="text-sm text-slate-500">
-                  Due tomorrow
-                </p>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
 
-              </div>
+                  Back to Login
 
-              <div className="rounded-xl border p-4">
+                </Link>
+              </Button>
 
-                <p className="font-semibold">
-                  Annual Returns
-                </p>
-
-                <p className="text-sm text-slate-500">
-                  Due next week
-                </p>
-
-              </div>
-
-            </div>
-
-          </CardContent>
-
-        </Card>
-
-      </section>
-
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }
