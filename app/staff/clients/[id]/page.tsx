@@ -21,12 +21,8 @@ export default async function ClientProfilePage({
     .from('clients')
     .select(`
       *,
-      profile:profiles(
-        *
-      ),
-      company:companies(
-        *
-      )
+      profile:profiles(*),
+      company:companies(*)
     `)
     .eq('id', id)
     .single()
@@ -39,27 +35,31 @@ export default async function ClientProfilePage({
     .from('services')
     .select('*')
     .eq('client_id', id)
-    .order('created_at', { ascending: false })
+    .order('created_at', {
+      ascending: false,
+    })
 
   const { data: activity } = await supabase
     .from('activity_logs')
     .select('*')
     .eq('user_id', client.profile.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', {
+      ascending: false,
+    })
 
   return (
     <div className="space-y-8">
 
       {/* Header */}
 
-      <Card>
+      <Card className="rounded-3xl border-0 shadow-sm">
         <CardContent className="p-8">
 
           <div className="flex items-start gap-5">
 
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#1E88E5] text-2xl font-bold text-white">
-              {client.profile.first_name.charAt(0)}
-              {client.profile.last_name.charAt(0)}
+              {client.profile.first_name?.charAt(0)}
+              {client.profile.last_name?.charAt(0)}
             </div>
 
             <div>
@@ -69,7 +69,7 @@ export default async function ClientProfilePage({
               </h1>
 
               <p className="text-slate-500">
-                {client.company?.name}
+                {client.company?.name ?? 'No company'}
               </p>
 
               <div className="mt-3 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
@@ -83,23 +83,43 @@ export default async function ClientProfilePage({
           <div className="mt-8 grid gap-6 md:grid-cols-2">
 
             <div>
-              <p className="text-sm text-slate-500">Email</p>
-              <p>{client.profile.email}</p>
+              <p className="text-sm text-slate-500">
+                Email
+              </p>
+
+              <p>
+                {client.profile.email}
+              </p>
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">Phone</p>
-              <p>{client.profile.phone || '-'}</p>
+              <p className="text-sm text-slate-500">
+                Phone
+              </p>
+
+              <p>
+                {client.profile.phone || '-'}
+              </p>
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">Company</p>
-              <p>{client.company?.name || '-'}</p>
+              <p className="text-sm text-slate-500">
+                Company
+              </p>
+
+              <p>
+                {client.company?.name || '-'}
+              </p>
             </div>
 
             <div>
-              <p className="text-sm text-slate-500">Client Code</p>
-              <p>{client.client_code || '-'}</p>
+              <p className="text-sm text-slate-500">
+                Client Code
+              </p>
+
+              <p>
+                {client.client_code || '-'}
+              </p>
             </div>
 
           </div>
@@ -111,7 +131,7 @@ export default async function ClientProfilePage({
 
       <div className="grid gap-6 md:grid-cols-2">
 
-        <Card>
+        <Card className="rounded-3xl border-0 shadow-sm">
           <CardContent className="p-6">
 
             <p className="text-sm text-slate-500">
@@ -125,7 +145,7 @@ export default async function ClientProfilePage({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-3xl border-0 shadow-sm">
           <CardContent className="p-6">
 
             <p className="text-sm text-slate-500">
@@ -143,55 +163,81 @@ export default async function ClientProfilePage({
 
       {/* Services */}
 
-      <Card>
+      <Card className="rounded-3xl border-0 shadow-sm">
+
         <CardContent className="p-6">
 
-          <h2 className="mb-4 text-xl font-semibold">
+          <h2 className="mb-6 text-xl font-semibold">
             Services
           </h2>
 
           {services?.length ? (
+
             <div className="space-y-4">
 
               {services.map((service) => (
+
                 <div
                   key={service.id}
-                  className="rounded-xl border p-4"
+                  className="rounded-2xl border p-5"
                 >
-                  <h3 className="font-semibold">
-                    {service.title}
-                  </h3>
 
-                  <p className="text-sm text-slate-500">
-                    {service.service_type}
-                  </p>
+                  <div className="flex items-center justify-between">
 
-                  <div className="mt-3 flex gap-4 text-sm">
+                    <div>
 
-                    <span>Status: {service.status}</span>
+                      <h3 className="font-semibold">
+                        {service.title}
+                      </h3>
 
-                    <span>Priority: {service.priority}</span>
+                      <p className="text-sm text-slate-500">
+                        {service.service_type}
+                      </p>
 
-                    <span>{service.progress}%</span>
+                    </div>
+
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">
+                      {service.status}
+                    </span>
+
+                  </div>
+
+                  <div className="mt-4 flex gap-6 text-sm text-slate-500">
+
+                    <span>
+                      Priority: {service.priority}
+                    </span>
+
+                    <span>
+                      Progress: {service.progress}%
+                    </span>
 
                   </div>
 
                 </div>
+
               ))}
 
             </div>
+
           ) : (
+
             <p className="text-slate-500">
               No services found.
             </p>
+
           )}
 
         </CardContent>
+
       </Card>
+
+      {/* Activity Timeline */}
+
+      <ClientActivity
+        clientId={client.id}
+      />
 
     </div>
   )
-  <ClientActivity
-  clientId={client.id}
-/>
 }
