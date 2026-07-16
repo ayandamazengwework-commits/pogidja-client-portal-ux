@@ -13,25 +13,34 @@ export default async function StaffLayout({
 }) {
   const supabase = await createClient()
 
+  // Get authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser()
-console.log('Logged in user ID:', user?.id)
-console.log('Logged in email:', user?.email)
-  
-  // Protect all staff pages
+
+  // Not logged in
   if (!user) {
     redirect('/auth/staff-login')
   }
 
-const { data: profile, error } = await supabase
-  .from('profiles')
-  .select('*')
-  .eq('id', user.id)
-  .maybeSingle()
+  // Get profile
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .maybeSingle()
 
-console.log('Staff profile:', profile)
-console.log('Profile error:', error)
+  // No profile found
+  if (error || !profile) {
+    console.error('Profile Error:', error)
+    redirect('/auth/staff-login')
+  }
+
+  // Prevent clients from entering staff portal
+  if (!['staff', 'manager', 'admin'].includes(profile.role)) {
+    redirect('/portal')
+  }
+
   return (
     <div className="flex h-screen bg-slate-100">
       <StaffSidebar profile={profile} />
