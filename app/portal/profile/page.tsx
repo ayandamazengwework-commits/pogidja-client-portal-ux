@@ -55,10 +55,13 @@ export default async function ProfilePage() {
         </div>
 
         <form action={logout}>
-          <Button variant="destructive">
-            Sign Out
-          </Button>
-        </form>
+  <Button
+    type="submit"
+    variant="destructive"
+  >
+    Sign Out
+  </Button>
+</form>
 
       </div>
 
