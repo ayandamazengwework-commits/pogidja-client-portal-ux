@@ -75,7 +75,7 @@ export default function RegisterPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/portal`,
       },
     })
 
@@ -92,7 +92,7 @@ export default function RegisterPage() {
         </h2>
 
         <p className="text-sm text-muted-foreground">
-          Join the Pogidja Client Portal.
+          Join the POG Advisory Client Portal.
         </p>
       </div>
 
@@ -152,9 +152,9 @@ export default function RegisterPage() {
             id="email"
             type="email"
             autoComplete="email"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
             required
           />
         </div>
@@ -165,9 +165,9 @@ export default function RegisterPage() {
           <Input
             id="phone"
             type="tel"
+            placeholder="+27..."
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="+27..."
             required
           />
         </div>
