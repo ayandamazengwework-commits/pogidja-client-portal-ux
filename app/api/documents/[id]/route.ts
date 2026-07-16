@@ -20,24 +20,89 @@ export async function GET(
     )
   }
 
-  const { data: document, error } = await supabase
+  // Get logged in profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) {
+    return new NextResponse('Unauthorized', {
+      status: 401,
+    })
+  }
+
+  // Staff can access everything
+  if (
+    profile.role === 'staff' ||
+    profile.role === 'manager' ||
+    profile.role === 'admin'
+  ) {
+    return downloadDocument(supabase, id)
+  }
+
+  // Get logged in client
+  const { data: client } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('profile_id', user.id)
+    .single()
+
+  if (!client) {
+    return new NextResponse('Unauthorized', {
+      status: 401,
+    })
+  }
+
+  // Get requested document
+  const { data: document } = await supabase
     .from('service_documents')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (error || !document) {
-    return new NextResponse('Document not found.', {
+  if (!document) {
+    return new NextResponse('Document not found', {
+      status: 404,
+    })
+  }
+
+  // Verify document belongs to this client's service
+  const { data: service } = await supabase
+    .from('services')
+    .select('client_id')
+    .eq('id', document.service_id)
+    .single()
+
+  if (!service || service.client_id !== client.id) {
+    return new NextResponse('Forbidden', {
+      status: 403,
+    })
+  }
+
+  return downloadDocument(supabase, id)
+}
+
+async function downloadDocument(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  id: string
+) {
+  const { data: document } = await supabase
+    .from('service_documents')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (!document) {
+    return new NextResponse('Document not found', {
       status: 404,
     })
   }
 
   const { data } = await supabase.storage
     .from(document.bucket_name)
-    .createSignedUrl(
-      document.storage_path,
-      60
-    )
+    .createSignedUrl(document.storage_path, 60)
 
   if (!data?.signedUrl) {
     return new NextResponse(
