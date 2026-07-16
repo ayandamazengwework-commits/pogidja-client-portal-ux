@@ -1,6 +1,8 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 export default async function ProfilePage() {
   const supabase = await createClient()
@@ -9,7 +11,9 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) {
+    redirect('/auth/login')
+  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -23,20 +27,43 @@ export default async function ProfilePage() {
     .eq('profile_id', user.id)
     .single()
 
+  async function logout() {
+    'use server'
+
+    const supabase = await createClient()
+
+    await supabase.auth.signOut()
+
+    redirect('/auth/login')
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
 
-      <div>
-        <h1 className="text-4xl font-bold">
-          My Profile
-        </h1>
+      <div className="flex items-center justify-between">
 
-        <p className="mt-2 text-muted-foreground">
-          Your client information.
-        </p>
+        <div>
+
+          <h1 className="text-4xl font-bold">
+            My Profile
+          </h1>
+
+          <p className="mt-2 text-muted-foreground">
+            Manage your account information.
+          </p>
+
+        </div>
+
+        <form action={logout}>
+          <Button variant="destructive">
+            Sign Out
+          </Button>
+        </form>
+
       </div>
 
       <Card className="rounded-3xl">
+
         <CardContent className="grid gap-8 p-8 md:grid-cols-2">
 
           <div>
@@ -45,7 +72,7 @@ export default async function ProfilePage() {
             </p>
 
             <h3 className="mt-2 text-xl font-semibold">
-              {profile?.first_name ?? '-'}
+              {profile?.first_name || '-'}
             </h3>
           </div>
 
@@ -55,7 +82,7 @@ export default async function ProfilePage() {
             </p>
 
             <h3 className="mt-2 text-xl font-semibold">
-              {profile?.last_name ?? '-'}
+              {profile?.last_name || '-'}
             </h3>
           </div>
 
@@ -71,11 +98,21 @@ export default async function ProfilePage() {
 
           <div>
             <p className="text-sm text-muted-foreground">
+              Phone
+            </p>
+
+            <h3 className="mt-2 text-xl font-semibold">
+              {profile?.phone || '-'}
+            </h3>
+          </div>
+
+          <div>
+            <p className="text-sm text-muted-foreground">
               Company
             </p>
 
             <h3 className="mt-2 text-xl font-semibold">
-              {profile?.company_name ?? '-'}
+              {profile?.company_name || '-'}
             </h3>
           </div>
 
@@ -85,21 +122,32 @@ export default async function ProfilePage() {
             </p>
 
             <h3 className="mt-2 text-xl font-semibold">
-              {client?.client_code}
+              {client?.client_code || '-'}
             </h3>
           </div>
 
           <div>
             <p className="text-sm text-muted-foreground">
-              Status
+              Account Status
             </p>
 
-            <h3 className="mt-2 text-xl font-semibold capitalize text-green-600">
-              {client?.status}
+            <h3 className="mt-2 text-xl font-semibold text-green-600">
+              {client?.status || profile?.client_status || 'Active'}
+            </h3>
+          </div>
+
+          <div>
+            <p className="text-sm text-muted-foreground">
+              Role
+            </p>
+
+            <h3 className="mt-2 text-xl font-semibold capitalize">
+              {profile?.role}
             </h3>
           </div>
 
         </CardContent>
+
       </Card>
 
     </div>
