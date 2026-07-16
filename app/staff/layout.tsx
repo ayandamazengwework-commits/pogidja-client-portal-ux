@@ -22,12 +22,14 @@ export default async function StaffLayout({
     redirect('/auth/staff-login')
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+const { data: profile, error } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', user.id)
+  .maybeSingle()
 
+console.log('Staff profile:', profile)
+console.log('Profile error:', error)
   return (
     <div className="flex h-screen bg-slate-100">
       <StaffSidebar profile={profile} />
