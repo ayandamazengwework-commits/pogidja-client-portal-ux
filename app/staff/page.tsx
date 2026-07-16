@@ -8,13 +8,33 @@ import {
 
 import { createClient } from '@/lib/supabase/server'
 import { getRecentActivity } from '@/lib/dashboard/activity'
+import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default async function StaffDashboard() {
   const supabase = await createClient()
+const {
+  data: { user },
+} = await supabase.auth.getUser()
 
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('first_name,last_name')
+  .eq('id', user?.id)
+  .single()
+
+const hour = new Date().getHours()
+
+const greeting =
+  hour >= 5 && hour < 12
+    ? 'Good Morning'
+    : hour >= 12 && hour < 17
+      ? 'Good Afternoon'
+      : hour >= 17 && hour < 21
+        ? 'Good Evening'
+        : 'Welcome Back'
   const activity = await getRecentActivity()
 
 const { count: totalClients } = await supabase
@@ -83,19 +103,20 @@ return (
 
         <div>
 
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-200">
-            POG ADVISORY
-          </p>
+         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-200">
+  POG ADVISORY & CHARTERED ACCOUNTANTS INC.
+</p>
 
-          <h1 className="mt-4 text-3xl font-bold md:text-5xl">
-            Staff Workspace
-          </h1>
+<h1 className="mt-4 text-3xl font-bold md:text-5xl">
+  {greeting},
+  <br />
+  {profile?.first_name} {profile?.last_name}
+</h1>
 
-          <p className="mt-5 max-w-2xl text-slate-300">
-            Monitor every client, manage service requests,
-            upload documents and track business activity
-            from one central workspace.
-          </p>
+<p className="mt-5 max-w-2xl text-slate-300">
+  Welcome to your staff dashboard.
+  Here's what's happening across the practice today.
+</p>
 
         </div>
 
