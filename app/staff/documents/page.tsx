@@ -31,27 +31,54 @@ export default async function StaffDocumentsPage() {
   return (
     <div className="space-y-8">
 
-      <div className="flex items-center justify-between">
+      {/* Hero */}
 
-        <div>
+      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
-          <h1 className="text-4xl font-bold">
-            Documents
-          </h1>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
-          <p className="mt-2 text-muted-foreground">
-            Manage every document uploaded by clients and staff.
-          </p>
+          <div>
+
+            <p className="text-sm uppercase tracking-[0.3em] text-blue-200">
+              DOCUMENT MANAGEMENT
+            </p>
+
+            <h1 className="mt-3 text-3xl font-bold md:text-5xl">
+              Documents
+            </h1>
+
+            <p className="mt-4 max-w-2xl text-slate-300">
+              View, download and manage every document
+              uploaded by clients and staff.
+            </p>
+
+          </div>
+
+          <Card className="border-0 bg-white/10 backdrop-blur">
+
+            <CardContent className="p-6 text-center">
+
+              <FileText className="mx-auto mb-3 h-10 w-10 text-blue-200" />
+
+              <p className="text-sm text-slate-300">
+                Total Documents
+              </p>
+
+              <p className="mt-2 text-4xl font-bold">
+                {documents?.length ?? 0}
+              </p>
+
+            </CardContent>
+
+          </Card>
 
         </div>
 
-        <Button>
-          Upload Document
-        </Button>
+      </section>
 
-      </div>
+      {/* Search */}
 
-      <div className="relative max-w-md">
+      <div className="relative max-w-xl">
 
         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
@@ -70,12 +97,12 @@ export default async function StaffDocumentsPage() {
 
             <Card
               key={document.id}
-              className="rounded-2xl"
+              className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg"
             >
 
-              <CardContent className="flex items-center justify-between p-6">
+              <CardContent className="flex flex-col gap-6 p-6 lg:flex-row lg:items-center lg:justify-between">
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-start gap-4">
 
                   <div className="rounded-2xl bg-blue-100 p-4">
 
@@ -86,11 +113,27 @@ export default async function StaffDocumentsPage() {
                   <div>
 
                     <h3 className="font-semibold">
+
                       {document.file_name}
+
                     </h3>
 
                     <p className="text-sm text-slate-500">
+
                       {document.service?.title}
+
+                    </p>
+
+                    <p className="mt-2 text-xs text-slate-500">
+
+                      {document.file_size
+                        ? `${Math.round(document.file_size / 1024)} KB`
+                        : '-'}
+
+                      {' • '}
+
+                      {document.mime_type || '-'}
+
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-400">
@@ -98,9 +141,13 @@ export default async function StaffDocumentsPage() {
                       <span>
 
                         Uploaded by{' '}
-                        {document.uploaded_by_role === 'client'
-                          ? 'Client'
-                          : 'Staff'}
+                        <strong>
+
+                          {document.uploaded_by_role === 'client'
+                            ? 'Client'
+                            : 'Staff'}
+
+                        </strong>
 
                       </span>
 
@@ -118,24 +165,25 @@ export default async function StaffDocumentsPage() {
 
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
 
                   <Button
                     variant="outline"
                     asChild
+                    className="w-full sm:w-auto"
                   >
 
                     <Link
-                      href={`/staff/cases/${document.service_id}`}
+                      href={`/staff/services/${document.service_id}`}
                     >
-                      View Case
+                      View Service
                     </Link>
 
                   </Button>
 
                   <Button
                     asChild
-                    variant="default"
+                    className="w-full sm:w-auto"
                   >
 
                     <Link
@@ -163,7 +211,7 @@ export default async function StaffDocumentsPage() {
 
       ) : (
 
-        <Card>
+        <Card className="rounded-3xl">
 
           <CardContent className="py-20 text-center">
 
