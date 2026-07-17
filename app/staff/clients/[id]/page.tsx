@@ -523,19 +523,24 @@ export default async function ClientProfilePage({
 
           </Card>
 
-          {/* ACTIVITY */}
+             {/* ACTIVITY */}
 
-          <ClientActivity
-            clientId={client.id}
-          />
+          <Card className="rounded-3xl border">
 
-        </div>
+            <CardContent className="p-6">
 
-      </CardContent>
+              <ClientActivity
+                clientId={client.id}
+              />
 
-    </Card>
+            </CardContent>
 
-  </div>
+          </Card>
 
-)
+        </CardContent>
+
+      </Card>
+
+    </div>
+  )
 }
