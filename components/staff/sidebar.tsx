@@ -85,7 +85,7 @@ export function StaffSidebar({
   const [loggingOut, setLoggingOut] = useState(false)
 
   const initials = profile
-    ? `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
+    ? `${profile.first_name?.[0] ?? ''}${profile.last_name?.[0] ?? ''}`.toUpperCase()
     : '??'
 
   const fullName = profile
@@ -97,6 +97,8 @@ export function StaffSidebar({
     : 'Staff'
 
   async function handleLogout() {
+    if (loggingOut) return
+
     setLoggingOut(true)
 
     const supabase = createClient()
@@ -108,11 +110,12 @@ export function StaffSidebar({
   }
 
   return (
-    <aside className="flex h-screen w-72 flex-col border-r border-slate-200 bg-white">
+    <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-slate-200 bg-white xl:flex xl:w-72">
 
       {/* Logo */}
 
-      <div className="border-b border-slate-200 p-8">
+      <div className="border-b border-slate-200 px-8 py-7">
+
         <h1 className="text-2xl font-bold tracking-tight">
           POG
           <span className="text-[#1E88E5]"> Advisory</span>
@@ -121,57 +124,65 @@ export function StaffSidebar({
         <p className="mt-1 text-sm text-slate-500">
           Staff Workspace
         </p>
+
       </div>
 
       {/* Navigation */}
 
-      <nav className="flex-1 space-y-1 p-4">
-        {navigation.map((item) => {
-          const Icon = item.icon
+      <nav className="flex-1 overflow-y-auto p-4">
 
-          const active =
-            pathname === item.href ||
-            pathname.startsWith(item.href + '/')
+        <div className="space-y-1">
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
-                active
-                  ? 'bg-[#1E88E5] text-white shadow-md'
-                  : 'text-slate-700 hover:bg-slate-100'
-              }`}
-            >
-              <Icon className="h-5 w-5" />
+          {navigation.map((item) => {
+            const Icon = item.icon
 
-              <span className="font-medium">
-                {item.name}
-              </span>
-            </Link>
-          )
-        })}
+            const active =
+              pathname === item.href ||
+              pathname.startsWith(item.href + '/')
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                  active
+                    ? 'bg-[#1E88E5] text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+
+                <span>{item.name}</span>
+              </Link>
+            )
+          })}
+
+        </div>
+
       </nav>
 
       {/* Logged-in User */}
 
       <div className="border-t border-slate-200 p-5">
+
         <div className="rounded-2xl bg-slate-50 p-4">
 
           <div className="mb-4 flex items-center gap-3">
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1E88E5] font-bold text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1E88E5] text-sm font-bold text-white">
               {initials}
             </div>
 
-            <div>
-              <p className="font-semibold">
+            <div className="min-w-0">
+
+              <p className="truncate font-semibold">
                 {fullName}
               </p>
 
               <p className="text-sm text-slate-500">
                 {role}
               </p>
+
             </div>
 
           </div>
@@ -196,6 +207,7 @@ export function StaffSidebar({
           </Button>
 
         </div>
+
       </div>
 
     </aside>
