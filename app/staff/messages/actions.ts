@@ -23,6 +23,7 @@ export async function sendMessage(formData: FormData) {
     throw new Error('Missing required fields')
   }
 
+  // Send message
   const { error } = await supabase
     .from('messages')
     .insert({
@@ -36,6 +37,14 @@ export async function sendMessage(formData: FormData) {
 
   if (error) throw error
 
+  // Find the client's ID from their profile ID
+  const { data: client } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('profile_id', recipientId)
+    .single()
+
+  // Log activity
   await supabase
     .from('activity_logs')
     .insert({
@@ -44,8 +53,13 @@ export async function sendMessage(formData: FormData) {
       action: 'Message Sent',
       description: subject || 'New message',
       entity_type: 'message',
-      client_id: recipientId,
+      entity_id: null,
+      client_id: client?.id ?? null,
     })
 
   revalidatePath('/staff/messages')
+
+  if (client?.id) {
+    revalidatePath(`/staff/clients/${client.id}`)
+  }
 }
