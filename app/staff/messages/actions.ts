@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/send-email'
 
@@ -22,31 +23,9 @@ export async function sendMessage(formData: FormData) {
 
   if (!recipientId || !body) {
     throw new Error('Missing required fields')
-  const { data: recipient } = await supabase
-  .from('profiles')
-  .select('email, first_name')
-  .eq('id', recipientId)
-  .single()
+  }
 
-if (recipient?.email) {
-  await sendEmail({
-    to: recipient.email,
-    subject: subject || 'New message from POG Advisory',
-    html: `
-      <h2>Hello ${recipient.first_name ?? 'Client'},</h2>
-
-      <p>You have received a new message from the POG Advisory team.</p>
-
-      <p>${body}</p>
-
-      <hr />
-
-      <p>Please log into your client portal to reply.</p>
-    `,
-  })
-}
-
-  // Send message
+  // Create the message
   const { error } = await supabase
     .from('messages')
     .insert({
@@ -60,7 +39,38 @@ if (recipient?.email) {
 
   if (error) throw error
 
-  // Find the client's ID from their profile ID
+  // Find the recipient's profile
+  const { data: recipient } = await supabase
+    .from('profiles')
+    .select('email, first_name')
+    .eq('id', recipientId)
+    .single()
+
+  // Send email notification
+  if (recipient?.email) {
+    try {
+      await sendEmail({
+        to: recipient.email,
+        subject: subject || 'New message from POG Advisory',
+        html: `
+          <h2>Hello ${recipient.first_name ?? 'Client'},</h2>
+
+          <p>You have received a new message from the POG Advisory team.</p>
+
+          <p>${body}</p>
+
+          <hr />
+
+          <p>Please log into your client portal to reply.</p>
+        `,
+      })
+    } catch (err) {
+      console.error('Failed to send email:', err)
+      // Don't fail the request if the email couldn't be sent.
+    }
+  }
+
+  // Find the client record
   const { data: client } = await supabase
     .from('clients')
     .select('id')
