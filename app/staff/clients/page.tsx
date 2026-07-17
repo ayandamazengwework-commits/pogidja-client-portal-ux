@@ -1,10 +1,8 @@
-import Link from 'next/link'
-import { Search, Users } from 'lucide-react'
-
 import { createClient } from '@/lib/supabase/server'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { ClientSearch } from '@/components/staff/client-search'
+import { Users } from 'lucide-react'
 
 export default async function ClientsPage() {
   const supabase = await createClient()
@@ -32,7 +30,7 @@ export default async function ClientsPage() {
   return (
     <div className="space-y-8">
 
-      {/* Header */}
+      {/* Hero */}
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
@@ -49,9 +47,9 @@ export default async function ClientsPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-slate-300">
-              Manage all registered clients,
-              monitor their services and open
-              their profiles.
+              Manage all registered clients, monitor
+              their services and quickly access their
+              profiles.
             </p>
 
           </div>
@@ -78,133 +76,7 @@ export default async function ClientsPage() {
 
       </section>
 
-      {/* Search */}
-
-      <div className="relative max-w-xl">
-
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-        <Input
-          placeholder="Search clients..."
-          className="pl-11"
-        />
-
-      </div>
-
-      {/* Clients */}
-
-      {clients && clients.length > 0 ? (
-
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-
-          {clients.map((client) => {
-
-            const initials = `${client.profile?.first_name?.[0] ?? ''}${client.profile?.last_name?.[0] ?? ''}`
-
-            return (
-
-              <Link
-                key={client.id}
-                href={`/staff/clients/${client.id}`}
-              >
-
-                <Card className="rounded-3xl border-0 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl">
-
-                  <CardContent className="p-6">
-
-                    <div className="flex items-start gap-4">
-
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
-
-                        {initials || '?'}
-
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-
-                        <h2 className="truncate text-lg font-bold">
-
-                          {client.company?.name ||
-
-                            `${client.profile?.first_name ?? ''} ${client.profile?.last_name ?? ''}`}
-
-                        </h2>
-
-                        <p className="truncate text-sm text-slate-500">
-
-                          {client.profile?.email}
-
-                        </p>
-
-                        <p className="mt-1 text-sm text-slate-400">
-
-                          {client.profile?.phone || 'No phone number'}
-
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                    <div className="mt-6 flex items-center justify-between">
-
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          client.status === 'active'
-                            ? 'bg-green-100 text-green-700'
-                            : client.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        {client.status}
-                      </span>
-
-                      <span className="text-xs text-slate-400">
-
-                        {client.client_code || '-'}
-
-                      </span>
-
-                    </div>
-
-                  </CardContent>
-
-                </Card>
-
-              </Link>
-
-            )
-          })}
-
-        </div>
-
-      ) : (
-
-        <Card className="rounded-3xl">
-
-          <CardContent className="py-20 text-center">
-
-            <Users className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-
-            <h2 className="text-2xl font-bold">
-
-              No Clients Yet
-
-            </h2>
-
-            <p className="mt-3 text-slate-500">
-
-              Clients will appear here once they
-              register and submit a service request.
-
-            </p>
-
-          </CardContent>
-
-        </Card>
-
-      )}
+      <ClientSearch clients={clients ?? []} />
 
     </div>
   )
