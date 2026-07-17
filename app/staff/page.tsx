@@ -5,438 +5,468 @@ import {
   FileText,
   Users,
 } from 'lucide-react'
+import Link from 'next/link'
 
 import { createClient } from '@/lib/supabase/server'
 import { getRecentActivity } from '@/lib/dashboard/activity'
-import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default async function StaffDashboard() {
   const supabase = await createClient()
-const {
-  data: { user },
-} = await supabase.auth.getUser()
 
-const { data: profile } = await supabase
-  .from('profiles')
-  .select('first_name,last_name')
-  .eq('id', user?.id)
-  .single()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-const hour = new Date().getHours()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('first_name,last_name')
+    .eq('id', user?.id)
+    .single()
 
-const greeting =
-  hour >= 5 && hour < 12
-    ? 'Good Morning'
-    : hour >= 12 && hour < 17
-      ? 'Good Afternoon'
-      : hour >= 17 && hour < 21
-        ? 'Good Evening'
-        : 'Welcome Back'
   const activity = await getRecentActivity()
 
-const { count: totalClients } = await supabase
-  .from('clients')
-  .select('*', {
-    count: 'exact',
-    head: true,
-  })
+  const { count: totalClients } = await supabase
+    .from('clients')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
 
-const { count: totalServices } = await supabase
-  .from('services')
-  .select('*', {
-    count: 'exact',
-    head: true,
-  })
+  const { count: totalServices } = await supabase
+    .from('services')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
 
-const { count: totalDocuments } = await supabase
-  .from('service_documents')
-  .select('*', {
-    count: 'exact',
-    head: true,
-  })
+  const { count: totalDocuments } = await supabase
+    .from('service_documents')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
 
-const { count: activeCases } = await supabase
-  .from('services')
-  .select('*', {
-    count: 'exact',
-    head: true,
-  })
-  .neq('status', 'Completed')
+  const { count: activeCases } = await supabase
+    .from('services')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
+    .neq('status', 'Completed')
 
-const { count: completedCases } = await supabase
-  .from('services')
-  .select('*', {
-    count: 'exact',
-    head: true,
-  })
-  .eq('status', 'Completed')
+  const { count: completedCases } = await supabase
+    .from('services')
+    .select('*', {
+      count: 'exact',
+      head: true,
+    })
+    .eq('status', 'Completed')
 
-const { data: recentClients } = await supabase
-  .from('profiles')
-  .select('*')
-  .eq('role', 'client')
-  .order('created_at', {
-    ascending: false,
-  })
-  .limit(5)
+  const { data: recentClients } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'client')
+    .order('created_at', {
+      ascending: false,
+    })
+    .limit(5)
 
-const { data: recentServices } = await supabase
-  .from('services')
-  .select('*')
-  .order('created_at', {
-    ascending: false,
-  })
-  .limit(5)
-return (
-  <div className="space-y-8">
+  const { data: recentServices } = await supabase
+    .from('services')
+    .select('*')
+    .order('created_at', {
+      ascending: false,
+    })
+    .limit(5)
 
-    {/* Hero */}
+  const now = new Date()
+  const hour = now.getHours()
 
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
+  const greeting =
+    hour < 12
+      ? 'Good morning'
+      : hour < 17
+      ? 'Good afternoon'
+      : 'Good evening'
 
-      <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
+  return (
+    <div className="space-y-8">
 
-      <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+      {/* Hero */}
 
-        <div>
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] px-6 py-8 text-white shadow-xl lg:px-10 lg:py-10">
 
-         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-200">
-  POG ADVISORY & CHARTERED ACCOUNTANTS INC.
-</p>
+        <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
 
-<h1 className="mt-4 text-3xl font-bold md:text-5xl">
-  {greeting},
-  <br />
-  {profile?.first_name} {profile?.last_name}
-</h1>
+        <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
 
-<p className="mt-5 max-w-2xl text-slate-300">
-  Welcome to your staff dashboard.
-  Here's what's happening across the practice today.
-</p>
+          <div className="max-w-3xl">
+
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-200 md:text-sm">
+              POG ADVISORY & CHARTERED ACCOUNTANTS INC.
+            </p>
+
+            <h1 className="mt-4 text-3xl font-bold leading-tight md:text-5xl">
+
+              {greeting},
+
+              <br />
+
+              {profile?.first_name} {profile?.last_name}
+
+            </h1>
+
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+              Welcome back to your staff workspace.
+              Manage clients, monitor services,
+              upload documents and keep track of
+              everything happening across the practice.
+            </p>
+
+          </div>
+
+          <Button
+            asChild
+            size="lg"
+            className="w-full bg-white text-slate-900 hover:bg-slate-100 lg:w-auto"
+          >
+            <Link href="/staff/clients">
+
+              View Clients
+
+              <ArrowRight className="ml-2 h-5 w-5" />
+
+            </Link>
+          </Button>
 
         </div>
 
-        <Button
-          asChild
-          size="lg"
-          className="bg-white text-slate-900 hover:bg-slate-100"
-        >
-          <Link href="/staff/clients">
-            View Clients
+      </section>
 
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
-        </Button>
+      {/* Statistics */}
 
-      </div>
+      <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
-    </section>
+        <Card className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg">
 
-    {/* Statistics */}
+          <CardContent className="flex items-center justify-between p-6">
 
-    <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <div>
 
-      <Card className="rounded-3xl border-0 shadow-sm">
+              <p className="text-sm text-slate-500">
+                Clients
+              </p>
 
-        <CardContent className="flex items-center justify-between p-6">
+              <p className="mt-2 text-4xl font-bold">
+                {totalClients ?? 0}
+              </p>
 
-          <div>
+            </div>
 
-            <p className="text-sm text-slate-500">
-              Clients
-            </p>
+            <div className="rounded-2xl bg-blue-100 p-4">
 
-            <p className="mt-2 text-4xl font-bold">
-              {totalClients ?? 0}
-            </p>
+              <Users className="h-7 w-7 text-blue-700" />
 
-          </div>
+            </div>
 
-          <div className="rounded-2xl bg-blue-100 p-4">
+          </CardContent>
 
-            <Users className="h-7 w-7 text-blue-700" />
+        </Card>
 
-          </div>
+        <Card className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg">
 
-        </CardContent>
+          <CardContent className="flex items-center justify-between p-6">
 
-      </Card>
+            <div>
 
-      <Card className="rounded-3xl border-0 shadow-sm">
+              <p className="text-sm text-slate-500">
+                Active Cases
+              </p>
 
-        <CardContent className="flex items-center justify-between p-6">
+              <p className="mt-2 text-4xl font-bold">
+                {activeCases ?? 0}
+              </p>
 
-          <div>
+            </div>
 
-            <p className="text-sm text-slate-500">
-              Active Cases
-            </p>
+            <div className="rounded-2xl bg-amber-100 p-4">
 
-            <p className="mt-2 text-4xl font-bold">
-              {activeCases ?? 0}
-            </p>
+              <Clock3 className="h-7 w-7 text-amber-700" />
 
-          </div>
+            </div>
 
-          <div className="rounded-2xl bg-amber-100 p-4">
+          </CardContent>
 
-            <Clock3 className="h-7 w-7 text-amber-700" />
+        </Card>
 
-          </div>
+        <Card className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg">
 
-        </CardContent>
+          <CardContent className="flex items-center justify-between p-6">
 
-      </Card>
+            <div>
 
-      <Card className="rounded-3xl border-0 shadow-sm">
+              <p className="text-sm text-slate-500">
+                Completed
+              </p>
 
-        <CardContent className="flex items-center justify-between p-6">
+              <p className="mt-2 text-4xl font-bold">
+                {completedCases ?? 0}
+              </p>
 
-          <div>
+            </div>
 
-            <p className="text-sm text-slate-500">
-              Completed
-            </p>
+            <div className="rounded-2xl bg-green-100 p-4">
 
-            <p className="mt-2 text-4xl font-bold">
-              {completedCases ?? 0}
-            </p>
+              <CheckCircle2 className="h-7 w-7 text-green-700" />
 
-          </div>
+            </div>
 
-          <div className="rounded-2xl bg-green-100 p-4">
+          </CardContent>
 
-            <CheckCircle2 className="h-7 w-7 text-green-700" />
+        </Card>
 
-          </div>
+        <Card className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg">
 
-        </CardContent>
+          <CardContent className="flex items-center justify-between p-6">
 
-      </Card>
+            <div>
 
-      <Card className="rounded-3xl border-0 shadow-sm">
+              <p className="text-sm text-slate-500">
+                Documents
+              </p>
 
-        <CardContent className="flex items-center justify-between p-6">
+              <p className="mt-2 text-4xl font-bold">
+                {totalDocuments ?? 0}
+              </p>
 
-          <div>
+            </div>
 
-            <p className="text-sm text-slate-500">
-              Documents
-            </p>
+            <div className="rounded-2xl bg-purple-100 p-4">
 
-            <p className="mt-2 text-4xl font-bold">
-              {totalDocuments ?? 0}
-            </p>
+              <FileText className="h-7 w-7 text-purple-700" />
 
-          </div>
+            </div>
 
-          <div className="rounded-2xl bg-purple-100 p-4">
+          </CardContent>
 
-            <FileText className="h-7 w-7 text-purple-700" />
+        </Card>
 
-          </div>
+      </section>
 
-        </CardContent>
+             {/* Dashboard Panels */}
 
-      </Card>
+      <section className="grid gap-6 xl:grid-cols-3">
 
-    </section>
+        {/* Recent Clients */}
 
-        {/* Dashboard Panels */}
+        <Card className="rounded-3xl border-0 shadow-sm">
 
-    <section className="grid gap-6 xl:grid-cols-3">
+          <CardContent className="p-6">
 
-      {/* Recent Clients */}
+            <div className="mb-6 flex items-center justify-between">
 
-      <Card className="rounded-3xl border-0 shadow-sm">
+              <h2 className="text-xl font-bold">
+                Recent Clients
+              </h2>
 
-        <CardContent className="p-6">
+              <Link
+                href="/staff/clients"
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                View All
+              </Link>
 
-          <div className="mb-6 flex items-center justify-between">
+            </div>
 
-            <h2 className="text-xl font-bold">
-              Recent Clients
-            </h2>
+            <div className="space-y-4">
 
-            <Link
-              href="/staff/clients"
-              className="text-sm font-medium text-blue-600"
-            >
-              View All
-            </Link>
+              {recentClients && recentClients.length > 0 ? (
 
-          </div>
+                recentClients.map((client) => (
 
-          <div className="space-y-4">
+                  <div
+                    key={client.id}
+                    className="rounded-2xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-slate-50"
+                  >
 
-            {recentClients && recentClients.length > 0 ? (
+                    <div className="flex items-start justify-between gap-3">
 
-              recentClients.map((client) => (
+                      <div>
 
-                <div
-                  key={client.id}
-                  className="flex items-center justify-between rounded-xl border p-4"
-                >
+                        <p className="font-semibold">
 
-                  <div>
+                          {client.company_name ||
 
-                    <p className="font-semibold">
-                      {client.company_name ||
-                        `${client.first_name ?? ''} ${client.last_name ?? ''}`}
-                    </p>
+                            `${client.first_name ?? ''} ${client.last_name ?? ''}`}
 
-                    <p className="text-sm text-slate-500">
-                      {client.email}
+                        </p>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                          {client.email}
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                ))
+
+              ) : (
+
+                <div className="rounded-xl border border-dashed p-8 text-center">
+
+                  <p className="text-sm text-slate-500">
+                    No clients yet.
+                  </p>
+
+                </div>
+
+              )}
+
+            </div>
+
+          </CardContent>
+
+        </Card>
+
+        {/* Recent Requests */}
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+
+          <CardContent className="p-6">
+
+            <div className="mb-6 flex items-center justify-between">
+
+              <h2 className="text-xl font-bold">
+                Recent Requests
+              </h2>
+
+              <Link
+                href="/staff/services"
+                className="text-sm font-semibold text-blue-600 hover:underline"
+              >
+                View All
+              </Link>
+
+            </div>
+
+            <div className="space-y-4">
+
+              {recentServices && recentServices.length > 0 ? (
+
+                recentServices.map((service) => (
+
+                  <div
+                    key={service.id}
+                    className="rounded-2xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-slate-50"
+                  >
+
+                    <div className="flex items-center justify-between gap-3">
+
+                      <p className="font-semibold">
+                        {service.title}
+                      </p>
+
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">
+
+                        {service.status}
+
+                      </span>
+
+                    </div>
+
+                    <p className="mt-2 text-sm text-slate-500">
+
+                      {new Date(
+                        service.created_at
+                      ).toLocaleDateString()}
+
                     </p>
 
                   </div>
 
+                ))
+
+              ) : (
+
+                <div className="rounded-xl border border-dashed p-8 text-center">
+
+                  <p className="text-sm text-slate-500">
+                    No service requests.
+                  </p>
+
                 </div>
 
-              ))
+              )}
 
-            ) : (
+            </div>
 
-              <p className="text-sm text-slate-500">
-                No clients yet.
-              </p>
+          </CardContent>
 
-            )}
+        </Card>
 
-          </div>
+        {/* Activity */}
 
-        </CardContent>
+        <Card className="rounded-3xl border-0 shadow-sm">
 
-      </Card>
+          <CardContent className="p-6">
 
-      {/* Recent Requests */}
+            <div className="mb-6 flex items-center justify-between">
 
-      <Card className="rounded-3xl border-0 shadow-sm">
+              <h2 className="text-xl font-bold">
+                Recent Activity
+              </h2>
 
-        <CardContent className="p-6">
+            </div>
 
-          <div className="mb-6 flex items-center justify-between">
+            <div className="space-y-4">
 
-            <h2 className="text-xl font-bold">
-              Recent Requests
-            </h2>
+              {activity.length > 0 ? (
 
-            <Link
-              href="/staff/cases"
-              className="text-sm font-medium text-blue-600"
-            >
-              View All
-            </Link>
+                activity.map((item) => (
 
-          </div>
-
-          <div className="space-y-4">
-
-            {recentServices && recentServices.length > 0 ? (
-
-              recentServices.map((service) => (
-
-                <div
-                  key={service.id}
-                  className="rounded-xl border p-4"
-                >
-
-                  <div className="flex items-center justify-between">
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-slate-100 p-4 transition hover:border-blue-200 hover:bg-slate-50"
+                  >
 
                     <p className="font-semibold">
-                      {service.title}
+                      {item.action}
                     </p>
 
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium">
-                      {service.status}
-                    </span>
+                    <p className="mt-2 text-sm text-slate-500">
+                      {item.description}
+                    </p>
 
                   </div>
 
-                  <p className="mt-2 text-sm text-slate-500">
+                ))
 
-                    {new Date(
-                      service.created_at
-                    ).toLocaleDateString()}
+              ) : (
 
+                <div className="rounded-xl border border-dashed p-8 text-center">
+
+                  <p className="text-sm text-slate-500">
+                    No recent activity.
                   </p>
 
                 </div>
 
-              ))
+              )}
 
-            ) : (
+            </div>
 
-              <p className="text-sm text-slate-500">
-                No service requests.
-              </p>
+          </CardContent>
 
-            )}
+        </Card>
 
-          </div>
+      </section>
 
-        </CardContent>
-
-      </Card>
-
-      {/* Activity */}
-
-      <Card className="rounded-3xl border-0 shadow-sm">
-
-        <CardContent className="p-6">
-
-          <h2 className="mb-6 text-xl font-bold">
-            Recent Activity
-          </h2>
-
-          <div className="space-y-4">
-
-            {activity.length > 0 ? (
-
-              activity.map((item) => (
-
-                <div
-                  key={item.id}
-                  className="rounded-xl border p-4"
-                >
-
-                  <p className="font-medium">
-
-                    {item.action}
-
-                  </p>
-
-                  <p className="mt-1 text-sm text-slate-500">
-
-                    {item.description}
-
-                  </p>
-
-                </div>
-
-              ))
-
-            ) : (
-
-              <p className="text-sm text-slate-500">
-
-                No recent activity.
-
-              </p>
-
-            )}
-
-          </div>
-
-        </CardContent>
-
-      </Card>
-
-    </section>
-  </div>
-)
+    </div>
+  )
 }
