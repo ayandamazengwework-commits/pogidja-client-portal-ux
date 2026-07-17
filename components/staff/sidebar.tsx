@@ -9,9 +9,7 @@ import {
   Briefcase,
   FileText,
   MessageSquare,
-  Calendar,
   Bell,
-  BarChart3,
   Settings,
   LogOut,
   Loader2,
@@ -47,19 +45,9 @@ const navigation = [
     icon: MessageSquare,
   },
   {
-    name: 'Calendar',
-    href: '/staff/calendar',
-    icon: Calendar,
-  },
-  {
     name: 'Notifications',
     href: '/staff/notifications',
     icon: Bell,
-  },
-  {
-    name: 'Reports',
-    href: '/staff/reports',
-    icon: BarChart3,
   },
   {
     name: 'Settings',
@@ -115,7 +103,6 @@ export function StaffSidebar({
       {/* Logo */}
 
       <div className="border-b border-slate-200 px-8 py-7">
-
         <h1 className="text-2xl font-bold tracking-tight">
           POG
           <span className="text-[#1E88E5]"> Advisory</span>
@@ -124,15 +111,12 @@ export function StaffSidebar({
         <p className="mt-1 text-sm text-slate-500">
           Staff Workspace
         </p>
-
       </div>
 
       {/* Navigation */}
 
       <nav className="flex-1 overflow-y-auto p-4">
-
         <div className="space-y-1">
-
           {navigation.map((item) => {
             const Icon = item.icon
 
@@ -151,20 +135,16 @@ export function StaffSidebar({
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-
                 <span>{item.name}</span>
               </Link>
             )
           })}
-
         </div>
-
       </nav>
 
       {/* Logged-in User */}
 
       <div className="border-t border-slate-200 p-5">
-
         <div className="rounded-2xl bg-slate-50 p-4">
 
           <div className="mb-4 flex items-center gap-3">
@@ -174,7 +154,6 @@ export function StaffSidebar({
             </div>
 
             <div className="min-w-0">
-
               <p className="truncate font-semibold">
                 {fullName}
               </p>
@@ -182,7 +161,6 @@ export function StaffSidebar({
               <p className="text-sm text-slate-500">
                 {role}
               </p>
-
             </div>
 
           </div>
@@ -207,7 +185,6 @@ export function StaffSidebar({
           </Button>
 
         </div>
-
       </div>
 
     </aside>
