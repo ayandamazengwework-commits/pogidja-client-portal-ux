@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/email/send-email'
 
 export async function sendMessage(formData: FormData) {
   const supabase = await createClient()
@@ -21,7 +22,29 @@ export async function sendMessage(formData: FormData) {
 
   if (!recipientId || !body) {
     throw new Error('Missing required fields')
-  }
+  const { data: recipient } = await supabase
+  .from('profiles')
+  .select('email, first_name')
+  .eq('id', recipientId)
+  .single()
+
+if (recipient?.email) {
+  await sendEmail({
+    to: recipient.email,
+    subject: subject || 'New message from POG Advisory',
+    html: `
+      <h2>Hello ${recipient.first_name ?? 'Client'},</h2>
+
+      <p>You have received a new message from the POG Advisory team.</p>
+
+      <p>${body}</p>
+
+      <hr />
+
+      <p>Please log into your client portal to reply.</p>
+    `,
+  })
+}
 
   // Send message
   const { error } = await supabase
