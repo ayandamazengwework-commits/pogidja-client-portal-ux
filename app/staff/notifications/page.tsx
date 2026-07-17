@@ -1,8 +1,9 @@
-import { Bell } from 'lucide-react'
+import { Bell, Search } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 export default async function StaffNotificationsPage() {
   const supabase = await createClient()
@@ -23,7 +24,9 @@ export default async function StaffNotificationsPage() {
 
   return (
     <div className="space-y-8">
+
       <div>
+
         <h1 className="text-4xl font-bold">
           Notifications
         </h1>
@@ -31,46 +34,109 @@ export default async function StaffNotificationsPage() {
         <p className="mt-2 text-muted-foreground">
           Latest activity across your firm.
         </p>
+
       </div>
 
-      <div className="space-y-4">
-        {activity?.length ? (
-          activity.map((item) => (
-            <Card key={item.id}>
-              <CardContent className="flex gap-4 p-6">
-                <div className="rounded-xl bg-blue-100 p-3">
-                  <Bell className="h-5 w-5 text-blue-700" />
+      <div className="relative max-w-md">
+
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+        <Input
+          placeholder="Search activity..."
+          className="pl-11"
+        />
+
+      </div>
+
+      {activity?.length ? (
+
+        <div className="space-y-5">
+
+          {activity.map((item) => (
+
+            <Card
+              key={item.id}
+              className="rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg"
+            >
+
+              <CardContent className="flex flex-col gap-5 p-6 sm:flex-row">
+
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100">
+
+                  <Bell className="h-6 w-6 text-blue-700" />
+
                 </div>
 
                 <div className="flex-1">
-                  <h2 className="font-semibold">
-                    {item.action}
-                  </h2>
 
-                  <p className="mt-2 text-sm text-slate-500">
+                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+
+                    <h2 className="text-lg font-semibold">
+
+                      {item.action}
+
+                    </h2>
+
+                    <span className="text-sm text-slate-400">
+
+                      {new Date(
+                        item.created_at
+                      ).toLocaleString()}
+
+                    </span>
+
+                  </div>
+
+                  <p className="mt-3 leading-7 text-slate-600">
+
                     {item.description}
+
                   </p>
 
-                  <p className="mt-3 text-xs text-slate-400">
+                  <div className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
+
                     {item.user?.company_name ||
+
                       `${item.user?.first_name ?? ''} ${item.user?.last_name ?? ''}`}
 
-                    {' • '}
+                  </div>
 
-                    {new Date(item.created_at).toLocaleString()}
-                  </p>
                 </div>
+
               </CardContent>
+
             </Card>
-          ))
-        ) : (
-          <Card>
-            <CardContent className="py-16 text-center text-slate-500">
-              No activity yet.
-            </CardContent>
-          </Card>
-        )}
-      </div>
+
+          ))}
+
+        </div>
+
+      ) : (
+
+        <Card className="rounded-3xl">
+
+          <CardContent className="py-20 text-center">
+
+            <Bell className="mx-auto mb-5 h-12 w-12 text-slate-300" />
+
+            <h2 className="text-2xl font-bold">
+
+              No Notifications
+
+            </h2>
+
+            <p className="mt-3 text-slate-500">
+
+              Activity from clients and staff will appear here.
+
+            </p>
+
+          </CardContent>
+
+        </Card>
+
+      )}
+
     </div>
   )
 }
