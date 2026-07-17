@@ -18,6 +18,12 @@ export async function uploadDocument(
     throw new Error('Not authenticated.')
   }
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   const file = formData.get('file') as File
   const serviceId = formData.get('serviceId') as string
 
@@ -32,46 +38,42 @@ export async function uploadDocument(
 
   const storagePath = `${serviceId}/${fileName}`
 
-  // Upload file to Supabase Storage
+  const bucket = 'service-documents'
+
   const { error: uploadError } =
     await supabase.storage
-      .from('service-documents')
-      .upload(storagePath, file, {
-        upsert: false,
-      })
+      .from(bucket)
+      .upload(storagePath, file)
 
-  if (uploadError) {
-    console.error(uploadError)
-    throw uploadError
-  }
+  if (uploadError) throw uploadError
 
-  // Save document record
+  const uploaderRole =
+    profile?.role === 'client'
+      ? 'client'
+      : 'staff'
+
   const { error: documentError } =
     await supabase
       .from('service_documents')
       .insert({
         service_id: serviceId,
         uploaded_by: user.id,
-        uploaded_by_role: 'client',
+        uploaded_by_role: uploaderRole,
         file_name: file.name,
         storage_path: storagePath,
-        bucket_name: 'service-documents',
+        bucket_name: bucket,
         mime_type: file.type,
         file_size: file.size,
-       document_type: 'client',
+        document_type: uploaderRole,
       })
 
-  if (documentError) {
-    console.error(documentError)
-    throw documentError
-  }
+  if (documentError) throw documentError
 
-  // Activity Log
   await supabase
     .from('activity_logs')
     .insert({
       user_id: user.id,
-      role: 'client',
+      role: uploaderRole,
       action: 'Document Uploaded',
       description: file.name,
       entity_type: 'service',
@@ -79,4 +81,5 @@ export async function uploadDocument(
     })
 
   revalidatePath(`/portal/cases/${serviceId}`)
+  revalidatePath(`/staff/services/${serviceId}`)
 }
