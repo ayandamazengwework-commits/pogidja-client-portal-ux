@@ -7,34 +7,58 @@ import { Users } from 'lucide-react'
 export default async function ClientsPage() {
   const supabase = await createClient()
 
-  const { data: clients, error } = await supabase
+  // Fetch clients
+  const { data: clientsData, error: clientsError } = await supabase
     .from('clients')
-    .select(`
-      id,
-      profile_id,
-      company_id,
-      client_code,
-      status,
-      profile:profiles(
-        id,
-        first_name,
-        last_name,
-        email,
-        phone
-      ),
-      company:companies(
-        id,
-        name
-      )
-    `)
+    .select('*')
     .order('created_at', {
       ascending: false,
     })
 
-  console.log('================ CLIENT QUERY ================')
-  console.log('Error:', error)
-  console.log(JSON.stringify(clients, null, 2))
-  console.log('=============================================')
+  if (clientsError) {
+    console.error(clientsError)
+  }
+
+  // Fetch profiles
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      first_name,
+      last_name,
+      email,
+      phone
+    `)
+
+  if (profilesError) {
+    console.error(profilesError)
+  }
+
+  // Fetch companies
+  const { data: companies, error: companiesError } = await supabase
+    .from('companies')
+    .select(`
+      id,
+      name
+    `)
+
+  if (companiesError) {
+    console.error(companiesError)
+  }
+
+  // Merge manually
+  const clients =
+    clientsData?.map((client) => ({
+      ...client,
+      profile:
+        profiles?.find(
+          (profile) => profile.id === client.profile_id
+        ) ?? null,
+      company:
+        companies?.find(
+          (company) => company.id === client.company_id
+        ) ?? null,
+    })) ?? []
 
   return (
     <div className="space-y-8">
@@ -74,7 +98,7 @@ export default async function ClientsPage() {
               </p>
 
               <p className="mt-2 text-4xl font-bold">
-                {clients?.length ?? 0}
+                {clients.length}
               </p>
 
             </CardContent>
@@ -85,7 +109,7 @@ export default async function ClientsPage() {
 
       </section>
 
-      <ClientSearch clients={clients ?? []} />
+      <ClientSearch clients={clients} />
 
     </div>
   )
