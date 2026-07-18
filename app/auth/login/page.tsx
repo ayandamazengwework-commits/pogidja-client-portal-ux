@@ -76,7 +76,7 @@ export default function LoginPage() {
       <div className="mb-10 flex flex-col items-center">
 
         <Image
-          src="/ChatGPT%20Image%20Jul%2018,%202026,%2005_10_52%20PM.png"
+          src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
           alt="POG Advisory"
           width={520}
           height={180}
