@@ -7,25 +7,56 @@ import { Users } from 'lucide-react'
 export default async function ClientsPage() {
   const supabase = await createClient()
 
-  const { data: clients } = await supabase
+  const { data: clients, error } = await supabase
     .from('clients')
     .select(`
       id,
+      profile_id,
+      company_id,
       client_code,
       status,
-      profile:profiles(
+      created_at,
+
+      profile:profiles!clients_profile_id_fkey(
+        id,
         first_name,
         last_name,
+        company_name,
         email,
-        phone
+        phone,
+        role
       ),
-      company:companies(
+
+      company:companies!clients_company_id_fkey(
+        id,
         name
       )
     `)
     .order('created_at', {
       ascending: false,
     })
+
+  if (error) {
+    console.error('Clients Query Error:', error)
+  }
+
+  // Clean the data so the UI always has values to work with
+  const formattedClients =
+    clients?.map((client) => ({
+      ...client,
+
+      profile: client.profile ?? {
+        first_name: '',
+        last_name: '',
+        company_name: '',
+        email: '',
+        phone: '',
+      },
+
+      company: client.company ?? {
+        name: '',
+      },
+    })) ?? []
 
   return (
     <div className="space-y-8">
@@ -47,9 +78,8 @@ export default async function ClientsPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-slate-300">
-              Manage all registered clients, monitor
-              their services and quickly access their
-              profiles.
+              Manage all registered clients, monitor their services and quickly
+              access their profiles.
             </p>
 
           </div>
@@ -65,7 +95,7 @@ export default async function ClientsPage() {
               </p>
 
               <p className="mt-2 text-4xl font-bold">
-                {clients?.length ?? 0}
+                {formattedClients.length}
               </p>
 
             </CardContent>
@@ -76,7 +106,7 @@ export default async function ClientsPage() {
 
       </section>
 
-      <ClientSearch clients={clients ?? []} />
+      <ClientSearch clients={formattedClients} />
 
     </div>
   )
