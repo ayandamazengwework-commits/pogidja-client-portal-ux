@@ -66,41 +66,41 @@ export default function LoginPage() {
 
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-5xl">
 
         {/* Logo */}
 
-        <div className="mb-8 flex flex-col items-center">
+        <div className="mb-5 flex flex-col items-center">
 
           <Image
-  src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
-  alt="POG Advisory"
-  width={300}
-  height={300}
-  priority
-  className="w-56 sm:w-64 md:w-72 h-auto"
-/>
+            src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
+            alt="POG Advisory"
+            width={320}
+            height={320}
+            priority
+            className="h-auto w-52 sm:w-60 md:w-64"
+          />
 
-          <h1 className="mt-6 text-center text-3xl font-bold text-slate-900">
+          <h1 className="mt-2 text-center text-3xl font-bold text-slate-900 sm:text-4xl">
             Client Portal
           </h1>
 
-          <p className="mt-3 text-center text-slate-600">
-            Secure access to your accounting
-            services, tax documents and client
-            requests.
+          <p className="mt-2 max-w-xl text-center text-slate-600">
+            Secure access to your accounting services,
+            tax documents, compliance requests and
+            client communication.
           </p>
 
         </div>
 
         {/* Login Card */}
 
-        <div className="rounded-3xl border border-white/60 bg-white/90 p-8 shadow-[0_30px_80px_rgba(30,136,229,0.18)] backdrop-blur-xl">
+        <div className="mx-auto w-full max-w-2xl rounded-3xl border border-white/60 bg-white/90 p-6 shadow-[0_30px_80px_rgba(30,136,229,0.18)] backdrop-blur-xl sm:p-8">
 
           {error && (
             <Alert
               variant="destructive"
-              className="mb-6"
+              className="mb-5"
             >
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -185,7 +185,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg hover:-translate-y-0.5 transition"
+              className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg transition-all hover:-translate-y-0.5"
             >
 
               {loading && (
@@ -200,24 +200,24 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Footer Links */}
+        {/* Footer */}
 
-        <div className="mt-8 text-center">
-
-          <p className="text-slate-600">
-            New to POG Advisory?
-          </p>
+        <div className="mt-5 flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-center sm:gap-6">
 
           <Link
             href="/auth/register"
-            className="mt-2 block font-semibold text-[#1E88E5] hover:underline"
+            className="font-semibold text-[#1E88E5] hover:underline"
           >
             Create an Account
           </Link>
 
+          <span className="hidden text-slate-300 sm:block">
+            •
+          </span>
+
           <Link
             href="/auth/staff-login"
-            className="mt-5 inline-block text-sm font-medium text-slate-600 hover:text-[#1E88E5]"
+            className="font-medium text-slate-600 hover:text-[#1E88E5]"
           >
             Staff Login
           </Link>
