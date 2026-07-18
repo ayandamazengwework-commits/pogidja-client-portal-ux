@@ -13,10 +13,11 @@ import { Textarea } from '@/components/ui/textarea'
 interface Client {
   id: string
   profile: {
-    first_name: string | null
-    last_name: string | null
-    company_name?: string | null
-    email?: string | null
+    first_name: string
+    last_name: string
+  } | null
+  company: {
+    name: string
   } | null
 }
 
@@ -66,7 +67,7 @@ export function NewServiceForm({
           className="space-y-6"
         >
 
-          {/* CLIENT */}
+          {/* Client */}
 
           <div>
 
@@ -85,28 +86,21 @@ export function NewServiceForm({
                 Select Client
               </option>
 
-              {clients.map((client) => {
-
-                const displayName =
-                  client.profile?.company_name?.trim()
-                    ? client.profile.company_name
-                    : `${client.profile?.first_name ?? ''} ${client.profile?.last_name ?? ''}`
-
-                return (
-                  <option
-                    key={client.id}
-                    value={client.id}
-                  >
-                    {displayName}
-                  </option>
-                )
-              })}
+              {clients.map((client) => (
+                <option
+                  key={client.id}
+                  value={client.id}
+                >
+                  {client.company?.name ??
+                    `${client.profile?.first_name ?? ''} ${client.profile?.last_name ?? ''}`}
+                </option>
+              ))}
 
             </select>
 
           </div>
 
-          {/* TITLE */}
+          {/* Title */}
 
           <div>
 
@@ -123,7 +117,7 @@ export function NewServiceForm({
 
           </div>
 
-          {/* CATEGORY */}
+          {/* Category */}
 
           <div>
 
@@ -143,21 +137,19 @@ export function NewServiceForm({
               </option>
 
               {categories.map((category) => (
-
                 <option
                   key={category.id}
                   value={category.id}
                 >
                   {category.name}
                 </option>
-
               ))}
 
             </select>
 
           </div>
 
-          {/* DESCRIPTION */}
+          {/* Description */}
 
           <div>
 
@@ -175,6 +167,8 @@ export function NewServiceForm({
 
           <div className="grid gap-6 md:grid-cols-3">
 
+            {/* Priority */}
+
             <div>
 
               <Label htmlFor="priority">
@@ -187,13 +181,17 @@ export function NewServiceForm({
                 defaultValue="Normal"
                 className="mt-2 w-full rounded-md border p-3"
               >
+
                 <option>Low</option>
                 <option>Normal</option>
                 <option>High</option>
                 <option>Urgent</option>
+
               </select>
 
             </div>
+
+            {/* Due Date */}
 
             <div>
 
@@ -208,6 +206,8 @@ export function NewServiceForm({
               />
 
             </div>
+
+            {/* Progress */}
 
             <div>
 
@@ -228,7 +228,7 @@ export function NewServiceForm({
 
           </div>
 
-          {/* STAFF */}
+          {/* Assigned Staff */}
 
           <div>
 
@@ -247,14 +247,12 @@ export function NewServiceForm({
               </option>
 
               {staff.map((person) => (
-
                 <option
                   key={person.id}
                   value={person.id}
                 >
                   {person.first_name} {person.last_name}
                 </option>
-
               ))}
 
             </select>
