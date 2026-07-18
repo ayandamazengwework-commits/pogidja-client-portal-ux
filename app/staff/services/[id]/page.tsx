@@ -3,18 +3,23 @@ import Link from 'next/link'
 import {
   ArrowLeft,
   Calendar,
-  CheckCircle2,
   Clock3,
+  CheckCircle2,
   User,
   Building2,
   Mail,
   Phone,
+  FileText,
+  MessageSquare,
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { UploadDocument } from '@/components/portal/upload-document'
+import { sendMessage } from '@/app/staff/messages/actions'
+import { ClientActivity } from '@/components/staff/client-activity'
 
 interface Props {
   params: Promise<{
@@ -29,29 +34,79 @@ export default async function ServicePage({
 
   const supabase = await createClient()
 
+  // --------------------------------------------------
+  // SERVICE
+  // --------------------------------------------------
+
   const { data: service } = await supabase
     .from('services')
-    .select(`
-      *,
-      client:profiles!services_client_id_fkey(
-        id,
-        first_name,
-        last_name,
-        company_name,
-        email,
-        phone
-      ),
-      assigned:profiles!services_assigned_to_fkey(
-        first_name,
-        last_name
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .single()
 
   if (!service) {
     notFound()
   }
+
+  // --------------------------------------------------
+  // CLIENT
+  // --------------------------------------------------
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select(`
+      *,
+      profile:profiles(*),
+      company:companies(*)
+    `)
+    .eq('id', service.client_id)
+    .single()
+
+  if (!client) {
+    notFound()
+  }
+
+  const profile = client.profile
+
+  // --------------------------------------------------
+  // ASSIGNED STAFF
+  // --------------------------------------------------
+
+  let assignedStaff = null
+
+  if (service.assigned_to) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('first_name,last_name')
+      .eq('id', service.assigned_to)
+      .single()
+
+    assignedStaff = data
+  }
+
+  // --------------------------------------------------
+  // DOCUMENTS
+  // --------------------------------------------------
+
+  const { data: documents } = await supabase
+    .from('service_documents')
+    .select('*')
+    .eq('service_id', service.id)
+    .order('created_at', {
+      ascending: false,
+    })
+
+  // --------------------------------------------------
+  // MESSAGES
+  // --------------------------------------------------
+
+  const { data: messages } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('service_id', service.id)
+    .order('created_at', {
+      ascending: false,
+    })
 
   const progress = service.progress ?? 0
 
@@ -73,24 +128,31 @@ export default async function ServicePage({
 
   return (
     <div className="space-y-8">
+            {/* HERO */}
 
-      {/* Hero */}
+      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
 
-      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
-
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
 
           <div>
 
-            <p className="text-sm uppercase tracking-[0.3em] text-blue-200">
-              SERVICE DETAILS
+            <Link
+              href="/staff/clients"
+              className="mb-5 inline-flex items-center text-sm text-blue-200 hover:text-white"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Client
+            </Link>
+
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-200">
+              SERVICE
             </p>
 
-            <h1 className="mt-3 text-3xl font-bold md:text-5xl">
+            <h1 className="mt-3 text-4xl font-bold">
               {service.title}
             </h1>
 
-            <p className="mt-4 max-w-2xl text-slate-300">
+            <p className="mt-3 text-lg text-slate-300">
               {service.service_type}
             </p>
 
@@ -112,28 +174,15 @@ export default async function ServicePage({
 
           </div>
 
-          <Button
-            asChild
-            variant="secondary"
-          >
-
-            <Link href="/staff/services">
-
-              <ArrowLeft className="mr-2 h-4 w-4" />
-
-              Back to Services
-
-            </Link>
-
-          </Button>
+          <UploadDocument serviceId={service.id} />
 
         </div>
 
       </section>
 
-      {/* Overview */}
+      {/* OVERVIEW */}
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -160,7 +209,7 @@ export default async function ServicePage({
             <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-200">
 
               <div
-                className="h-full rounded-full bg-[#1E88E5]"
+                className="h-full rounded-full bg-[#1E88E5] transition-all"
                 style={{
                   width: `${progress}%`,
                 }}
@@ -189,10 +238,8 @@ export default async function ServicePage({
                 <p className="text-lg font-semibold">
 
                   {service.due_date
-                    ? new Date(
-                        service.due_date
-                      ).toLocaleDateString()
-                    : 'Not Set'}
+                    ? new Date(service.due_date).toLocaleDateString()
+                    : 'No due date'}
 
                 </p>
 
@@ -220,8 +267,8 @@ export default async function ServicePage({
 
                 <p className="text-lg font-semibold">
 
-                  {service.assigned
-                    ? `${service.assigned.first_name} ${service.assigned.last_name}`
+                  {assignedStaff
+                    ? `${assignedStaff.first_name} ${assignedStaff.last_name}`
                     : 'Unassigned'}
 
                 </p>
@@ -234,11 +281,41 @@ export default async function ServicePage({
 
         </Card>
 
-      </div>
+        <Card className="rounded-3xl border-0 shadow-sm">
 
-      {/* Details */}
+          <CardContent className="p-6">
+
+            <div className="flex items-center gap-3">
+
+              <Building2 className="h-6 w-6 text-blue-600" />
+
+              <div>
+
+                <p className="text-sm text-slate-500">
+                  Client
+                </p>
+
+                <p className="font-semibold">
+
+                  {profile.company_name ||
+                    `${profile.first_name} ${profile.last_name}`}
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </CardContent>
+
+        </Card>
+
+      </div>
+            {/* DETAILS */}
 
       <div className="grid gap-6 lg:grid-cols-2">
+
+        {/* Service Information */}
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -254,14 +331,28 @@ export default async function ServicePage({
                 Description
               </p>
 
-              <p className="mt-2 leading-7">
+              <p className="mt-2 leading-7 text-slate-700">
+
                 {service.description ||
-                  'No description has been provided for this service.'}
+                  'No description has been provided.'}
+
               </p>
 
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
+
+              <div>
+
+                <p className="text-sm text-slate-500">
+                  Service Type
+                </p>
+
+                <p className="mt-2 font-semibold">
+                  {service.service_type}
+                </p>
+
+              </div>
 
               <div>
 
@@ -278,11 +369,23 @@ export default async function ServicePage({
               <div>
 
                 <p className="text-sm text-slate-500">
-                  Service Type
+                  Status
                 </p>
 
                 <p className="mt-2 font-semibold">
-                  {service.service_type}
+                  {service.status}
+                </p>
+
+              </div>
+
+              <div>
+
+                <p className="text-sm text-slate-500">
+                  Progress
+                </p>
+
+                <p className="mt-2 font-semibold">
+                  {progress}%
                 </p>
 
               </div>
@@ -292,6 +395,8 @@ export default async function ServicePage({
           </CardContent>
 
         </Card>
+
+        {/* Client Information */}
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -315,8 +420,8 @@ export default async function ServicePage({
 
                   <p className="font-semibold">
 
-                    {service.client.company_name ||
-                      `${service.client.first_name} ${service.client.last_name}`}
+                    {profile.company_name ||
+                      `${profile.first_name} ${profile.last_name}`}
 
                   </p>
 
@@ -335,7 +440,11 @@ export default async function ServicePage({
                   </p>
 
                   <p>
-                    {service.client.company_name || '-'}
+
+                    {client.company?.name ||
+                      profile.company_name ||
+                      '-'}
+
                   </p>
 
                 </div>
@@ -352,7 +461,7 @@ export default async function ServicePage({
                     Email
                   </p>
 
-                  <p>{service.client.email}</p>
+                  <p>{profile.email}</p>
 
                 </div>
 
@@ -368,7 +477,7 @@ export default async function ServicePage({
                     Phone
                   </p>
 
-                  <p>{service.client.phone || '-'}</p>
+                  <p>{profile.phone || '-'}</p>
 
                 </div>
 
@@ -381,85 +490,209 @@ export default async function ServicePage({
         </Card>
 
       </div>
-            {/* Documents */}
+            {/* DOCUMENTS */}
 
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
+      <Card className="rounded-3xl border-0 shadow-sm">
+
+        <CardContent className="p-8">
+
+          <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold">
+            <FileText className="h-6 w-6 text-[#1E88E5]" />
             Documents
           </h2>
 
-          {documents.length > 0 ? (
+          {documents && documents.length > 0 ? (
+
             <div className="space-y-4">
+
               {documents.map((doc) => (
+
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between rounded-xl border p-4"
+                  className="flex items-center justify-between rounded-2xl border p-5"
                 >
+
                   <div>
-                    <p className="font-medium">
+
+                    <h3 className="font-semibold">
                       {doc.file_name}
-                    </p>
+                    </h3>
 
                     <p className="text-sm text-slate-500">
                       {doc.document_type || 'Document'}
                     </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {new Date(doc.created_at).toLocaleString()}
+                    </p>
+
                   </div>
 
-                  <a
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                  <Button
+                    asChild
+                    variant="outline"
                   >
-                    Download
-                  </a>
+                    <Link
+                      href={`/api/documents/${doc.id}`}
+                      target="_blank"
+                    >
+                      Download
+                    </Link>
+                  </Button>
+
                 </div>
+
               ))}
+
             </div>
+
           ) : (
-            <p className="text-slate-500">
-              No documents uploaded.
-            </p>
+
+            <div className="rounded-2xl border border-dashed py-12 text-center">
+
+              <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300" />
+
+              <p className="text-slate-500">
+                No documents uploaded yet.
+              </p>
+
+            </div>
+
           )}
+
         </CardContent>
+
       </Card>
 
-      {/* Activity */}
+      {/* MESSAGES */}
 
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="mb-6 text-xl font-semibold">
-            Activity Timeline
+      <Card className="rounded-3xl border-0 shadow-sm">
+
+        <CardContent className="space-y-6 p-8">
+
+          <h2 className="flex items-center gap-3 text-2xl font-bold">
+
+            <MessageSquare className="h-6 w-6 text-[#1E88E5]" />
+
+            Conversation
+
           </h2>
 
-          {activity.length > 0 ? (
-            <div className="space-y-5">
-              {activity.map((item) => (
-                <div
-                  key={item.id}
-                  className="border-l-2 border-blue-500 pl-4"
-                >
-                  <p className="font-medium">
-                    {item.action}
-                  </p>
+          <form
+            action={sendMessage}
+            className="space-y-4 rounded-2xl border p-5"
+          >
 
-                  <p className="text-sm text-slate-500">
-                    {item.description}
-                  </p>
+            <input
+              type="hidden"
+              name="recipientId"
+              value={profile.id}
+            />
 
-                  <p className="mt-1 text-xs text-slate-400">
-                    {new Date(item.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
+            <input
+              type="hidden"
+              name="serviceId"
+              value={service.id}
+            />
+
+            <input
+              name="subject"
+              type="text"
+              placeholder="Subject"
+              className="w-full rounded-xl border p-3"
+            />
+
+            <textarea
+              rows={4}
+              required
+              name="body"
+              placeholder="Write your message..."
+              className="w-full rounded-xl border p-3"
+            />
+
+            <div className="flex justify-end">
+
+              <Button type="submit">
+                Send Message
+              </Button>
+
             </div>
+
+          </form>
+
+          {messages && messages.length > 0 ? (
+
+            <div className="space-y-4">
+
+              {messages.map((message) => (
+
+                <div
+                  key={message.id}
+                  className={`rounded-2xl p-5 ${
+                    message.sender_id === profile.id
+                      ? 'bg-slate-100'
+                      : 'bg-blue-50'
+                  }`}
+                >
+
+                  <div className="flex items-center justify-between">
+
+                    <h3 className="font-semibold">
+                      {message.subject || 'Message'}
+                    </h3>
+
+                    <span className="text-xs text-slate-400">
+
+                      {new Date(message.created_at).toLocaleString()}
+
+                    </span>
+
+                  </div>
+
+                  <p className="mt-3 whitespace-pre-wrap text-slate-700">
+
+                    {message.body}
+
+                  </p>
+
+                </div>
+
+              ))}
+
+            </div>
+
           ) : (
-            <p className="text-slate-500">
-              No activity recorded.
-            </p>
+
+            <div className="rounded-2xl border border-dashed py-12 text-center">
+
+              <MessageSquare className="mx-auto mb-4 h-10 w-10 text-slate-300" />
+
+              <p className="text-slate-500">
+
+                No conversation yet.
+
+              </p>
+
+            </div>
+
           )}
+
         </CardContent>
+
+      </Card>
+
+      {/* ACTIVITY */}
+
+      <Card className="rounded-3xl border-0 shadow-sm">
+
+        <CardContent className="p-8">
+
+          <ClientActivity
+            clientId={client.id}
+          />
+
+        </CardContent>
+
       </Card>
 
     </div>
