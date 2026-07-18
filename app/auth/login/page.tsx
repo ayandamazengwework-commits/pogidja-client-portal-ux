@@ -76,12 +76,12 @@ export default function LoginPage() {
       <div className="mb-10 flex flex-col items-center">
 
         <Image
-          src="/pog-logo.png"
+          src="/ChatGPT%20Image%20Jul%2018,%202026,%2005_10_52%20PM.png"
           alt="POG Advisory"
           width={520}
           height={180}
           priority
-          className="h-auto w-full max-w-[430px]"
+          className="h-auto w-full max-w-[430px] object-contain"
         />
 
         <h1 className="mt-8 text-center text-4xl font-bold tracking-tight text-slate-900">
@@ -146,8 +146,6 @@ export default function LoginPage() {
           className="space-y-6"
         >
 
-          {/* EMAIL */}
-
           <div>
 
             <Label htmlFor="email">
@@ -174,8 +172,6 @@ export default function LoginPage() {
             </div>
 
           </div>
-
-          {/* PASSWORD */}
 
           <div>
 
@@ -231,8 +227,6 @@ export default function LoginPage() {
         </form>
 
       </div>
-
-      {/* ================= REGISTER ================= */}
 
       <p className="mt-8 text-center text-base text-slate-600">
 
