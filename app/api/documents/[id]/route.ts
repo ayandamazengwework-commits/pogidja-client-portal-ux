@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
+
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params
+  const { id } = await params
 
   const supabase = await createClient()
 
@@ -14,7 +15,9 @@ export async function GET(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    return NextResponse.redirect(
+      new URL('/auth/login', request.url)
+    )
   }
 
   // Get logged in profile
@@ -25,11 +28,17 @@ export async function GET(
     .single()
 
   if (!profile) {
-    return new NextResponse('Unauthorized', { status: 401 })
+    return new NextResponse('Unauthorized', {
+      status: 401,
+    })
   }
 
   // Staff can access everything
-  if (['staff', 'manager', 'admin'].includes(profile.role)) {
+  if (
+    profile.role === 'staff' ||
+    profile.role === 'manager' ||
+    profile.role === 'admin'
+  ) {
     return downloadDocument(supabase, id)
   }
 
@@ -41,7 +50,9 @@ export async function GET(
     .single()
 
   if (!client) {
-    return new NextResponse('Unauthorized', { status: 401 })
+    return new NextResponse('Unauthorized', {
+      status: 401,
+    })
   }
 
   // Get requested document
@@ -52,7 +63,9 @@ export async function GET(
     .single()
 
   if (!document) {
-    return new NextResponse('Document not found', { status: 404 })
+    return new NextResponse('Document not found', {
+      status: 404,
+    })
   }
 
   // Verify document belongs to this client's service
@@ -63,7 +76,9 @@ export async function GET(
     .single()
 
   if (!service || service.client_id !== client.id) {
-    return new NextResponse('Forbidden', { status: 403 })
+    return new NextResponse('Forbidden', {
+      status: 403,
+    })
   }
 
   return downloadDocument(supabase, id)
@@ -80,16 +95,22 @@ async function downloadDocument(
     .single()
 
   if (!document) {
-    return new NextResponse('Document not found', { status: 404 })
+    return new NextResponse('Document not found', {
+      status: 404,
+    })
   }
 
-  // Force the correct bucket name
-  const { data, error } = await supabase.storage
-    .from('service-documents')
+  const { data } = await supabase.storage
+    .from(document.bucket_name)
     .createSignedUrl(document.storage_path, 60)
 
-  if (error || !data?.signedUrl) {
-    return new NextResponse('Unable to generate download link.', { status: 500 })
+  if (!data?.signedUrl) {
+    return new NextResponse(
+      'Unable to generate download link.',
+      {
+        status: 500,
+      }
+    )
   }
 
   return NextResponse.redirect(data.signedUrl)
