@@ -73,13 +73,13 @@ export default function LoginPage() {
         <div className="mb-8 flex flex-col items-center">
 
           <Image
-            src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
-            alt="POG Advisory"
-            width={450}
-            height={150}
-            priority
-            className="h-auto w-full max-w-[250px]"
-          />
+  src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
+  alt="POG Advisory"
+  width={300}
+  height={300}
+  priority
+  className="w-56 sm:w-64 md:w-72 h-auto"
+/>
 
           <h1 className="mt-6 text-center text-3xl font-bold text-slate-900">
             Client Portal
