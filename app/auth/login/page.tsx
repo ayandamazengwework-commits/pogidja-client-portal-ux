@@ -1,13 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Loader2, Mail, Lock, AlertCircle } from 'lucide-react'
+import {
+  Loader2,
+  Mail,
+  Lock,
+  AlertCircle,
+} from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/client'
 
-import { Logo } from '@/components/brand/logo'
 import { GoogleButton } from '@/components/brand/google-button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -66,27 +71,39 @@ export default function LoginPage() {
   return (
     <div className="relative z-20 w-full max-w-xl">
 
+      {/* ================= LOGO ================= */}
+
       <div className="mb-10 flex flex-col items-center">
 
-        <Logo />
+        <Image
+          src="/pog-logo.png"
+          alt="POG Advisory"
+          width={520}
+          height={180}
+          priority
+          className="h-auto w-full max-w-[430px]"
+        />
 
-        <h1 className="mt-7 text-center text-5xl font-extrabold tracking-tight text-slate-900">
-          POG
-          <span className="text-[#1E88E5]"> Advisory </span>
-          Portal
+        <h1 className="mt-8 text-center text-4xl font-bold tracking-tight text-slate-900">
+          Client Portal
         </h1>
 
-        <p className="mt-3 text-lg text-slate-600">
-          Client Portal —
-          <Link
-            href="/auth/staff-login"
-            className="ml-2 font-semibold text-[#1E88E5] hover:underline"
-          >
-            Staff login
-          </Link>
+        <p className="mt-3 max-w-md text-center text-lg text-slate-600">
+          Secure access to your accounting services,
+          tax documents, communication and client
+          requests.
         </p>
 
+        <Link
+          href="/auth/staff-login"
+          className="mt-5 font-semibold text-[#1E88E5] transition hover:underline"
+        >
+          Staff Login
+        </Link>
+
       </div>
+
+      {/* ================= LOGIN CARD ================= */}
 
       <div className="rounded-[30px] border border-white/60 bg-white/90 p-10 shadow-[0_30px_80px_rgba(30,136,229,0.18)] backdrop-blur-xl">
 
@@ -129,10 +146,12 @@ export default function LoginPage() {
           className="space-y-6"
         >
 
+          {/* EMAIL */}
+
           <div>
 
             <Label htmlFor="email">
-              Email address
+              Email Address
             </Label>
 
             <div className="relative mt-2">
@@ -155,6 +174,8 @@ export default function LoginPage() {
             </div>
 
           </div>
+
+          {/* PASSWORD */}
 
           <div>
 
@@ -196,7 +217,7 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="mt-4 h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+            className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
           >
 
             {loading && (
@@ -210,6 +231,8 @@ export default function LoginPage() {
         </form>
 
       </div>
+
+      {/* ================= REGISTER ================= */}
 
       <p className="mt-8 text-center text-base text-slate-600">
 
