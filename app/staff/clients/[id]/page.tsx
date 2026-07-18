@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+
 import {
   ArrowLeft,
   Building2,
@@ -8,7 +9,6 @@ import {
   FolderOpen,
   FileText,
   MessageSquare,
-  Calendar,
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
@@ -32,21 +32,36 @@ export default async function ClientProfilePage({
 
   const supabase = await createClient()
 
-  const { data: client } = await supabase
+  // Load client
+
+  const { data: client, error: clientError } = await supabase
     .from('clients')
     .select(`
       *,
-      profile:profiles(*),
       company:companies(*)
     `)
     .eq('id', id)
     .single()
 
-  if (!client) {
+  if (clientError || !client) {
+    console.error(clientError)
     notFound()
   }
 
-  const profile = client.profile
+  // Load profile separately
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', client.profile_id)
+    .single()
+
+  if (profileError || !profile) {
+    console.error(profileError)
+    notFound()
+  }
+
+  // Services
 
   const { data: services } = await supabase
     .from('services')
@@ -56,13 +71,15 @@ export default async function ClientProfilePage({
       ascending: false,
     })
 
-  const serviceIds =
-    services?.map((s) => s.id) ?? []
-
   const latestService =
-    services?.length
+    services && services.length > 0
       ? services[0]
       : null
+
+  const serviceIds =
+    services?.map((service) => service.id) ?? []
+
+  // Documents
 
   const { data: documents } =
     serviceIds.length > 0
@@ -77,22 +94,15 @@ export default async function ClientProfilePage({
           data: [],
         }
 
+  // Messages
+
   const { data: messages } =
     await supabase
       .from('messages')
       .select('*')
       .or(
-        `sender_id.eq.${profile.id},recipient_id.eq.${profile.id}`
+        `sender_id.eq.${client.profile_id},recipient_id.eq.${client.profile_id}`
       )
-      .order('created_at', {
-        ascending: false,
-      })
-
-  const { data: activity } =
-    await supabase
-      .from('activity_logs')
-      .select('*')
-      .eq('client_id', client.id)
       .order('created_at', {
         ascending: false,
       })
@@ -122,8 +132,8 @@ export default async function ClientProfilePage({
 
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#1E88E5] text-2xl font-bold text-white">
 
-                {profile.first_name?.charAt(0)}
-                {profile.last_name?.charAt(0)}
+                {(profile.first_name?.[0] ?? '?').toUpperCase()}
+                {(profile.last_name?.[0] ?? '').toUpperCase()}
 
               </div>
 
@@ -131,21 +141,18 @@ export default async function ClientProfilePage({
 
                 <h1 className="text-3xl font-bold">
 
-                  {profile.company_name ||
-                    `${profile.first_name} ${profile.last_name}`}
+                  {profile.company_name?.trim()
+                    ? profile.company_name
+                    : `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim()}
 
                 </h1>
 
                 <p className="mt-2 text-slate-500">
-
                   {profile.email}
-
                 </p>
 
                 <div className="mt-4 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-
                   {client.status}
-
                 </div>
 
               </div>
@@ -153,17 +160,15 @@ export default async function ClientProfilePage({
             </div>
 
             {latestService && (
-
               <UploadDocument
                 serviceId={latestService.id}
               />
-
             )}
 
           </div>
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
 
-            <Card>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                        <Card>
               <CardContent className="p-5">
 
                 <Building2 className="mb-3 h-6 w-6 text-blue-600" />
@@ -173,11 +178,9 @@ export default async function ClientProfilePage({
                 </p>
 
                 <p className="mt-2 font-semibold">
-
                   {client.company?.name ??
                     profile.company_name ??
                     '-'}
-
                 </p>
 
               </CardContent>
@@ -268,17 +271,11 @@ export default async function ClientProfilePage({
 
                           <div className="mt-3 flex gap-6 text-sm text-slate-400">
 
-                            <span>
-                              {service.status}
-                            </span>
+                            <span>{service.status}</span>
 
-                            <span>
-                              {service.priority}
-                            </span>
+                            <span>{service.priority}</span>
 
-                            <span>
-                              {service.progress ?? 0}%
-                            </span>
+                            <span>{service.progress ?? 0}%</span>
 
                           </div>
 
@@ -288,13 +285,9 @@ export default async function ClientProfilePage({
                           asChild
                           variant="outline"
                         >
-
-                          <Link
-                            href={`/staff/services/${service.id}`}
-                          >
+                          <Link href={`/staff/services/${service.id}`}>
                             Open
                           </Link>
-
                         </Button>
 
                       </CardContent>
@@ -336,7 +329,8 @@ export default async function ClientProfilePage({
                 )}
 
               </div>
-                            {documents && documents.length > 0 ? (
+
+              {documents && documents.length > 0 ? (
 
                 <div className="space-y-4">
 
@@ -354,16 +348,11 @@ export default async function ClientProfilePage({
                         </h3>
 
                         <p className="text-sm text-slate-500">
-                          {document.document_type ??
-                            'Document'}
+                          {document.document_type ?? 'Document'}
                         </p>
 
                         <p className="mt-2 text-xs text-slate-400">
-
-                          {new Date(
-                            document.created_at
-                          ).toLocaleString()}
-
+                          {new Date(document.created_at).toLocaleString()}
                         </p>
 
                       </div>
@@ -396,9 +385,7 @@ export default async function ClientProfilePage({
                   <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300" />
 
                   <p className="text-slate-500">
-
                     No documents uploaded.
-
                   </p>
 
                 </div>
@@ -433,7 +420,7 @@ export default async function ClientProfilePage({
                 <input
                   type="hidden"
                   name="recipientId"
-                  value={profile.id}
+                  value={client.profile_id}
                 />
 
                 <input
@@ -466,16 +453,16 @@ export default async function ClientProfilePage({
                 </div>
 
               </form>
-
-              {messages && messages.length > 0 ? (
+                            {messages && messages.length > 0 ? (
 
                 <div className="space-y-4">
-                                    {messages.map((message) => (
+
+                  {messages.map((message) => (
 
                     <div
                       key={message.id}
                       className={`rounded-2xl p-5 ${
-                        message.sender_id === profile.id
+                        message.sender_id === client.profile_id
                           ? 'bg-slate-100'
                           : 'bg-blue-50'
                       }`}
@@ -488,9 +475,7 @@ export default async function ClientProfilePage({
                         </h3>
 
                         <span className="text-xs text-slate-400">
-                          {new Date(
-                            message.created_at
-                          ).toLocaleString()}
+                          {new Date(message.created_at).toLocaleString()}
                         </span>
 
                       </div>
@@ -523,7 +508,7 @@ export default async function ClientProfilePage({
 
           </Card>
 
-             {/* ACTIVITY */}
+          {/* ACTIVITY */}
 
           <Card className="rounded-3xl border">
 
