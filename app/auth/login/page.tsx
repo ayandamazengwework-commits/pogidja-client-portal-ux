@@ -69,7 +69,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-6 py-12">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-6 py-8 sm:py-12">
 
       {/* Background Glow */}
 
@@ -93,14 +93,14 @@ export default function LoginPage() {
             width={900}
             height={300}
             priority
-            className="h-auto w-full max-w-[480px]"
+            className="h-auto w-full max-w-[280px] sm:max-w-[360px] lg:max-w-[480px]"
           />
 
-          <h1 className="mt-5 text-center text-5xl font-bold tracking-tight text-slate-900">
+          <h1 className="mt-5 text-center text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900">
             Client Portal
           </h1>
 
-          <p className="mt-4 max-w-xl text-center text-lg leading-8 text-slate-600">
+          <p className="mt-4 max-w-xl text-centertext-base sm:text-lg leading-8 text-slate-600">
             Securely manage your accounting services,
             tax documents, compliance requests,
             client communication and business records
@@ -111,7 +111,7 @@ export default function LoginPage() {
 
         {/* Login Card */}
 
-        <div className="mx-auto w-full max-w-xl rounded-[32px] border border-white/60 bg-white/90 p-10 shadow-[0_35px_90px_rgba(30,136,229,0.18)] backdrop-blur-2xl">
+        <div className="mx-auto w-full max-w-xl rounded-[32px] border border-white/60 bg-white/90 p-6 sm:p-8 lg:p-10 shadow-[0_35px_90px_rgba(30,136,229,0.18)] backdrop-blur-2xl">
 
           <GoogleButton
             label={
