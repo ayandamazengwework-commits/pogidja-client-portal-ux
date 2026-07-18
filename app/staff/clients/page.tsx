@@ -15,19 +15,14 @@ export default async function ClientsPage() {
       company_id,
       client_code,
       status,
-      created_at,
-
-      profile:profiles!clients_profile_id_fkey(
+      profile:profiles(
         id,
         first_name,
         last_name,
-        company_name,
         email,
-        phone,
-        role
+        phone
       ),
-
-      company:companies!clients_company_id_fkey(
+      company:companies(
         id,
         name
       )
@@ -36,27 +31,10 @@ export default async function ClientsPage() {
       ascending: false,
     })
 
-  if (error) {
-    console.error('Clients Query Error:', error)
-  }
-
-  // Clean the data so the UI always has values to work with
-  const formattedClients =
-    clients?.map((client) => ({
-      ...client,
-
-      profile: client.profile ?? {
-        first_name: '',
-        last_name: '',
-        company_name: '',
-        email: '',
-        phone: '',
-      },
-
-      company: client.company ?? {
-        name: '',
-      },
-    })) ?? []
+  console.log('================ CLIENT QUERY ================')
+  console.log('Error:', error)
+  console.log(JSON.stringify(clients, null, 2))
+  console.log('=============================================')
 
   return (
     <div className="space-y-8">
@@ -78,8 +56,9 @@ export default async function ClientsPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-slate-300">
-              Manage all registered clients, monitor their services and quickly
-              access their profiles.
+              Manage all registered clients, monitor
+              their services and quickly access their
+              profiles.
             </p>
 
           </div>
@@ -95,7 +74,7 @@ export default async function ClientsPage() {
               </p>
 
               <p className="mt-2 text-4xl font-bold">
-                {formattedClients.length}
+                {clients?.length ?? 0}
               </p>
 
             </CardContent>
@@ -106,7 +85,7 @@ export default async function ClientsPage() {
 
       </section>
 
-      <ClientSearch clients={formattedClients} />
+      <ClientSearch clients={clients ?? []} />
 
     </div>
   )
