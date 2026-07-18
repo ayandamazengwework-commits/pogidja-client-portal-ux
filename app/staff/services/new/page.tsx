@@ -13,68 +13,33 @@ import { NewServiceForm } from '@/components/services/new-service-form'
 export default async function NewServicePage() {
   const supabase = await createClient()
 
-  // --------------------------------------------------
-  // Load clients
-  // --------------------------------------------------
-
-  const { data: clientRows } = await supabase
+  // Clients
+  const { data: clients } = await supabase
     .from('clients')
     .select(`
       id,
-      profile_id,
-      client_code,
-      status
+      profile:profiles(
+        first_name,
+        last_name
+      ),
+      company:companies(
+        name
+      )
     `)
     .order('created_at')
 
-  const profileIds =
-    clientRows?.map((c) => c.profile_id).filter(Boolean) ?? []
-
-  const { data: profiles } =
-    profileIds.length > 0
-      ? await supabase
-          .from('profiles')
-          .select(`
-            id,
-            first_name,
-            last_name,
-            company_name,
-            email,
-            phone
-          `)
-          .in('id', profileIds)
-      : { data: [] }
-
-  const clients =
-    clientRows?.map((client) => ({
-      ...client,
-      profile:
-        profiles?.find(
-          (p) => p.id === client.profile_id
-        ) ?? null,
-    })) ?? []
-
-  // --------------------------------------------------
   // Categories
-  // --------------------------------------------------
-
   const { data: categories } = await supabase
     .from('service_categories')
     .select('*')
     .order('name')
 
-  // --------------------------------------------------
   // Staff
-  // --------------------------------------------------
-
   const { data: staff } = await supabase
     .from('profiles')
-    .select(`
-      id,
-      first_name,
-      last_name,
-      role
-    `)
+    .select(
+      'id, first_name, last_name, role'
+    )
     .in('role', [
       'staff',
       'manager',
@@ -84,7 +49,7 @@ export default async function NewServicePage() {
   return (
     <div className="space-y-8">
 
-      {/* HERO */}
+      {/* Hero */}
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
@@ -130,30 +95,31 @@ export default async function NewServicePage() {
 
       </section>
 
-      {/* BACK BUTTON */}
-
-      <div>
+      <div className="flex justify-start">
 
         <Button
-          asChild
           variant="outline"
+          asChild
         >
+
           <Link href="/staff/services">
+
             <ArrowLeft className="mr-2 h-4 w-4" />
+
             Back to Services
+
           </Link>
+
         </Button>
 
       </div>
-
-      {/* FORM */}
 
       <Card className="rounded-3xl border-0 shadow-sm">
 
         <CardContent className="p-8">
 
           <NewServiceForm
-            clients={clients}
+            clients={clients ?? []}
             categories={categories ?? []}
             staff={staff ?? []}
           />
