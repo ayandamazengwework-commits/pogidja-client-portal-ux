@@ -108,7 +108,8 @@ export default async function ClientsPage() {
         </div>
 
       </section>
-
+console.log('CLIENTS SENT TO COMPONENT')
+console.log(JSON.stringify(clients, null, 2))
       <ClientSearch clients={clients} />
 
     </div>
