@@ -7,58 +7,33 @@ import { Users } from 'lucide-react'
 export default async function ClientsPage() {
   const supabase = await createClient()
 
-  // Fetch clients
-  const { data: clientsData, error: clientsError } = await supabase
+  const { data: clients, error } = await supabase
     .from('clients')
-    .select('*')
+    .select(`
+      id,
+      profile_id,
+      client_code,
+      status,
+      profile:profile_id (
+        id,
+        first_name,
+        last_name,
+        email,
+        phone
+      ),
+      company:company_id (
+        id,
+        name
+      )
+    `)
     .order('created_at', {
       ascending: false,
     })
 
-  if (clientsError) {
-    console.error(clientsError)
-  }
-
-  // Fetch profiles
-  const { data: profiles, error: profilesError } = await supabase
-    .from('profiles')
-    .select(`
-      id,
-      first_name,
-      last_name,
-      email,
-      phone
-    `)
-
-  if (profilesError) {
-    console.error(profilesError)
-  }
-
-  // Fetch companies
-  const { data: companies, error: companiesError } = await supabase
-    .from('companies')
-    .select(`
-      id,
-      name
-    `)
-
-  if (companiesError) {
-    console.error(companiesError)
-  }
-
-  // Merge manually
-  const clients =
-    clientsData?.map((client) => ({
-      ...client,
-      profile:
-        profiles?.find(
-          (profile) => profile.id === client.profile_id
-        ) ?? null,
-      company:
-        companies?.find(
-          (company) => company.id === client.company_id
-        ) ?? null,
-    })) ?? []
+  console.log('================ CLIENT QUERY ================')
+  console.log('ERROR:', error)
+  console.log(JSON.stringify(clients, null, 2))
+  console.log('==============================================')
 
   return (
     <div className="space-y-8">
@@ -80,9 +55,8 @@ export default async function ClientsPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-slate-300">
-              Manage all registered clients, monitor
-              their services and quickly access their
-              profiles.
+              Manage all registered clients, monitor their services and
+              quickly access their profiles.
             </p>
 
           </div>
@@ -98,7 +72,7 @@ export default async function ClientsPage() {
               </p>
 
               <p className="mt-2 text-4xl font-bold">
-                {clients.length}
+                {clients?.length ?? 0}
               </p>
 
             </CardContent>
@@ -108,9 +82,8 @@ export default async function ClientsPage() {
         </div>
 
       </section>
-console.log('CLIENTS SENT TO COMPONENT')
-console.log(JSON.stringify(clients, null, 2))
-      <ClientSearch clients={clients} />
+
+      <ClientSearch clients={clients ?? []} />
 
     </div>
   )
