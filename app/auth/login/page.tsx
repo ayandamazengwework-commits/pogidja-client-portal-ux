@@ -13,8 +13,10 @@ import {
 
 import { createClient } from '@/lib/supabase/client'
 
-import { GoogleButton } from '@/components/brand/google-button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Alert,
+  AlertDescription,
+} from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,7 +29,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
 
   const [loading, setLoading] = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function signIn(e?: React.FormEvent) {
@@ -36,10 +37,11 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
     if (error) {
       setLoading(false)
@@ -51,37 +53,20 @@ export default function LoginPage() {
     router.refresh()
   }
 
-  async function signInWithGoogle() {
-    setGoogleLoading(true)
-    setError(null)
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/portal`,
-      },
-    })
-
-    if (error) {
-      setGoogleLoading(false)
-      setError(error.message)
-    }
-  }
-
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-6 py-8 sm:py-12">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-6 py-10">
 
-      {/* Background Glow */}
+      {/* Background */}
 
       <div className="absolute inset-0 overflow-hidden">
 
-        <div className="absolute left-[-200px] top-[-150px] h-[500px] w-[500px] rounded-full bg-blue-200/40 blur-[150px]" />
+        <div className="absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-blue-200/40 blur-[140px]" />
 
-        <div className="absolute bottom-[-200px] right-[-200px] h-[500px] w-[500px] rounded-full bg-blue-400/20 blur-[170px]" />
+        <div className="absolute -bottom-40 -right-40 h-[420px] w-[420px] rounded-full bg-blue-400/20 blur-[160px]" />
 
       </div>
 
-      <div className="relative z-10 w-full max-w-2xl">
+      <div className="relative z-10 w-full max-w-md">
 
         {/* Logo */}
 
@@ -90,50 +75,27 @@ export default function LoginPage() {
           <Image
             src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
             alt="POG Advisory"
-            width={900}
-            height={300}
+            width={450}
+            height={150}
             priority
-            className="h-auto w-full max-w-[280px] sm:max-w-[360px] lg:max-w-[480px]"
+            className="h-auto w-full max-w-[250px]"
           />
 
-          <h1 className="mt-5 text-center text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900">
+          <h1 className="mt-6 text-center text-3xl font-bold text-slate-900">
             Client Portal
           </h1>
 
-          <p className="mt-4 max-w-xl text-centertext-base sm:text-lg leading-8 text-slate-600">
-            Securely manage your accounting services,
-            tax documents, compliance requests,
-            client communication and business records
-            from one place.
+          <p className="mt-3 text-center text-slate-600">
+            Secure access to your accounting
+            services, tax documents and client
+            requests.
           </p>
 
         </div>
 
         {/* Login Card */}
 
-        <div className="mx-auto w-full max-w-xl rounded-[32px] border border-white/60 bg-white/90 p-6 sm:p-8 lg:p-10 shadow-[0_35px_90px_rgba(30,136,229,0.18)] backdrop-blur-2xl">
-
-          <GoogleButton
-            label={
-              googleLoading
-                ? 'Redirecting to Google...'
-                : 'Continue with Google'
-            }
-            onClick={signInWithGoogle}
-            disabled={googleLoading}
-          />
-
-          <div className="my-8 flex items-center gap-5">
-
-            <div className="h-px flex-1 bg-slate-200" />
-
-            <span className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400">
-              Or continue with email
-            </span>
-
-            <div className="h-px flex-1 bg-slate-200" />
-
-          </div>
+        <div className="rounded-3xl border border-white/60 bg-white/90 p-8 shadow-[0_30px_80px_rgba(30,136,229,0.18)] backdrop-blur-xl">
 
           {error && (
             <Alert
@@ -141,26 +103,26 @@ export default function LoginPage() {
               className="mb-6"
             >
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
           <form
             onSubmit={signIn}
-            className="space-y-7"
+            className="space-y-5"
           >
-                        {/* Email */}
+
+            {/* Email */}
 
             <div>
 
-              <Label
-                htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
+              <Label htmlFor="email">
                 Email Address
               </Label>
 
-              <div className="relative">
+              <div className="relative mt-2">
 
                 <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
@@ -169,9 +131,11 @@ export default function LoginPage() {
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
+                  className="h-14 rounded-xl pl-12"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 rounded-xl border-slate-200 bg-white pl-12 text-base shadow-sm transition focus:border-[#2196F3] focus:ring-[#2196F3]"
+                  onChange={(e) =>
+                    setEmail(e.target.value)
+                  }
                   required
                 />
 
@@ -185,10 +149,7 @@ export default function LoginPage() {
 
               <div className="mb-2 flex items-center justify-between">
 
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-semibold text-slate-700"
-                >
+                <Label htmlFor="password">
                   Password
                 </Label>
 
@@ -209,9 +170,11 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  className="h-14 rounded-xl pl-12"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 rounded-xl border-slate-200 bg-white pl-12 text-base shadow-sm transition focus:border-[#2196F3] focus:ring-[#2196F3]"
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
                   required
                 />
 
@@ -222,7 +185,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+              className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg hover:-translate-y-0.5 transition"
             >
 
               {loading && (
@@ -237,28 +200,24 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Bottom Links */}
+        {/* Footer Links */}
 
-        <div className="mt-8 flex flex-col items-center gap-3 text-base text-slate-600 md:flex-row md:justify-center">
+        <div className="mt-8 text-center">
 
-          <span>
+          <p className="text-slate-600">
             New to POG Advisory?
-          </span>
+          </p>
 
           <Link
             href="/auth/register"
-            className="font-semibold text-[#1E88E5] hover:underline"
+            className="mt-2 block font-semibold text-[#1E88E5] hover:underline"
           >
             Create an Account
           </Link>
 
-          <span className="hidden text-slate-400 md:block">
-            •
-          </span>
-
           <Link
             href="/auth/staff-login"
-            className="font-semibold text-[#1E88E5] hover:underline"
+            className="mt-5 inline-block text-sm font-medium text-slate-600 hover:text-[#1E88E5]"
           >
             Staff Login
           </Link>
