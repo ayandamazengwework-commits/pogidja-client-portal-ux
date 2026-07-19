@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-
+import { ServiceStatusPanel } from '@/components/staff/service-status-panel'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { UploadDocument } from '@/components/portal/upload-document'
@@ -179,7 +179,9 @@ export default async function ServicePage({
         </div>
 
       </section>
-
+<ServiceStatusPanel
+  service={service}
+/>
       {/* OVERVIEW */}
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
