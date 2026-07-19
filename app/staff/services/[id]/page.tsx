@@ -20,6 +20,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { UploadDocument } from '@/components/portal/upload-document'
 import { sendMessage } from '@/app/staff/messages/actions'
 import { ClientActivity } from '@/components/staff/client-activity'
+import { DocumentRequestForm } from '@/components/staff/document-request-form'
 
 interface Props {
   params: Promise<{
@@ -47,7 +48,10 @@ export default async function ServicePage({
   if (!service) {
     notFound()
   }
-
+<DocumentRequestForm
+  serviceId={service.id}
+  clientId={client.id}
+/>
   // --------------------------------------------------
   // CLIENT
   // --------------------------------------------------
