@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { randomBytes } from 'crypto'
 
 import { createClient } from '@/lib/supabase/server'
+import { sendClientInvite } from '@/lib/email/send-client-invite'
 
 export async function createClientProfile(formData: FormData) {
   const supabase = await createClient()
@@ -24,7 +25,10 @@ export async function createClientProfile(formData: FormData) {
 
   const companyName = String(formData.get('company_name') ?? '')
   const idNumber = String(formData.get('id_number') ?? '')
-  const companyRegistration = String(formData.get('company_registration') ?? '')
+  const companyRegistration = String(
+    formData.get('company_registration') ?? ''
+  )
+
   const vatNumber = String(formData.get('vat_number') ?? '')
   const taxNumber = String(formData.get('tax_number') ?? '')
 
@@ -98,7 +102,7 @@ export async function createClientProfile(formData: FormData) {
   }
 
   //
-  // Client
+  // Create Client
   //
 
   const clientCode = `POG-${Date.now()}`
@@ -133,19 +137,21 @@ export async function createClientProfile(formData: FormData) {
   })
 
   //
-  // TODO
-  // Send welcome email with:
-  // email
-  // temporaryPassword
+  // Send Welcome Email
   //
 
-  console.log('================================')
-  console.log('CLIENT CREATED')
-  console.log(email)
-  console.log(temporaryPassword)
-  console.log('================================')
+  try {
+    await sendClientInvite({
+      email,
+      firstName,
+      temporaryPassword,
+    })
+  } catch (err) {
+    console.error('Failed to send invite email', err)
+  }
 
   revalidatePath('/staff/clients')
+  revalidatePath(`/staff/clients/${client.id}`)
 
   redirect(`/staff/clients/${client.id}`)
 }
