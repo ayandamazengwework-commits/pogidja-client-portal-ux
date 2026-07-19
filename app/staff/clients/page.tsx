@@ -1,8 +1,14 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { ClientSearch } from '@/components/staff/client-search'
-import { Users } from 'lucide-react'
+
+import {
+  Users,
+  Plus,
+} from 'lucide-react'
 
 export default async function ClientsPage() {
   const supabase = await createClient()
@@ -38,7 +44,7 @@ export default async function ClientsPage() {
   return (
     <div className="space-y-8">
 
-      {/* Hero */}
+      {/* ================= HERO ================= */}
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
@@ -55,33 +61,51 @@ export default async function ClientsPage() {
             </h1>
 
             <p className="mt-4 max-w-2xl text-slate-300">
-              Manage all registered clients, monitor their services and
-              quickly access their profiles.
+              Manage all registered clients, monitor their services,
+              documents, invoices and communication from one place.
             </p>
 
           </div>
 
-          <Card className="border-0 bg-white/10 backdrop-blur">
+          <div className="flex flex-col gap-4">
 
-            <CardContent className="p-6 text-center">
+            <Link href="/staff/clients/new">
 
-              <Users className="mx-auto mb-3 h-10 w-10 text-blue-200" />
+              <Button
+                size="lg"
+                className="bg-white text-slate-900 hover:bg-slate-100"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                New Client
+              </Button>
 
-              <p className="text-sm text-slate-300">
-                Total Clients
-              </p>
+            </Link>
 
-              <p className="mt-2 text-4xl font-bold">
-                {clients?.length ?? 0}
-              </p>
+            <Card className="border-0 bg-white/10 backdrop-blur">
 
-            </CardContent>
+              <CardContent className="p-6 text-center">
 
-          </Card>
+                <Users className="mx-auto mb-3 h-10 w-10 text-blue-200" />
+
+                <p className="text-sm text-slate-300">
+                  Total Clients
+                </p>
+
+                <p className="mt-2 text-4xl font-bold">
+                  {clients?.length ?? 0}
+                </p>
+
+              </CardContent>
+
+            </Card>
+
+          </div>
 
         </div>
 
       </section>
+
+      {/* ================= CLIENT LIST ================= */}
 
       <ClientSearch clients={clients ?? []} />
 
