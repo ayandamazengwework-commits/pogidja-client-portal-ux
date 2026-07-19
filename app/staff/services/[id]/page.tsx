@@ -18,6 +18,9 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
+import { ServiceChecklist } from '@/components/staff/service-checklist'
+import { InternalNotes } from '@/components/staff/internal-notes'
+
 import { UploadDocument } from '@/components/portal/upload-document'
 
 import { ServiceStatusPanel } from '@/components/staff/service-status-panel'
@@ -99,6 +102,40 @@ export default async function ServicePage({
     .order('created_at', {
       ascending: false,
     })
+
+  const { data: checklist } = await supabase
+  .from('service_checklist')
+  .select('*')
+  .eq('service_id', service.id)
+  .order('created_at', {
+    ascending: true,
+  })
+
+  <div className="grid gap-6 lg:grid-cols-2">
+
+  <Card className="rounded-3xl border-0 shadow-sm">
+
+    <CardContent className="p-8">
+
+      <h2 className="mb-6 text-2xl font-bold">
+        Checklist
+      </h2>
+
+      <ServiceChecklist
+        serviceId={service.id}
+        items={checklist ?? []}
+      />
+
+    </CardContent>
+
+  </Card>
+
+  <InternalNotes
+    serviceId={service.id}
+    initialNotes={service.internal_notes}
+  />
+
+</div>
 
   // --------------------------------------------------
   // MESSAGES
