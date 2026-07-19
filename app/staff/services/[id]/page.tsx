@@ -269,13 +269,20 @@ The client will receive this request inside their portal and by email."
 
         </div>
 
-      </section>
+</section>
+
 <ServiceStatusPanel
   service={service}
 />
-      {/* OVERVIEW */}
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+<DocumentRequestForm
+  serviceId={service.id}
+  clientId={client.id}
+/>
+
+{/* OVERVIEW */}
+
+<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
