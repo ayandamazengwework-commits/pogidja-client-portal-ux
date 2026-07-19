@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Loader2, Save } from 'lucide-react'
 
-import { updateService } from '@/app/staff/services/actions'
+import { updateService } from '@/app/staff/services/new/actions'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
