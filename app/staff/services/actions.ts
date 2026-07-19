@@ -56,7 +56,7 @@ export async function toggleChecklistItem(
 
 export async function createChecklistItem(
   serviceId: string,
-  title: string
+  formData: FormData
 ) {
   const supabase = await createClient()
 
@@ -65,6 +65,12 @@ export async function createChecklistItem(
   } = await supabase.auth.getUser()
 
   if (!user) throw new Error('Not authenticated')
+
+  const title = String(formData.get('title') ?? '').trim()
+
+  if (!title) {
+    throw new Error('Checklist title is required')
+  }
 
   const { error } = await supabase
     .from('service_checklist')
