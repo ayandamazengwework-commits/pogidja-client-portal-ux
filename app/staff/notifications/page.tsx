@@ -18,6 +18,9 @@ export default async function StaffNotificationsPage() {
         company_name
       )
     `)
+    .order('read', {
+      ascending: true,
+    })
     .order('created_at', {
       ascending: false,
     })
@@ -56,7 +59,11 @@ export default async function StaffNotificationsPage() {
 
             <Card
               key={item.id}
-              className="rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg"
+              className={`rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg ${
+                item.read
+                  ? ''
+                  : 'border-l-4 border-l-blue-600 bg-blue-50'
+              }`}
             >
 
               <CardContent className="flex flex-col gap-5 p-6 sm:flex-row">
@@ -71,11 +78,19 @@ export default async function StaffNotificationsPage() {
 
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
 
-                    <h2 className="text-lg font-semibold">
+                    <div className="flex items-center gap-2">
 
-                      {item.action}
+                      <h2 className="text-lg font-semibold">
+                        {item.action}
+                      </h2>
 
-                    </h2>
+                      {!item.read && (
+                        <span className="rounded-full bg-blue-600 px-2 py-1 text-xs font-semibold text-white">
+                          NEW
+                        </span>
+                      )}
+
+                    </div>
 
                     <span className="text-sm text-slate-400">
 
