@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache'
 import { randomBytes } from 'crypto'
 
 import { createClient } from '@/lib/supabase/server'
-import { sendClientInvite } from '@/lib/email/send-client-invite'
 
 export async function createClientProfile(formData: FormData) {
   const supabase = await createClient()
@@ -18,6 +17,10 @@ export async function createClientProfile(formData: FormData) {
     throw new Error('Not authenticated')
   }
 
+  // =====================================================
+  // FORM
+  // =====================================================
+
   const firstName = String(formData.get('first_name') ?? '')
   const lastName = String(formData.get('last_name') ?? '')
   const email = String(formData.get('email') ?? '')
@@ -28,7 +31,6 @@ export async function createClientProfile(formData: FormData) {
   const companyRegistration = String(
     formData.get('company_registration') ?? ''
   )
-
   const vatNumber = String(formData.get('vat_number') ?? '')
   const taxNumber = String(formData.get('tax_number') ?? '')
 
@@ -36,19 +38,18 @@ export async function createClientProfile(formData: FormData) {
   const city = String(formData.get('city') ?? '')
   const province = String(formData.get('province') ?? '')
   const postalCode = String(formData.get('postal_code') ?? '')
-
   const notes = String(formData.get('notes') ?? '')
 
-  //
-  // Generate temporary password
-  //
+  // =====================================================
+  // PASSWORD
+  // =====================================================
 
   const temporaryPassword =
     randomBytes(5).toString('hex') + '!'
 
-  //
-  // Create Auth User
-  //
+  // =====================================================
+  // CREATE AUTH USER
+  // =====================================================
 
   const { data: authUser, error: authError } =
     await supabase.auth.admin.createUser({
@@ -61,9 +62,9 @@ export async function createClientProfile(formData: FormData) {
     throw new Error(authError.message)
   }
 
-  //
-  // Create Profile
-  //
+  // =====================================================
+  // PROFILE
+  // =====================================================
 
   const { data: profile, error: profileError } =
     await supabase
@@ -101,9 +102,9 @@ export async function createClientProfile(formData: FormData) {
     throw new Error(profileError.message)
   }
 
-  //
-  // Create Client
-  //
+  // =====================================================
+  // CLIENT
+  // =====================================================
 
   const clientCode = `POG-${Date.now()}`
 
@@ -113,7 +114,7 @@ export async function createClientProfile(formData: FormData) {
       .insert({
         profile_id: profile.id,
         client_code: clientCode,
-        status: 'pending',
+        status: 'Pending',
       })
       .select()
       .single()
@@ -122,36 +123,88 @@ export async function createClientProfile(formData: FormData) {
     throw new Error(clientError.message)
   }
 
-  //
-  // Activity
-  //
+  // =====================================================
+  // DEFAULT SERVICE
+  // =====================================================
 
-  await supabase.from('activity_logs').insert({
-    user_id: user.id,
-    role: 'staff',
-    client_id: client.id,
-    action: 'Client Created',
-    description: `${firstName} ${lastName} created`,
-    entity_type: 'client',
-    entity_id: client.id,
+  const { data: service } = await supabase
+    .from('services')
+    .insert({
+      client_id: client.id,
+      title: 'Client Onboarding',
+      service_type: 'Onboarding',
+      description:
+        'Waiting for required client documents.',
+      status: 'Waiting For Documents',
+      priority: 'Normal',
+      progress: 5,
+      assigned_to: user.id,
+    })
+    .select()
+    .single()
+
+  // =====================================================
+  // FIRST MESSAGE
+  // =====================================================
+
+  await supabase
+    .from('messages')
+    .insert({
+      sender_id: user.id,
+      recipient_id: profile.id,
+      service_id: service?.id,
+
+      subject: 'Welcome to POG Advisory',
+
+      body: `Welcome ${firstName}.
+
+Your client profile has been created.
+
+Please log into your portal and upload the requested documents so we can begin processing your application.
+
+Username:
+${email}
+
+Temporary Password:
+${temporaryPassword}
+
+Once logged in you can:
+
+• Upload documents
+• View your application progress
+• View invoices
+• Upload proof of payment
+• Chat directly with us
+
+Thank you.`,
+    })
+
+  // =====================================================
+  // ACTIVITY
+  // =====================================================
+
+  await supabase
+    .from('activity_logs')
+    .insert({
+      user_id: user.id,
+      role: 'staff',
+      client_id: client.id,
+      entity_type: 'client',
+      entity_id: client.id,
+      action: 'Client Created',
+      description: `${firstName} ${lastName} onboarded`,
+    })
+
+  // =====================================================
+  // EMAIL
+  // =====================================================
+
+  console.log({
+    email,
+    temporaryPassword,
   })
 
-  //
-  // Send Welcome Email
-  //
-
-  try {
-    await sendClientInvite({
-      email,
-      firstName,
-      temporaryPassword,
-    })
-  } catch (err) {
-    console.error('Failed to send invite email', err)
-  }
-
   revalidatePath('/staff/clients')
-  revalidatePath(`/staff/clients/${client.id}`)
 
-  redirect(`/staff/clients/${client.id}`)
+  redirect(`/staff/services/${service?.id}`)
 }
