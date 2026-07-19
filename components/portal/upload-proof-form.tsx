@@ -1,10 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+
 import { uploadProofOfPayment } from '@/app/portal/invoices/actions'
 
-import { Card, CardContent } from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/client'
+
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 
 export function UploadProofForm({
@@ -12,6 +15,41 @@ export function UploadProofForm({
 }: {
   invoice: any
 }) {
+  const supabase = createClient()
+
+  const [uploading, setUploading] = useState(false)
+
+  async function handleUpload(
+    formData: FormData
+  ) {
+    setUploading(true)
+
+    const file = formData.get('file') as File
+
+    const fileName = `${Date.now()}-${file.name}`
+
+    const { error } = await supabase.storage
+      .from('documents')
+      .upload(fileName, file)
+
+    if (error) {
+      alert(error.message)
+      setUploading(false)
+      return
+    }
+
+    const { data } = supabase.storage
+      .from('documents')
+      .getPublicUrl(fileName)
+
+    formData.set(
+      'proof_url',
+      data.publicUrl
+    )
+
+    await uploadProofOfPayment(formData)
+  }
+
   return (
     <Card className="mx-auto max-w-2xl rounded-3xl">
 
@@ -19,12 +57,12 @@ export function UploadProofForm({
 
         <h1 className="text-3xl font-bold">
 
-          Upload Proof of Payment
+          Upload Proof Of Payment
 
         </h1>
 
         <form
-          action={uploadProofOfPayment}
+          action={handleUpload}
           className="space-y-6"
         >
 
@@ -34,25 +72,28 @@ export function UploadProofForm({
             value={invoice.id}
           />
 
-          <div>
+          <Label>
 
-            <Label>
+            PDF / Image
 
-              Proof of Payment URL
+          </Label>
 
-            </Label>
+          <input
+            required
+            type="file"
+            name="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="block w-full rounded-xl border p-3"
+          />
 
-            <Input
-              name="proof_url"
-              placeholder="https://..."
-              required
-            />
+          <Button
+            disabled={uploading}
+            className="w-full"
+          >
 
-          </div>
-
-          <Button className="w-full">
-
-            Submit Proof
+            {uploading
+              ? 'Uploading...'
+              : 'Upload Proof'}
 
           </Button>
 
