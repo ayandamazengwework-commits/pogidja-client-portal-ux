@@ -23,22 +23,16 @@ import { ClientActivity } from '@/components/staff/client-activity'
 import { DocumentRequestForm } from '@/components/staff/document-request-form'
 
 interface Props {
-  params: Promise<{
+  params: {
     id: string
-  }>
+  }
 }
 
-export default async function ServicePage({
-  params,
-}: Props) {
-  const { id } = await params
-
+export default async function ServicePage({ params }: Props) {
+  const { id } = params
   const supabase = await createClient()
 
-  // --------------------------------------------------
   // SERVICE
-  // --------------------------------------------------
-
   const { data: service } = await supabase
     .from('services')
     .select('*')
@@ -48,14 +42,8 @@ export default async function ServicePage({
   if (!service) {
     notFound()
   }
-<DocumentRequestForm
-  serviceId={service.id}
-  clientId={client.id}
-/>
-  // --------------------------------------------------
-  // CLIENT
-  // --------------------------------------------------
 
+  // CLIENT
   const { data: client } = await supabase
     .from('clients')
     .select(`
@@ -72,75 +60,49 @@ export default async function ServicePage({
 
   const profile = client.profile
 
-  // --------------------------------------------------
   // ASSIGNED STAFF
-  // --------------------------------------------------
-
   let assignedStaff = null
-
   if (service.assigned_to) {
     const { data } = await supabase
       .from('profiles')
       .select('first_name,last_name')
       .eq('id', service.assigned_to)
       .single()
-
     assignedStaff = data
   }
 
-  // --------------------------------------------------
   // DOCUMENTS
-  // --------------------------------------------------
-
   const { data: documents } = await supabase
     .from('service_documents')
     .select('*')
     .eq('service_id', service.id)
-    .order('created_at', {
-      ascending: false,
-    })
-{/* DOCUMENT REQUEST */}
+    .order('created_at', { ascending: false })
 
-<Card className="rounded-3xl border-0 shadow-sm">
+  // RENDER
+  return (
+    <div className="space-y-8">
+      <ServiceStatusPanel service={service} />
 
-  <CardContent className="space-y-6 p-8">
+      <DocumentRequestForm serviceId={service.id} clientId={client.id} />
 
-    <h2 className="flex items-center gap-3 text-2xl font-bold">
+      {/* DOCUMENT REQUEST */}
+      <Card className="rounded-3xl border-0 shadow-sm">
+        <CardContent className="space-y-6 p-8">
+          <h2 className="flex items-center gap-3 text-2xl font-bold">
+            <MessageSquare className="h-6 w-6 text-[#1E88E5]" />
+            Request Documents From Client
+          </h2>
 
-      <MessageSquare className="h-6 w-6 text-[#1E88E5]" />
+          <form action={sendMessage} className="space-y-5 rounded-2xl border p-6">
+            <input type="hidden" name="recipientId" value={profile.id} />
+            <input type="hidden" name="serviceId" value={service.id} />
+            <input type="hidden" name="subject" value="Document Request" />
 
-      Request Documents From Client
-
-    </h2>
-
-    <form
-      action={sendMessage}
-      className="space-y-5 rounded-2xl border p-6"
-    >
-
-      <input
-        type="hidden"
-        name="recipientId"
-        value={profile.id}
-      />
-
-      <input
-        type="hidden"
-        name="serviceId"
-        value={service.id}
-      />
-
-      <input
-        type="hidden"
-        name="subject"
-        value="Document Request"
-      />
-
-      <textarea
-        rows={6}
-        required
-        name="body"
-        placeholder="Example:
+            <textarea
+              rows={6}
+              required
+              name="body"
+              placeholder="Example:
 
 • Certified ID Copy
 • Proof of Address (not older than 3 months)
@@ -148,85 +110,47 @@ export default async function ServicePage({
 • SARS Tax Number Confirmation
 
 The client will receive this request inside their portal and by email."
-        className="w-full rounded-xl border p-4"
-      />
+              className="w-full rounded-xl border p-4"
+            />
 
-      <div className="flex justify-end">
+            <div className="flex justify-end">
+              <Button type="submit">Send Request</Button>
+            </div>
+          </form>
 
-        <Button type="submit">
+          <div className="space-y-4">
+            {messages?.map((message) => (
+              <div key={message.id} className="rounded-2xl border bg-slate-50 p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold">
+                    {message.subject || 'Document Request'}
+                  </h3>
+                  <span className="text-xs text-slate-400">
+                    {new Date(message.created_at).toLocaleString()}
+                  </span>
+                </div>
+                <div className="mt-4 whitespace-pre-wrap text-slate-700">
+                  {message.body}
+                </div>
+              </div>
+            ))}
 
-          Send Request
-
-        </Button>
-
-      </div>
-
-    </form>
-
-    <div className="space-y-4">
-
-      {messages?.map((message) => (
-
-        <div
-          key={message.id}
-          className="rounded-2xl border bg-slate-50 p-5"
-        >
-
-          <div className="flex items-center justify-between">
-
-            <h3 className="font-semibold">
-
-              {message.subject || 'Document Request'}
-
-            </h3>
-
-            <span className="text-xs text-slate-400">
-
-              {new Date(message.created_at).toLocaleString()}
-
-            </span>
-
+            {!messages?.length && (
+              <div className="rounded-2xl border border-dashed py-10 text-center">
+                <MessageSquare className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                <p className="text-slate-500">
+                  No document requests have been sent.
+                </p>
+              </div>
+            )}
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="mt-4 whitespace-pre-wrap text-slate-700">
-
-            {message.body}
-
-          </div>
-
-        </div>
-
-      ))}
-
-      {!messages?.length && (
-
-        <div className="rounded-2xl border border-dashed py-10 text-center">
-
-          <MessageSquare className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-
-          <p className="text-slate-500">
-
-            No document requests have been sent.
-
-          </p>
-
-        </div>
-
-      )}
-
-    </div>
-
-  </CardContent>
-
-</Card>
-            {/* HERO */}
-
+      {/* HERO */}
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
-
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-
           <div>
-
             <Link
               href="/staff/clients"
               className="mb-5 inline-flex items-center text-sm text-blue-200 hover:text-white"
@@ -239,50 +163,29 @@ The client will receive this request inside their portal and by email."
               SERVICE
             </p>
 
-            <h1 className="mt-3 text-4xl font-bold">
-              {service.title}
-            </h1>
-
-            <p className="mt-3 text-lg text-slate-300">
-              {service.service_type}
-            </p>
+            <h1 className="mt-3 text-4xl font-bold">{service.title}</h1>
+            <p className="mt-3 text-lg text-slate-300">{service.service_type}</p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-
               <span
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${statusColour}`}
               >
                 {service.status}
               </span>
-
               <span
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${priorityColour}`}
               >
                 {service.priority} Priority
               </span>
-
             </div>
-
           </div>
 
           <UploadDocument serviceId={service.id} />
-
         </div>
-
-</section>
-
-export default function Page({ params }) {
-  const service = ... // however you fetch it
-
-  return (
-    <div>
-      <ServiceStatusPanel service={service} />
-      <DocumentRequestForm serviceId={service.id} />
+      </section>
     </div>
-  );
+  )
 }
-
-
 
 {/* OVERVIEW */}
 
