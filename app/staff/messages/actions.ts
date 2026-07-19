@@ -25,7 +25,10 @@ export async function sendMessage(formData: FormData) {
     throw new Error('Missing required fields')
   }
 
-  // Create the message
+  // --------------------------------------------------
+  // Create Message
+  // --------------------------------------------------
+
   const { error } = await supabase
     .from('messages')
     .insert({
@@ -39,14 +42,20 @@ export async function sendMessage(formData: FormData) {
 
   if (error) throw error
 
-  // Find the recipient's profile
+  // --------------------------------------------------
+  // Recipient Profile
+  // --------------------------------------------------
+
   const { data: recipient } = await supabase
     .from('profiles')
     .select('email, first_name')
     .eq('id', recipientId)
     .single()
 
-  // Send email notification
+  // --------------------------------------------------
+  // Email Notification
+  // --------------------------------------------------
+
   if (recipient?.email) {
     try {
       await sendEmail({
@@ -66,29 +75,52 @@ export async function sendMessage(formData: FormData) {
       })
     } catch (err) {
       console.error('Failed to send email:', err)
-      // Don't fail the request if the email couldn't be sent.
     }
   }
 
-  // Find the client record
+  // --------------------------------------------------
+  // Client Record
+  // --------------------------------------------------
+
   const { data: client } = await supabase
     .from('clients')
     .select('id')
     .eq('profile_id', recipientId)
     .single()
 
-  // Log activity
-  await supabase
-    .from('activity_logs')
-    .insert({
-      user_id: user.id,
-      role: 'staff',
-      action: 'Message Sent',
-      description: subject || 'New message',
-      entity_type: 'message',
-      entity_id: null,
-      client_id: client?.id ?? null,
-    })
+  // --------------------------------------------------
+  // Activity Log
+  // --------------------------------------------------
+
+  await supabase.from('activity_logs').insert({
+    user_id: user.id,
+    role: 'staff',
+    action: 'Message Sent',
+    description: subject || 'New message',
+    entity_type: 'message',
+    entity_id: serviceId,
+    client_id: client?.id ?? null,
+    read: false,
+  })
+
+  // --------------------------------------------------
+  // Notification for Recipient
+  // --------------------------------------------------
+
+  await supabase.from('activity_logs').insert({
+    user_id: recipientId,
+    role: 'client',
+    action: 'New Message',
+    description: subject || 'You received a new message.',
+    entity_type: 'message',
+    entity_id: serviceId,
+    client_id: client?.id ?? null,
+    read: false,
+  })
+
+  // --------------------------------------------------
+  // Refresh
+  // --------------------------------------------------
 
   revalidatePath('/staff/messages')
 
