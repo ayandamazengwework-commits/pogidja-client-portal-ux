@@ -271,10 +271,17 @@ The client will receive this request inside their portal and by email."
 
 </section>
 
-<div>
-  <ServiceStatusPanel service={service} />
-  <DocumentRequestForm serviceId={service.id} />
-</div>
+export default function Page({ params }) {
+  const service = ... // however you fetch it
+
+  return (
+    <div>
+      <ServiceStatusPanel service={service} />
+      <DocumentRequestForm serviceId={service.id} />
+    </div>
+  );
+}
+
 
 
 {/* OVERVIEW */}
