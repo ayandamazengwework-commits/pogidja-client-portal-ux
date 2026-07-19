@@ -26,6 +26,7 @@ export async function createClientProfile(formData: FormData) {
   const companyRegistration = String(
     formData.get('company_registration') ?? ''
   )
+
   const vatNumber = String(formData.get('vat_number') ?? '')
   const taxNumber = String(formData.get('tax_number') ?? '')
 
@@ -36,7 +37,10 @@ export async function createClientProfile(formData: FormData) {
 
   const notes = String(formData.get('notes') ?? '')
 
-  // Create profile
+  //
+  // Create Profile
+  //
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .insert({
@@ -45,16 +49,20 @@ export async function createClientProfile(formData: FormData) {
       email,
       phone,
       role: 'client',
+
       company_name: companyName,
       id_number: idNumber,
       company_registration: companyRegistration,
       vat_number: vatNumber,
       tax_number: taxNumber,
+
       address,
       city,
       province,
       postal_code: postalCode,
+
       notes,
+
       active: true,
       client_status: 'Pending',
     })
@@ -65,11 +73,17 @@ export async function createClientProfile(formData: FormData) {
     throw new Error(profileError.message)
   }
 
-  // Create client record
+  //
+  // Create Client
+  //
+
+  const clientCode = `POG-${Date.now()}`
+
   const { data: client, error: clientError } = await supabase
     .from('clients')
     .insert({
       profile_id: profile.id,
+      client_code: clientCode,
       status: 'pending',
     })
     .select()
@@ -79,18 +93,32 @@ export async function createClientProfile(formData: FormData) {
     throw new Error(clientError.message)
   }
 
+  //
   // Activity Log
+  //
+
   await supabase.from('activity_logs').insert({
     user_id: user.id,
-    client_id: client.id,
     role: 'staff',
+    client_id: client.id,
+
     action: 'Client Created',
-    description: `Created client ${firstName} ${lastName}`,
+    description: `${firstName} ${lastName} was created`,
+
     entity_type: 'client',
     entity_id: client.id,
   })
 
+  //
+  // TODO (Next Step)
+  //
+  // Create Auth Account
+  // Generate Password
+  // Send Welcome Email
+  //
+
   revalidatePath('/staff/clients')
+  revalidatePath(`/staff/clients/${client.id}`)
 
   redirect(`/staff/clients/${client.id}`)
 }
