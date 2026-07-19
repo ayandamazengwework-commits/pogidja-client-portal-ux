@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { randomBytes } from 'crypto'
-
+import { sendClientWelcomeEmail } from '@/lib/email/send-client-welcome'
 import { createClient } from '@/lib/supabase/server'
 
 export async function createClientProfile(formData: FormData) {
@@ -199,10 +199,11 @@ Thank you.`,
   // EMAIL
   // =====================================================
 
-  console.log({
-    email,
-    temporaryPassword,
-  })
+await sendClientWelcomeEmail({
+  email,
+  firstName,
+  temporaryPassword,
+})
 
   revalidatePath('/staff/clients')
 
