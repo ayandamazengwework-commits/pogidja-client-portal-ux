@@ -14,25 +14,35 @@ import {
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
-import { ServiceStatusPanel } from '@/components/staff/service-status-panel'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+
 import { UploadDocument } from '@/components/portal/upload-document'
-import { sendMessage } from '@/app/staff/messages/actions'
+
+import { ServiceStatusPanel } from '@/components/staff/service-status-panel'
 import { ClientActivity } from '@/components/staff/client-activity'
 import { DocumentRequestForm } from '@/components/staff/document-request-form'
 
+import { sendMessage } from '@/app/staff/messages/actions'
+
 interface Props {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default async function ServicePage({ params }: Props) {
-  const { id } = params
+export default async function ServicePage({
+  params,
+}: Props) {
+  const { id } = await params
+
   const supabase = await createClient()
 
+  // --------------------------------------------------
   // SERVICE
+  // --------------------------------------------------
+
   const { data: service } = await supabase
     .from('services')
     .select('*')
@@ -43,7 +53,10 @@ export default async function ServicePage({ params }: Props) {
     notFound()
   }
 
+  // --------------------------------------------------
   // CLIENT
+  // --------------------------------------------------
+
   const { data: client } = await supabase
     .from('clients')
     .select(`
@@ -59,95 +72,68 @@ export default async function ServicePage({ params }: Props) {
   }
 
   const profile = client.profile
-
+    // --------------------------------------------------
   // ASSIGNED STAFF
+  // --------------------------------------------------
+
   let assignedStaff = null
+
   if (service.assigned_to) {
     const { data } = await supabase
       .from('profiles')
       .select('first_name,last_name')
       .eq('id', service.assigned_to)
       .single()
+
     assignedStaff = data
   }
 
+  // --------------------------------------------------
   // DOCUMENTS
+  // --------------------------------------------------
+
   const { data: documents } = await supabase
     .from('service_documents')
     .select('*')
     .eq('service_id', service.id)
-    .order('created_at', { ascending: false })
+    .order('created_at', {
+      ascending: false,
+    })
 
-  // RENDER
+  // --------------------------------------------------
+  // MESSAGES
+  // --------------------------------------------------
+
+  const { data: messages } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('service_id', service.id)
+    .order('created_at', {
+      ascending: false,
+    })
+
+  const progress = service.progress ?? 0
+
+  const statusColour =
+    service.status === 'Completed'
+      ? 'bg-green-100 text-green-700'
+      : service.status === 'In Progress'
+      ? 'bg-blue-100 text-blue-700'
+      : service.status === 'Pending'
+      ? 'bg-yellow-100 text-yellow-700'
+      : 'bg-slate-100 text-slate-700'
+
+  const priorityColour =
+    service.priority === 'High'
+      ? 'bg-red-100 text-red-700'
+      : service.priority === 'Medium'
+      ? 'bg-amber-100 text-amber-700'
+      : 'bg-green-100 text-green-700'
+
   return (
     <div className="space-y-8">
-      <ServiceStatusPanel service={service} />
-
-      <DocumentRequestForm serviceId={service.id} clientId={client.id} />
-
-      {/* DOCUMENT REQUEST */}
-      <Card className="rounded-3xl border-0 shadow-sm">
-        <CardContent className="space-y-6 p-8">
-          <h2 className="flex items-center gap-3 text-2xl font-bold">
-            <MessageSquare className="h-6 w-6 text-[#1E88E5]" />
-            Request Documents From Client
-          </h2>
-
-          <form action={sendMessage} className="space-y-5 rounded-2xl border p-6">
-            <input type="hidden" name="recipientId" value={profile.id} />
-            <input type="hidden" name="serviceId" value={service.id} />
-            <input type="hidden" name="subject" value="Document Request" />
-
-            <textarea
-              rows={6}
-              required
-              name="body"
-              placeholder="Example:
-
-• Certified ID Copy
-• Proof of Address (not older than 3 months)
-• Bank Statement
-• SARS Tax Number Confirmation
-
-The client will receive this request inside their portal and by email."
-              className="w-full rounded-xl border p-4"
-            />
-
-            <div className="flex justify-end">
-              <Button type="submit">Send Request</Button>
-            </div>
-          </form>
-
-          <div className="space-y-4">
-            {messages?.map((message) => (
-              <div key={message.id} className="rounded-2xl border bg-slate-50 p-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">
-                    {message.subject || 'Document Request'}
-                  </h3>
-                  <span className="text-xs text-slate-400">
-                    {new Date(message.created_at).toLocaleString()}
-                  </span>
-                </div>
-                <div className="mt-4 whitespace-pre-wrap text-slate-700">
-                  {message.body}
-                </div>
-              </div>
-            ))}
-
-            {!messages?.length && (
-              <div className="rounded-2xl border border-dashed py-10 text-center">
-                <MessageSquare className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-                <p className="text-slate-500">
-                  No document requests have been sent.
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* HERO */}
+
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -163,8 +149,13 @@ The client will receive this request inside their portal and by email."
               SERVICE
             </p>
 
-            <h1 className="mt-3 text-4xl font-bold">{service.title}</h1>
-            <p className="mt-3 text-lg text-slate-300">{service.service_type}</p>
+            <h1 className="mt-3 text-4xl font-bold">
+              {service.title}
+            </h1>
+
+            <p className="mt-3 text-lg text-slate-300">
+              {service.service_type}
+            </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               <span
@@ -172,6 +163,7 @@ The client will receive this request inside their portal and by email."
               >
                 {service.status}
               </span>
+
               <span
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${priorityColour}`}
               >
@@ -183,13 +175,11 @@ The client will receive this request inside their portal and by email."
           <UploadDocument serviceId={service.id} />
         </div>
       </section>
-    </div>
-  )
-}
 
-{/* OVERVIEW */}
+      <ServiceStatusPanel service={service} />
+            {/* OVERVIEW */}
 
-<div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -318,11 +308,10 @@ The client will receive this request inside their portal and by email."
         </Card>
 
       </div>
-            {/* DETAILS */}
+
+      {/* DETAILS */}
 
       <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* Service Information */}
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -348,8 +337,7 @@ The client will receive this request inside their portal and by email."
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
-
-              <div>
+                            <div>
 
                 <p className="text-sm text-slate-500">
                   Service Type
@@ -402,8 +390,6 @@ The client will receive this request inside their portal and by email."
           </CardContent>
 
         </Card>
-
-        {/* Client Information */}
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -497,18 +483,28 @@ The client will receive this request inside their portal and by email."
         </Card>
 
       </div>
-            {/* DOCUMENTS */}
+
+      {/* DOCUMENT REQUEST */}
+
+      <DocumentRequestForm
+        serviceId={service.id}
+        clientId={client.id}
+      />
+
+      {/* DOCUMENTS */}
 
       <Card className="rounded-3xl border-0 shadow-sm">
 
         <CardContent className="p-8">
 
           <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold">
-            <FileText className="h-6 w-6 text-[#1E88E5]" />
-            Documents
-          </h2>
 
-          {documents && documents.length > 0 ? (
+            <FileText className="h-6 w-6 text-[#1E88E5]" />
+
+            Documents
+
+          </h2>
+                    {documents && documents.length > 0 ? (
 
             <div className="space-y-4">
 
@@ -571,7 +567,7 @@ The client will receive this request inside their portal and by email."
 
       </Card>
 
-      {/* MESSAGES */}
+      {/* CONVERSATION */}
 
       <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -641,25 +637,20 @@ The client will receive this request inside their portal and by email."
                       : 'bg-blue-50'
                   }`}
                 >
-
-                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between">
 
                     <h3 className="font-semibold">
                       {message.subject || 'Message'}
                     </h3>
 
                     <span className="text-xs text-slate-400">
-
                       {new Date(message.created_at).toLocaleString()}
-
                     </span>
 
                   </div>
 
                   <p className="mt-3 whitespace-pre-wrap text-slate-700">
-
                     {message.body}
-
                   </p>
 
                 </div>
@@ -675,9 +666,7 @@ The client will receive this request inside their portal and by email."
               <MessageSquare className="mx-auto mb-4 h-10 w-10 text-slate-300" />
 
               <p className="text-slate-500">
-
                 No conversation yet.
-
               </p>
 
             </div>
@@ -691,6 +680,17 @@ The client will receive this request inside their portal and by email."
       {/* ACTIVITY */}
 
       <Card className="rounded-3xl border-0 shadow-sm">
+
+        <CardContent className="p-8">
+
+          <ClientActivity
+            clientId={client.id}
+          />
+
+        </CardContent>
+
+      </Card>
+            <Card className="rounded-3xl border-0 shadow-sm">
 
         <CardContent className="p-8">
 
