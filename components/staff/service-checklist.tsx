@@ -1,9 +1,15 @@
 'use client'
 
-import { useTransition } from 'react'
-import { CheckCircle2 } from 'lucide-react'
+import { useState, useTransition } from 'react'
+import { CheckCircle2, Plus } from 'lucide-react'
 
-import { toggleChecklistItem } from '@/app/staff/services/actions'
+import {
+  addChecklistItem,
+  toggleChecklistItem,
+} from '@/app/staff/services/actions'
+
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 interface Item {
   id: string
@@ -21,9 +27,33 @@ export function ServiceChecklist({
   items,
 }: Props) {
   const [pending, startTransition] = useTransition()
+  const [title, setTitle] = useState('')
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+
+      <div className="flex gap-3">
+
+        <Input
+          placeholder="New checklist item..."
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <Button
+          disabled={!title.trim() || pending}
+          onClick={() => {
+            startTransition(async () => {
+              await addChecklistItem(serviceId, title)
+              setTitle('')
+            })
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add
+        </Button>
+
+      </div>
 
       {items.length === 0 && (
         <div className="rounded-2xl border border-dashed p-8 text-center text-slate-500">
