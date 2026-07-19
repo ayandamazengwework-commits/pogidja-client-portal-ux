@@ -56,7 +56,7 @@ export async function toggleChecklistItem(
 
 export async function createChecklistItem(
   serviceId: string,
-  formData: FormData
+  title: string
 ) {
   const supabase = await createClient()
 
@@ -65,12 +65,6 @@ export async function createChecklistItem(
   } = await supabase.auth.getUser()
 
   if (!user) throw new Error('Not authenticated')
-
-  const title = String(formData.get('title') ?? '').trim()
-
-  if (!title) {
-    throw new Error('Checklist title is required')
-  }
 
   const { error } = await supabase
     .from('service_checklist')
@@ -88,6 +82,38 @@ export async function createChecklistItem(
     entity_id: serviceId,
     action: 'Checklist Item Added',
     description: title,
+  })
+
+  revalidatePath(`/staff/services/${serviceId}`)
+}
+
+export async function saveInternalNotes(
+  serviceId: string,
+  notes: string
+) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('services')
+    .update({
+      internal_notes: notes,
+    })
+    .eq('id', serviceId)
+
+  if (error) throw new Error(error.message)
+
+  await supabase.from('activity_logs').insert({
+    user_id: user.id,
+    entity_type: 'service',
+    entity_id: serviceId,
+    action: 'Updated Internal Notes',
+    description: 'Internal notes updated',
   })
 
   revalidatePath(`/staff/services/${serviceId}`)
