@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Bell, Search } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
@@ -8,7 +9,7 @@ import { Button } from '@/components/ui/button'
 
 interface StaffTopbarProps {
   profile: {
-    first_name?: string |null
+    first_name?: string | null
     last_name?: string | null
     role?: string | null
   } | null
@@ -19,6 +20,10 @@ export function StaffTopbar({
 }: StaffTopbarProps) {
   const [today, setToday] = useState('')
   const [greeting, setGreeting] = useState('Welcome')
+
+  // Temporary notification count
+  // We'll replace this with Supabase realtime later.
+  const unreadNotifications = 5
 
   useEffect(() => {
     const now = new Date()
@@ -75,13 +80,25 @@ export function StaffTopbar({
 
           </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="shrink-0"
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
+          <Link href="/staff/notifications">
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative shrink-0"
+            >
+
+              <Bell className="h-5 w-5" />
+
+              {unreadNotifications > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  {unreadNotifications}
+                </span>
+              )}
+
+            </Button>
+
+          </Link>
 
         </div>
 
