@@ -1,15 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { CheckCircle2, Plus } from 'lucide-react'
+import { useTransition } from 'react'
+import { CheckCircle2 } from 'lucide-react'
 
-import {
-  addChecklistItem,
-  toggleChecklistItem,
-} from '@/app/staff/services/actions'
+import { toggleChecklistItem } from '@/app/staff/services/actions'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { ServiceChecklistForm } from './service-checklist-form'
 
 interface Item {
   id: string
@@ -27,33 +23,13 @@ export function ServiceChecklist({
   items,
 }: Props) {
   const [pending, startTransition] = useTransition()
-  const [title, setTitle] = useState('')
 
   return (
     <div className="space-y-6">
 
-      <div className="flex gap-3">
-
-        <Input
-          placeholder="New checklist item..."
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <Button
-          disabled={!title.trim() || pending}
-          onClick={() => {
-            startTransition(async () => {
-              await addChecklistItem(serviceId, title)
-              setTitle('')
-            })
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add
-        </Button>
-
-      </div>
+      <ServiceChecklistForm
+        serviceId={serviceId}
+      />
 
       {items.length === 0 && (
         <div className="rounded-2xl border border-dashed p-8 text-center text-slate-500">
@@ -67,7 +43,10 @@ export function ServiceChecklist({
           disabled={pending}
           onClick={() =>
             startTransition(() =>
-              toggleChecklistItem(serviceId, item.id)
+              toggleChecklistItem(
+                serviceId,
+                item.id
+              )
             )
           }
           className={`flex w-full items-center justify-between rounded-2xl border p-5 transition ${
@@ -76,6 +55,7 @@ export function ServiceChecklist({
               : 'bg-white hover:bg-slate-50'
           }`}
         >
+
           <div className="flex items-center gap-4">
 
             <CheckCircle2
@@ -99,7 +79,9 @@ export function ServiceChecklist({
           </div>
 
           <span className="text-sm text-slate-500">
-            {item.completed ? 'Completed' : 'Pending'}
+            {item.completed
+              ? 'Completed'
+              : 'Pending'}
           </span>
 
         </button>
