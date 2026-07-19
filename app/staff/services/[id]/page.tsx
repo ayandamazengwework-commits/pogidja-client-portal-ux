@@ -95,39 +95,126 @@ export default async function ServicePage({
     .order('created_at', {
       ascending: false,
     })
+{/* DOCUMENT REQUEST */}
 
-  // --------------------------------------------------
-  // MESSAGES
-  // --------------------------------------------------
+<Card className="rounded-3xl border-0 shadow-sm">
 
-  const { data: messages } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('service_id', service.id)
-    .order('created_at', {
-      ascending: false,
-    })
+  <CardContent className="space-y-6 p-8">
 
-  const progress = service.progress ?? 0
+    <h2 className="flex items-center gap-3 text-2xl font-bold">
 
-  const statusColour =
-    service.status === 'Completed'
-      ? 'bg-green-100 text-green-700'
-      : service.status === 'In Progress'
-      ? 'bg-blue-100 text-blue-700'
-      : service.status === 'Pending'
-      ? 'bg-yellow-100 text-yellow-700'
-      : 'bg-slate-100 text-slate-700'
+      <MessageSquare className="h-6 w-6 text-[#1E88E5]" />
 
-  const priorityColour =
-    service.priority === 'High'
-      ? 'bg-red-100 text-red-700'
-      : service.priority === 'Medium'
-      ? 'bg-amber-100 text-amber-700'
-      : 'bg-green-100 text-green-700'
+      Request Documents From Client
 
-  return (
-    <div className="space-y-8">
+    </h2>
+
+    <form
+      action={sendMessage}
+      className="space-y-5 rounded-2xl border p-6"
+    >
+
+      <input
+        type="hidden"
+        name="recipientId"
+        value={profile.id}
+      />
+
+      <input
+        type="hidden"
+        name="serviceId"
+        value={service.id}
+      />
+
+      <input
+        type="hidden"
+        name="subject"
+        value="Document Request"
+      />
+
+      <textarea
+        rows={6}
+        required
+        name="body"
+        placeholder="Example:
+
+• Certified ID Copy
+• Proof of Address (not older than 3 months)
+• Bank Statement
+• SARS Tax Number Confirmation
+
+The client will receive this request inside their portal and by email."
+        className="w-full rounded-xl border p-4"
+      />
+
+      <div className="flex justify-end">
+
+        <Button type="submit">
+
+          Send Request
+
+        </Button>
+
+      </div>
+
+    </form>
+
+    <div className="space-y-4">
+
+      {messages?.map((message) => (
+
+        <div
+          key={message.id}
+          className="rounded-2xl border bg-slate-50 p-5"
+        >
+
+          <div className="flex items-center justify-between">
+
+            <h3 className="font-semibold">
+
+              {message.subject || 'Document Request'}
+
+            </h3>
+
+            <span className="text-xs text-slate-400">
+
+              {new Date(message.created_at).toLocaleString()}
+
+            </span>
+
+          </div>
+
+          <div className="mt-4 whitespace-pre-wrap text-slate-700">
+
+            {message.body}
+
+          </div>
+
+        </div>
+
+      ))}
+
+      {!messages?.length && (
+
+        <div className="rounded-2xl border border-dashed py-10 text-center">
+
+          <MessageSquare className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+
+          <p className="text-slate-500">
+
+            No document requests have been sent.
+
+          </p>
+
+        </div>
+
+      )}
+
+    </div>
+
+  </CardContent>
+
+</Card>
             {/* HERO */}
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
