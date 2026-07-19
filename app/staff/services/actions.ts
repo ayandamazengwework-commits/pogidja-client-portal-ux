@@ -49,6 +49,7 @@ export async function toggleChecklistItem(
       ? 'Checklist Completed'
       : 'Checklist Reopened',
     description: item.title,
+    read: false,
   })
 
   revalidatePath(`/staff/services/${serviceId}`)
@@ -82,6 +83,7 @@ export async function createChecklistItem(
     entity_id: serviceId,
     action: 'Checklist Item Added',
     description: title,
+    read: false,
   })
 
   revalidatePath(`/staff/services/${serviceId}`)
@@ -114,6 +116,7 @@ export async function saveInternalNotes(
     entity_id: serviceId,
     action: 'Updated Internal Notes',
     description: 'Internal notes updated',
+    read: false,
   })
 
   revalidatePath(`/staff/services/${serviceId}`)
