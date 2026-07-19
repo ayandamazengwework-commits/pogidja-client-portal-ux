@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { randomBytes } from 'crypto'
 
 import { createClient } from '@/lib/supabase/server'
 
@@ -23,10 +24,7 @@ export async function createClientProfile(formData: FormData) {
 
   const companyName = String(formData.get('company_name') ?? '')
   const idNumber = String(formData.get('id_number') ?? '')
-  const companyRegistration = String(
-    formData.get('company_registration') ?? ''
-  )
-
+  const companyRegistration = String(formData.get('company_registration') ?? '')
   const vatNumber = String(formData.get('vat_number') ?? '')
   const taxNumber = String(formData.get('tax_number') ?? '')
 
@@ -38,87 +36,116 @@ export async function createClientProfile(formData: FormData) {
   const notes = String(formData.get('notes') ?? '')
 
   //
+  // Generate temporary password
+  //
+
+  const temporaryPassword =
+    randomBytes(5).toString('hex') + '!'
+
+  //
+  // Create Auth User
+  //
+
+  const { data: authUser, error: authError } =
+    await supabase.auth.admin.createUser({
+      email,
+      password: temporaryPassword,
+      email_confirm: true,
+    })
+
+  if (authError) {
+    throw new Error(authError.message)
+  }
+
+  //
   // Create Profile
   //
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .insert({
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone,
-      role: 'client',
+  const { data: profile, error: profileError } =
+    await supabase
+      .from('profiles')
+      .insert({
+        id: authUser.user.id,
 
-      company_name: companyName,
-      id_number: idNumber,
-      company_registration: companyRegistration,
-      vat_number: vatNumber,
-      tax_number: taxNumber,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        phone,
 
-      address,
-      city,
-      province,
-      postal_code: postalCode,
+        role: 'client',
 
-      notes,
+        company_name: companyName,
+        id_number: idNumber,
+        company_registration: companyRegistration,
+        vat_number: vatNumber,
+        tax_number: taxNumber,
 
-      active: true,
-      client_status: 'Pending',
-    })
-    .select()
-    .single()
+        address,
+        city,
+        province,
+        postal_code: postalCode,
+
+        active: true,
+        client_status: 'Pending',
+
+        notes,
+      })
+      .select()
+      .single()
 
   if (profileError) {
     throw new Error(profileError.message)
   }
 
   //
-  // Create Client
+  // Client
   //
 
   const clientCode = `POG-${Date.now()}`
 
-  const { data: client, error: clientError } = await supabase
-    .from('clients')
-    .insert({
-      profile_id: profile.id,
-      client_code: clientCode,
-      status: 'pending',
-    })
-    .select()
-    .single()
+  const { data: client, error: clientError } =
+    await supabase
+      .from('clients')
+      .insert({
+        profile_id: profile.id,
+        client_code: clientCode,
+        status: 'pending',
+      })
+      .select()
+      .single()
 
   if (clientError) {
     throw new Error(clientError.message)
   }
 
   //
-  // Activity Log
+  // Activity
   //
 
   await supabase.from('activity_logs').insert({
     user_id: user.id,
     role: 'staff',
     client_id: client.id,
-
     action: 'Client Created',
-    description: `${firstName} ${lastName} was created`,
-
+    description: `${firstName} ${lastName} created`,
     entity_type: 'client',
     entity_id: client.id,
   })
 
   //
-  // TODO (Next Step)
-  //
-  // Create Auth Account
-  // Generate Password
-  // Send Welcome Email
+  // TODO
+  // Send welcome email with:
+  // email
+  // temporaryPassword
   //
 
+  console.log('================================')
+  console.log('CLIENT CREATED')
+  console.log(email)
+  console.log(temporaryPassword)
+  console.log('================================')
+
   revalidatePath('/staff/clients')
-  revalidatePath(`/staff/clients/${client.id}`)
 
   redirect(`/staff/clients/${client.id}`)
 }
