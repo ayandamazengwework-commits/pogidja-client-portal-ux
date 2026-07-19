@@ -271,10 +271,6 @@ The client will receive this request inside their portal and by email."
 
 </section>
 
-<ServiceStatusPanel
-  service={service}
-/>
-
 <div>
   <ServiceStatusPanel service={service} />
   <DocumentRequestForm serviceId={service.id} />
