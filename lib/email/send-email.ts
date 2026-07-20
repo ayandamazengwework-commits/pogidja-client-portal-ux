@@ -1,9 +1,9 @@
-import { getResend } from './resend'
+import { transporter } from "./transporter";
 
 interface SendEmailOptions {
-  to: string
-  subject: string
-  html: string
+  to: string;
+  subject: string;
+  html: string;
 }
 
 export async function sendEmail({
@@ -11,17 +11,10 @@ export async function sendEmail({
   subject,
   html,
 }: SendEmailOptions) {
-  const resend = getResend()
-
-  const { error } = await resend.emails.send({
-    from: 'POG Advisory <noreply@pogidja.co.za>',
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM!,
     to,
     subject,
     html,
-  })
-
-  if (error) {
-    console.error('Resend Error:', error)
-    throw error
-  }
+  });
 }
