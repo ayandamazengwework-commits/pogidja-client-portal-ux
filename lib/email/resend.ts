@@ -1,9 +1,17 @@
 import { Resend } from 'resend'
 
-const apiKey = process.env.RESEND_API_KEY
+let resend: Resend | null = null
 
-if (!apiKey) {
-  throw new Error('Missing RESEND_API_KEY')
+export function getResend() {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY
+
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY is not configured.')
+    }
+
+    resend = new Resend(apiKey)
+  }
+
+  return resend
 }
-
-export const resend = new Resend(apiKey)
