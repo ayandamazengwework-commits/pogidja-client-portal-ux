@@ -13,7 +13,7 @@ export async function sendClientInvite({
 }: InviteProps) {
   const resend = getResend()
 
-  await resend.emails.send({
+  return resend.emails.send({
     from: 'POG Advisory <notifications@pogidja.co.za>',
     to: email,
     subject: 'Welcome to the POG Advisory Client Portal',
@@ -23,9 +23,7 @@ export async function sendClientInvite({
 
         <h2>Welcome ${firstName},</h2>
 
-        <p>
-          Your accountant has created your secure client portal.
-        </p>
+        <p>Your accountant has created your secure client portal.</p>
 
         <p>
           All communication, document uploads, invoices and progress updates
@@ -36,15 +34,9 @@ export async function sendClientInvite({
 
         <h3>Login Details</h3>
 
-        <p>
-          <strong>Email</strong><br>
-          ${email}
-        </p>
+        <p><strong>Email</strong><br>${email}</p>
 
-        <p>
-          <strong>Temporary Password</strong><br>
-          ${temporaryPassword}
-        </p>
+        <p><strong>Temporary Password</strong><br>${temporaryPassword}</p>
 
         <br>
 
