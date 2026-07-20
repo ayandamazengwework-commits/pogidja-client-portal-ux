@@ -100,21 +100,21 @@ export async function sendMessage(formData: FormData) {
     entity_type: 'message',
     entity_id: serviceId,
     client_id: client?.id ?? null,
-    read: false,
   })
 
   // --------------------------------------------------
-  // Notification for Recipient
+  // In-App Notification
   // --------------------------------------------------
 
-  await supabase.from('activity_logs').insert({
+  await supabase.from('notifications').insert({
     user_id: recipientId,
-    role: 'client',
-    action: 'New Message',
-    description: subject || 'You received a new message.',
-    entity_type: 'message',
-    entity_id: serviceId,
-    client_id: client?.id ?? null,
+    title: 'New Message',
+    message:
+      subject && subject.length > 0
+        ? subject
+        : 'You have received a new message from POG Advisory.',
+    type: 'message',
+    link: '/portal/messages',
     read: false,
   })
 
@@ -127,4 +127,7 @@ export async function sendMessage(formData: FormData) {
   if (client?.id) {
     revalidatePath(`/staff/clients/${client.id}`)
   }
+
+  revalidatePath('/portal/messages')
+  revalidatePath('/portal')
 }
