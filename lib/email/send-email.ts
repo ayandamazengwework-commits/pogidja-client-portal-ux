@@ -1,6 +1,6 @@
 import { getResend } from './resend'
 
-interface SendEmailProps {
+interface SendEmailOptions {
   to: string
   subject: string
   html: string
@@ -10,13 +10,18 @@ export async function sendEmail({
   to,
   subject,
   html,
-}: SendEmailProps) {
+}: SendEmailOptions) {
   const resend = getResend()
 
-  return resend.emails.send({
-    from: 'POG Advisory <notifications@pogidja.co.za>',
+  const { error } = await resend.emails.send({
+    from: 'POG Advisory <noreply@pogidja.co.za>',
     to,
     subject,
     html,
   })
+
+  if (error) {
+    console.error('Resend Error:', error)
+    throw error
+  }
 }
