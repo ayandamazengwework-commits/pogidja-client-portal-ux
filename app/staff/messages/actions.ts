@@ -25,16 +25,16 @@ export async function sendMessage(formData: FormData) {
     throw new Error('Missing required fields')
   }
 
-  // --------------------------------------------------
+  // ----------------------------------------------------
   // Create Message
-  // --------------------------------------------------
+  // ----------------------------------------------------
 
   const { error } = await supabase
     .from('messages')
     .insert({
       sender_id: user.id,
       recipient_id: recipientId,
-      service_id: serviceId || null,
+      service_id: serviceId,
       subject,
       body,
       read: false,
@@ -42,9 +42,9 @@ export async function sendMessage(formData: FormData) {
 
   if (error) throw error
 
-  // --------------------------------------------------
+  // ----------------------------------------------------
   // Recipient Profile
-  // --------------------------------------------------
+  // ----------------------------------------------------
 
   const { data: recipient } = await supabase
     .from('profiles')
@@ -52,9 +52,9 @@ export async function sendMessage(formData: FormData) {
     .eq('id', recipientId)
     .single()
 
-  // --------------------------------------------------
-  // Email Notification
-  // --------------------------------------------------
+  // ----------------------------------------------------
+  // Email
+  // ----------------------------------------------------
 
   if (recipient?.email) {
     try {
@@ -68,66 +68,44 @@ export async function sendMessage(formData: FormData) {
 
           <p>${body}</p>
 
-          <hr />
+          <hr>
 
-          <p>Please log into your client portal to reply.</p>
+          <p>Please log into your portal to reply.</p>
         `,
       })
     } catch (err) {
-      console.error('Failed to send email:', err)
+      console.error(err)
     }
   }
 
-  // --------------------------------------------------
-  // Client Record
-  // --------------------------------------------------
+  // ----------------------------------------------------
+  // Client Notification
+  // ----------------------------------------------------
 
-  const { data: client } = await supabase
-    .from('clients')
-    .select('id')
-    .eq('profile_id', recipientId)
-    .single()
+  await supabase.from('notifications').insert({
+    user_id: recipientId,
+    title: subject || 'New Message',
+    message: body,
+    type: 'message',
+    link: serviceId
+      ? `/portal/cases/${serviceId}`
+      : '/portal/messages',
+    read: false,
+  })
 
-  // --------------------------------------------------
+  // ----------------------------------------------------
   // Activity Log
-  // --------------------------------------------------
+  // ----------------------------------------------------
 
   await supabase.from('activity_logs').insert({
     user_id: user.id,
-    role: 'staff',
     action: 'Message Sent',
     description: subject || 'New message',
     entity_type: 'message',
     entity_id: serviceId,
-    client_id: client?.id ?? null,
   })
-
-  // --------------------------------------------------
-  // In-App Notification
-  // --------------------------------------------------
-
-  await supabase.from('notifications').insert({
-    user_id: recipientId,
-    title: 'New Message',
-    message:
-      subject && subject.length > 0
-        ? subject
-        : 'You have received a new message from POG Advisory.',
-    type: 'message',
-    link: '/portal/messages',
-    read: false,
-  })
-
-  // --------------------------------------------------
-  // Refresh
-  // --------------------------------------------------
 
   revalidatePath('/staff/messages')
-
-  if (client?.id) {
-    revalidatePath(`/staff/clients/${client.id}`)
-  }
-
   revalidatePath('/portal/messages')
-  revalidatePath('/portal')
+  revalidatePath('/portal/notifications')
 }
