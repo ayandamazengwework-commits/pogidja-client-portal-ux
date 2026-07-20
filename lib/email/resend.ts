@@ -3,15 +3,17 @@ import { Resend } from 'resend'
 let resend: Resend | null = null
 
 export function getResend() {
-  if (!resend) {
-    const apiKey = process.env.RESEND_API_KEY
+  if (resend) return resend
 
-    if (!apiKey) {
-      throw new Error('RESEND_API_KEY is not configured.')
-    }
+  const apiKey = process.env.RESEND_API_KEY
 
-    resend = new Resend(apiKey)
+  // Don't crash the build if the env variable doesn't exist yet.
+  // Only throw when an email is actually being sent.
+  if (!apiKey) {
+    throw new Error('Missing RESEND_API_KEY')
   }
+
+  resend = new Resend(apiKey)
 
   return resend
 }
