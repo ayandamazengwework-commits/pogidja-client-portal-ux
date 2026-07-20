@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Bell, Search } from 'lucide-react'
 
+import { createClient } from '@/lib/supabase/client'
+
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 interface StaffTopbarProps {
   profile: {
+    id?: string
     first_name?: string | null
     last_name?: string | null
     role?: string | null
@@ -18,12 +21,11 @@ interface StaffTopbarProps {
 export function StaffTopbar({
   profile,
 }: StaffTopbarProps) {
+  const supabase = createClient()
+
   const [today, setToday] = useState('')
   const [greeting, setGreeting] = useState('Welcome')
-
-  // Temporary notification count
-  // We'll replace this with Supabase realtime later.
-  const unreadNotifications = 5
+  const [notificationCount, setNotificationCount] = useState(0)
 
   useEffect(() => {
     const now = new Date()
@@ -47,6 +49,22 @@ export function StaffTopbar({
       })
     )
   }, [])
+
+  useEffect(() => {
+    async function loadNotifications() {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', {
+          head: true,
+          count: 'exact',
+        })
+        .eq('read', false)
+
+      setNotificationCount(count ?? 0)
+    }
+
+    loadNotifications()
+  }, [supabase])
 
   const firstName = profile?.first_name ?? 'Staff'
 
@@ -80,25 +98,24 @@ export function StaffTopbar({
 
           </div>
 
-          <Link href="/staff/notifications">
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="relative shrink-0"
-            >
+          <Button
+            asChild
+            variant="outline"
+            size="icon"
+            className="relative shrink-0"
+          >
+            <Link href="/staff/notifications">
 
               <Bell className="h-5 w-5" />
 
-              {unreadNotifications > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                  {unreadNotifications}
+              {notificationCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                  {notificationCount}
                 </span>
               )}
 
-            </Button>
-
-          </Link>
+            </Link>
+          </Button>
 
         </div>
 
