@@ -1,67 +1,73 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
-
-interface WelcomeEmailProps {
-  email: string
-  firstName: string
-}
-
 export async function sendClientWelcomeEmail({
   email,
   firstName,
-}: WelcomeEmailProps) {
-  return resend.emails.send({
+  temporaryPassword,
+}: {
+  email: string
+  firstName: string
+  temporaryPassword: string
+}) {
+  const apiKey = process.env.RESEND_API_KEY
+
+  if (!apiKey) {
+    console.warn('RESEND_API_KEY is not configured. Welcome email skipped.')
+    return
+  }
+
+  const resend = new Resend(apiKey)
+
+  await resend.emails.send({
     from: 'POG Advisory <noreply@pogidja.co.za>',
     to: email,
-    subject: 'Welcome to POG Advisory',
-
+    subject: 'Welcome to POG Advisory Client Portal',
     html: `
-      <div style="font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:auto">
+      <div style="font-family:Arial;padding:40px;max-width:700px">
 
-        <h2>Welcome ${firstName},</h2>
+        <h2>Welcome ${firstName}</h2>
 
-        <p>
-          Thank you for joining the POG Advisory Client Portal.
-        </p>
+        <p>Your advisor has created your client portal.</p>
 
-        <p>
-          Your account has been activated successfully.
-        </p>
+        <p>Please log in using the details below.</p>
 
-        <p>
-          You can now securely access your portal to:
-        </p>
+        <table style="margin:25px 0">
 
-        <ul>
-          <li>Upload requested documents</li>
-          <li>Track your services</li>
-          <li>Receive invoices</li>
-          <li>Upload proof of payment</li>
-          <li>Chat directly with your advisor</li>
-        </ul>
+          <tr>
+            <td><strong>Email</strong></td>
+            <td>${email}</td>
+          </tr>
 
-        <p style="margin-top:30px">
-          <a
-            href="https://portal.pogidja.co.za/auth/login"
-            style="
-              background:#1E88E5;
-              color:#ffffff;
-              text-decoration:none;
-              padding:14px 24px;
-              border-radius:8px;
-              display:inline-block;
-            "
-          >
-            Login to Portal
-          </a>
-        </p>
+          <tr>
+            <td><strong>Temporary Password</strong></td>
+            <td>${temporaryPassword}</td>
+          </tr>
+
+        </table>
+
+        <a
+          href="https://portal.pogidja.co.za/auth/login"
+          style="
+            background:#1E88E5;
+            color:white;
+            padding:14px 24px;
+            text-decoration:none;
+            border-radius:8px;
+            display:inline-block;
+          "
+        >
+          Login to Portal
+        </a>
 
         <hr style="margin:40px 0">
 
-        <p style="color:#666">
-          If you did not expect this email, please contact POG Advisory immediately.
-        </p>
+        <ul>
+          <li>Upload requested documents</li>
+          <li>Track application progress</li>
+          <li>Receive invoices</li>
+          <li>Upload proof of payment</li>
+          <li>Chat with your advisor</li>
+        </ul>
 
       </div>
     `,
