@@ -64,9 +64,7 @@ export async function sendClientInvite({
 
         <br><br>
 
-        <p>
-          Once logged in you will be able to:
-        </p>
+        <p>Once logged in you will be able to:</p>
 
         <ul>
           <li>Upload requested documents</li>
