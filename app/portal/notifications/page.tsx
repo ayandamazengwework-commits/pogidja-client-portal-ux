@@ -1,6 +1,15 @@
+import Link from 'next/link'
+import { Bell, CheckCheck } from 'lucide-react'
+
 import { createClient } from '@/lib/supabase/server'
+
+import {
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from './actions'
+
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Bell } from 'lucide-react'
 
 export default async function NotificationsPage() {
   const supabase = await createClient()
@@ -19,18 +28,37 @@ export default async function NotificationsPage() {
       ascending: false,
     })
 
+  const unread =
+    notifications?.filter((n) => !n.read).length ?? 0
+
   return (
     <div className="space-y-8">
 
-      <div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 
-        <h1 className="text-3xl font-bold">
-          Notifications
-        </h1>
+        <div>
 
-        <p className="mt-2 text-slate-500">
-          Recent updates from your advisor.
-        </p>
+          <h1 className="text-3xl font-bold">
+            Notifications
+          </h1>
+
+          <p className="mt-2 text-slate-500">
+            Recent updates from your advisor.
+          </p>
+
+        </div>
+
+        {unread > 0 && (
+          <form action={markAllNotificationsAsRead}>
+            <Button>
+
+              <CheckCheck className="mr-2 h-4 w-4" />
+
+              Mark all as read
+
+            </Button>
+          </form>
+        )}
 
       </div>
 
@@ -59,21 +87,61 @@ export default async function NotificationsPage() {
 
                 <div className="flex-1">
 
-                  <h2 className="font-semibold">
-                    {notification.title}
-                  </h2>
+                  <div className="flex items-start justify-between gap-4">
 
-                  <p className="mt-2 text-slate-600">
-                    {notification.message}
-                  </p>
+                    <div>
 
-                  <p className="mt-3 text-xs text-slate-400">
+                      <h2 className="font-semibold">
+                        {notification.title}
+                      </h2>
 
-                    {new Date(
-                      notification.created_at
-                    ).toLocaleString()}
+                      <p className="mt-2 text-slate-600">
+                        {notification.message}
+                      </p>
 
-                  </p>
+                      <p className="mt-3 text-xs text-slate-400">
+                        {new Date(
+                          notification.created_at
+                        ).toLocaleString()}
+                      </p>
+
+                    </div>
+
+                    {!notification.read && (
+                      <form
+                        action={async () => {
+                          'use server'
+                          await markNotificationAsRead(
+                            notification.id
+                          )
+                        }}
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          Mark read
+                        </Button>
+                      </form>
+                    )}
+
+                  </div>
+
+                  {notification.link && (
+                    <div className="mt-4">
+
+                      <Button
+                        asChild
+                        variant="secondary"
+                        size="sm"
+                      >
+                        <Link href={notification.link}>
+                          Open
+                        </Link>
+                      </Button>
+
+                    </div>
+                  )}
 
                 </div>
 
