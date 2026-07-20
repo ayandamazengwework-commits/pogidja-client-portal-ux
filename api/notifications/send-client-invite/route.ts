@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getResend } from '@/lib/email/resend'
+import { sendEmail } from '@/lib/email/send-email'
 
 export async function POST(request: Request) {
   try {
-    const resend = getResend()
-
     const {
       email,
       firstName,
       invitationUrl,
     } = await request.json()
 
-    const { error } = await resend.emails.send({
-      from: 'POG Advisory <noreply@pogidja.co.za>',
+    await sendEmail({
       to: email,
       subject: 'Welcome to the POG Advisory Client Portal',
 
@@ -67,15 +64,6 @@ export async function POST(request: Request) {
       </div>
       `,
     })
-
-    if (error) {
-      console.error(error)
-
-      return NextResponse.json(
-        { error },
-        { status: 500 }
-      )
-    }
 
     return NextResponse.json({
       success: true,
