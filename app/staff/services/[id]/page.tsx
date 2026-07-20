@@ -18,13 +18,11 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
-import { ServiceChecklist } from '@/components/staff/service-checklist'
-import { InternalNotes } from '@/components/staff/internal-notes'
-
 import { UploadDocument } from '@/components/portal/upload-document'
-
 import { ServiceStatusPanel } from '@/components/staff/service-status-panel'
 import { ClientActivity } from '@/components/staff/client-activity'
+import { InternalNotes } from '@/components/staff/internal-notes'
+import { ServiceChecklist } from '@/components/staff/service-checklist'
 import { DocumentRequestForm } from '@/components/staff/document-request-form'
 
 import { sendMessage } from '@/app/staff/messages/actions'
@@ -75,7 +73,8 @@ export default async function ServicePage({
   }
 
   const profile = client.profile
-    // --------------------------------------------------
+
+  // --------------------------------------------------
   // ASSIGNED STAFF
   // --------------------------------------------------
 
@@ -103,40 +102,6 @@ export default async function ServicePage({
       ascending: false,
     })
 
-  const { data: checklist } = await supabase
-  .from('service_checklist')
-  .select('*')
-  .eq('service_id', service.id)
-  .order('created_at', {
-    ascending: true,
-  })
-
-  <div className="grid gap-6 lg:grid-cols-2">
-
-  <Card className="rounded-3xl border-0 shadow-sm">
-
-    <CardContent className="p-8">
-
-      <h2 className="mb-6 text-2xl font-bold">
-        Checklist
-      </h2>
-
-      <ServiceChecklist
-        serviceId={service.id}
-        items={checklist ?? []}
-      />
-
-    </CardContent>
-
-  </Card>
-
-  <InternalNotes
-    serviceId={service.id}
-    initialNotes={service.internal_notes}
-  />
-
-</div>
-
   // --------------------------------------------------
   // MESSAGES
   // --------------------------------------------------
@@ -147,6 +112,18 @@ export default async function ServicePage({
     .eq('service_id', service.id)
     .order('created_at', {
       ascending: false,
+    })
+
+  // --------------------------------------------------
+  // CHECKLIST
+  // --------------------------------------------------
+
+  const { data: checklist } = await supabase
+    .from('service_checklist')
+    .select('*')
+    .eq('service_id', service.id)
+    .order('created_at', {
+      ascending: true,
     })
 
   const progress = service.progress ?? 0
@@ -169,11 +146,14 @@ export default async function ServicePage({
 
   return (
     <div className="space-y-8">
-      {/* HERO */}
+            {/* HERO */}
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
+
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+
           <div>
+
             <Link
               href="/staff/clients"
               className="mb-5 inline-flex items-center text-sm text-blue-200 hover:text-white"
@@ -195,6 +175,7 @@ export default async function ServicePage({
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
+
               <span
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${statusColour}`}
               >
@@ -206,15 +187,22 @@ export default async function ServicePage({
               >
                 {service.priority} Priority
               </span>
+
             </div>
+
           </div>
 
           <UploadDocument serviceId={service.id} />
+
         </div>
+
       </section>
 
-      <ServiceStatusPanel service={service} />
-            {/* OVERVIEW */}
+      <ServiceStatusPanel
+        service={service}
+      />
+
+      {/* OVERVIEW */}
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
@@ -284,8 +272,7 @@ export default async function ServicePage({
           </CardContent>
 
         </Card>
-
-        <Card className="rounded-3xl border-0 shadow-sm">
+                <Card className="rounded-3xl border-0 shadow-sm">
 
           <CardContent className="p-6">
 
@@ -346,9 +333,37 @@ export default async function ServicePage({
 
       </div>
 
+      {/* INTERNAL NOTES */}
+
+      <InternalNotes
+        serviceId={service.id}
+        initialNotes={service.internal_notes ?? ''}
+      />
+
+      {/* CHECKLIST */}
+
+      <Card className="rounded-3xl border-0 shadow-sm">
+
+        <CardContent className="space-y-6 p-8">
+
+          <h2 className="text-2xl font-bold">
+            Service Checklist
+          </h2>
+
+          <ServiceChecklist
+            serviceId={service.id}
+            items={checklist ?? []}
+          />
+
+        </CardContent>
+
+      </Card>
+
       {/* DETAILS */}
 
       <div className="grid gap-6 lg:grid-cols-2">
+
+        {/* Service Information */}
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -427,6 +442,8 @@ export default async function ServicePage({
           </CardContent>
 
         </Card>
+
+        {/* Client Information */}
 
         <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -520,28 +537,18 @@ export default async function ServicePage({
         </Card>
 
       </div>
-
-      {/* DOCUMENT REQUEST */}
-
-      <DocumentRequestForm
-        serviceId={service.id}
-        clientId={client.id}
-      />
-
-      {/* DOCUMENTS */}
+            {/* DOCUMENTS */}
 
       <Card className="rounded-3xl border-0 shadow-sm">
 
         <CardContent className="p-8">
 
           <h2 className="mb-6 flex items-center gap-3 text-2xl font-bold">
-
             <FileText className="h-6 w-6 text-[#1E88E5]" />
-
             Documents
-
           </h2>
-                    {documents && documents.length > 0 ? (
+
+          {documents && documents.length > 0 ? (
 
             <div className="space-y-4">
 
@@ -604,7 +611,13 @@ export default async function ServicePage({
 
       </Card>
 
-      {/* CONVERSATION */}
+      {/* DOCUMENT REQUEST */}
+
+      <DocumentRequestForm
+        serviceId={service.id}
+        clientId={client.id}
+      />
+            {/* MESSAGES */}
 
       <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -674,20 +687,25 @@ export default async function ServicePage({
                       : 'bg-blue-50'
                   }`}
                 >
-                                    <div className="flex items-center justify-between">
+
+                  <div className="flex items-center justify-between">
 
                     <h3 className="font-semibold">
                       {message.subject || 'Message'}
                     </h3>
 
                     <span className="text-xs text-slate-400">
+
                       {new Date(message.created_at).toLocaleString()}
+
                     </span>
 
                   </div>
 
                   <p className="mt-3 whitespace-pre-wrap text-slate-700">
+
                     {message.body}
+
                   </p>
 
                 </div>
@@ -697,8 +715,7 @@ export default async function ServicePage({
             </div>
 
           ) : (
-
-            <div className="rounded-2xl border border-dashed py-12 text-center">
+                  <div className="rounded-2xl border border-dashed py-12 text-center">
 
               <MessageSquare className="mx-auto mb-4 h-10 w-10 text-slate-300" />
 
@@ -727,18 +744,6 @@ export default async function ServicePage({
         </CardContent>
 
       </Card>
-            <Card className="rounded-3xl border-0 shadow-sm">
-
-        <CardContent className="p-8">
-
-          <ClientActivity
-            clientId={client.id}
-          />
-
-        </CardContent>
-
-      </Card>
-
-    </div>
+          </div>
   )
 }
