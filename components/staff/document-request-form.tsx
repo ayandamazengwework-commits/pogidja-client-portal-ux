@@ -1,54 +1,106 @@
 'use client'
 
-import { createDocumentRequest } from '@/app/staff/services/document-request/actions'
+import { useState, useTransition } from 'react'
+import { Loader2 } from 'lucide-react'
+
+import { requestDocuments } from '@/app/staff/services/document-request-actions'
 
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+
+interface Props {
+  serviceId: string
+  clientId: string
+}
 
 export function DocumentRequestForm({
   serviceId,
   clientId,
-}: {
-  serviceId: string
-  clientId: string
-}) {
+}: Props) {
+  const [pending, startTransition] = useTransition()
+
+  const [documents, setDocuments] = useState('')
+
   return (
-    <form
-      action={createDocumentRequest}
-      className="space-y-4 rounded-2xl border p-6"
-    >
-      <input
-        type="hidden"
-        name="service_id"
-        value={serviceId}
-      />
+    <Card className="rounded-3xl border-0 shadow-sm">
 
-      <input
-        type="hidden"
-        name="client_id"
-        value={clientId}
-      />
+      <CardContent className="space-y-6 p-8">
 
-      <h3 className="text-xl font-semibold">
-        Request Document
-      </h3>
+        <div>
 
-      <input
-        required
-        name="title"
-        placeholder="Document Name"
-        className="w-full rounded-xl border p-3"
-      />
+          <h2 className="text-2xl font-bold">
+            Request Documents
+          </h2>
 
-      <textarea
-        rows={3}
-        name="description"
-        placeholder="Instructions..."
-        className="w-full rounded-xl border p-3"
-      />
+          <p className="mt-2 text-slate-500">
+            Send a document request directly to the client.
+          </p>
 
-      <Button className="w-full">
-        Send Request
-      </Button>
-    </form>
+        </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+
+            startTransition(async () => {
+              await requestDocuments({
+                serviceId,
+                clientId,
+                documents,
+              })
+
+              setDocuments('')
+            })
+          }}
+          className="space-y-5"
+        >
+
+          <div>
+
+            <Label>
+              Requested Documents
+            </Label>
+
+            <Textarea
+              rows={8}
+              placeholder={`Example:
+
+• ID Copy
+
+• SARS Tax Number
+
+• Company Registration Documents
+
+• Bank Statement
+
+• Proof of Address`}
+              value={documents}
+              onChange={(e) =>
+                setDocuments(e.target.value)
+              }
+            />
+
+          </div>
+
+          <Button
+            disabled={pending}
+            type="submit"
+          >
+
+            {pending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+
+            Send Request
+
+          </Button>
+
+        </form>
+
+      </CardContent>
+
+    </Card>
   )
 }
