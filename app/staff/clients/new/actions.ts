@@ -2,8 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { randomBytes } from 'crypto'
-import { sendClientWelcomeEmail } from '@/lib/email/send-client-welcome'
+
 import { createClient } from '@/lib/supabase/server'
 
 export async function createClientProfile(formData: FormData) {
@@ -31,6 +30,7 @@ export async function createClientProfile(formData: FormData) {
   const companyRegistration = String(
     formData.get('company_registration') ?? ''
   )
+
   const vatNumber = String(formData.get('vat_number') ?? '')
   const taxNumber = String(formData.get('tax_number') ?? '')
 
@@ -41,25 +41,27 @@ export async function createClientProfile(formData: FormData) {
   const notes = String(formData.get('notes') ?? '')
 
   // =====================================================
-  // PASSWORD
+  // INVITE USER
   // =====================================================
 
-  const temporaryPassword =
-    randomBytes(5).toString('hex') + '!'
-
-  // =====================================================
-  // CREATE AUTH USER
-  // =====================================================
-
-  const { data: authUser, error: authError } =
-    await supabase.auth.admin.createUser({
-      email,
-      password: temporaryPassword,
-      email_confirm: true,
+  const { data: invite, error: inviteError } =
+    await supabase.auth.admin.inviteUserByEmail(email, {
+      data: {
+        role: 'client',
+        first_name: firstName,
+        last_name: lastName,
+      },
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
     })
 
-  if (authError) {
-    throw new Error(authError.message)
+  if (inviteError) {
+    throw new Error(inviteError.message)
+  }
+
+  const authUser = invite.user
+
+  if (!authUser) {
+    throw new Error('Failed to create client account.')
   }
 
   // =====================================================
@@ -70,7 +72,7 @@ export async function createClientProfile(formData: FormData) {
     await supabase
       .from('profiles')
       .insert({
-        id: authUser.user.id,
+        id: authUser.id,
 
         first_name: firstName,
         last_name: lastName,
@@ -147,63 +149,60 @@ export async function createClientProfile(formData: FormData) {
   // FIRST MESSAGE
   // =====================================================
 
-  await supabase
-    .from('messages')
-    .insert({
-      sender_id: user.id,
-      recipient_id: profile.id,
-      service_id: service?.id,
+  await supabase.from('messages').insert({
+    sender_id: user.id,
+    recipient_id: profile.id,
+    service_id: service?.id,
 
-      subject: 'Welcome to POG Advisory',
+    subject: 'Welcome to POG Advisory',
 
-      body: `Welcome ${firstName}.
+    body: `Welcome ${firstName}.
 
-Your client profile has been created.
+Your client portal has been created.
 
-Please log into your portal and upload the requested documents so we can begin processing your application.
+Please check your email.
 
-Username:
-${email}
+You will receive a secure invitation link from POG Advisory.
 
-Temporary Password:
-${temporaryPassword}
+Click the link to:
 
-Once logged in you can:
+• Create your password
+• Sign in securely
+• Upload your required documents
+• Complete your onboarding
+• Track your services
+• Message your consultant
 
-• Upload documents
-• View your application progress
-• View invoices
-• Upload proof of payment
-• Chat directly with us
+We look forward to working with you.`,
+  })
 
-Thank you.`,
-    })
+  // =====================================================
+  // NOTIFICATION
+  // =====================================================
+
+  await supabase.from('notifications').insert({
+    user_id: profile.id,
+    title: 'Welcome to POG Advisory',
+    message:
+      'Please check your email to activate your client portal.',
+    type: 'onboarding',
+    link: '/portal',
+    read: false,
+  })
 
   // =====================================================
   // ACTIVITY
   // =====================================================
 
-  await supabase
-    .from('activity_logs')
-    .insert({
-      user_id: user.id,
-      role: 'staff',
-      client_id: client.id,
-      entity_type: 'client',
-      entity_id: client.id,
-      action: 'Client Created',
-      description: `${firstName} ${lastName} onboarded`,
-    })
-
-  // =====================================================
-  // EMAIL
-  // =====================================================
-
-await sendClientWelcomeEmail({
-  email,
-  firstName,
-  temporaryPassword,
-})
+  await supabase.from('activity_logs').insert({
+    user_id: user.id,
+    role: 'staff',
+    client_id: client.id,
+    entity_type: 'client',
+    entity_id: client.id,
+    action: 'Client Created',
+    description: `${firstName} ${lastName} onboarded`,
+  })
 
   revalidatePath('/staff/clients')
 
