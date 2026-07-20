@@ -15,37 +15,73 @@ export default async function PortalLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Not logged in
+  // --------------------------------------------------
+  // Authentication
+  // --------------------------------------------------
+
   if (!user) {
     redirect('/auth/login')
   }
 
-  // Get logged in profile
   const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .maybeSingle()
 
-  // Invalid profile
   if (error || !profile) {
     console.error(error)
     redirect('/auth/login')
   }
 
-  // Only clients may access the client portal
   if (profile.role !== 'client') {
     redirect('/staff')
   }
 
+  // --------------------------------------------------
+  // Onboarding Check
+  // --------------------------------------------------
+
+  const { data: requests } = await supabase
+    .from('document_requests')
+    .select('id, completed')
+    .eq('user_id', user.id)
+
+  const hasPendingRequests =
+    (requests ?? []).some(
+      (request) => !request.completed
+    )
+
+  // Current path
+  const pathname =
+    (await import('next/headers')).headers
+      ? ''
+      : ''
+
+  // If onboarding is incomplete,
+  // only allow access to onboarding
+  if (
+    hasPendingRequests &&
+    !String(process.env.NEXT_PUBLIC_VERCEL_URL).includes(
+      '/portal/onboarding'
+    )
+  ) {
+    redirect('/portal/onboarding')
+  }
+
+  // --------------------------------------------------
+  // Notification Counts
+  // --------------------------------------------------
+
   const { count: unreadNotifications = 0 } =
     await supabase
-      .from('activity_logs')
+      .from('notifications')
       .select('*', {
         count: 'exact',
         head: true,
       })
       .eq('user_id', user.id)
+      .eq('read', false)
 
   const { count: unreadMessages = 0 } =
     await supabase
@@ -56,6 +92,10 @@ export default async function PortalLayout({
       })
       .eq('recipient_id', user.id)
       .eq('read', false)
+
+  // --------------------------------------------------
+  // Navigation
+  // --------------------------------------------------
 
   const nav: NavItem[] = [
     {
