@@ -7,14 +7,44 @@ import {
   Plus,
 } from 'lucide-react'
 
+import { createClient } from '@/lib/supabase/server'
+
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const supabase = await createClient()
+
+  const { data: services = [] } = await supabase
+    .from('services')
+    .select(`
+      *,
+      client:clients(
+        id,
+        company:company_id(name),
+        profile:profile_id(first_name,last_name)
+      )
+    `)
+    .order('created_at', {
+      ascending: false,
+    })
+
+  const total = services.length
+
+  const inProgress = services.filter(
+    (s) => s.status === 'In Progress'
+  ).length
+
+  const awaiting = services.filter(
+    (s) => s.status === 'Pending'
+  ).length
+
+  const completed = services.filter(
+    (s) => s.status === 'Completed'
+  ).length
+
   return (
     <div className="space-y-8">
-
-      {/* Hero */}
 
       <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
 
@@ -31,8 +61,7 @@ export default function ServicesPage() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-slate-300">
-              Create, assign and monitor all client
-              service requests from one place.
+              Create, assign and monitor every client service request.
             </p>
 
           </div>
@@ -52,111 +81,155 @@ export default function ServicesPage() {
 
       </section>
 
-      {/* Stats */}
-
       <div className="grid gap-6 md:grid-cols-4">
 
-        <Card className="rounded-2xl border-0 shadow-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <Briefcase className="h-10 w-10 text-[#1E88E5]" />
+        <StatCard
+          icon={<Briefcase className="h-10 w-10 text-[#1E88E5]" />}
+          title="Total Services"
+          value={total}
+        />
 
-            <div>
-              <p className="text-sm text-slate-500">
-                Total Services
-              </p>
+        <StatCard
+          icon={<Clock3 className="h-10 w-10 text-amber-500" />}
+          title="In Progress"
+          value={inProgress}
+        />
 
-              <p className="text-3xl font-bold">
-                0
-              </p>
-            </div>
+        <StatCard
+          icon={<AlertCircle className="h-10 w-10 text-red-500" />}
+          title="Pending"
+          value={awaiting}
+        />
 
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-0 shadow-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <Clock3 className="h-10 w-10 text-amber-500" />
-
-            <div>
-              <p className="text-sm text-slate-500">
-                In Progress
-              </p>
-
-              <p className="text-3xl font-bold">
-                0
-              </p>
-            </div>
-
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-0 shadow-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <AlertCircle className="h-10 w-10 text-red-500" />
-
-            <div>
-              <p className="text-sm text-slate-500">
-                Awaiting Client
-              </p>
-
-              <p className="text-3xl font-bold">
-                0
-              </p>
-            </div>
-
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-2xl border-0 shadow-sm">
-          <CardContent className="flex items-center gap-4 p-6">
-            <CheckCircle2 className="h-10 w-10 text-green-500" />
-
-            <div>
-              <p className="text-sm text-slate-500">
-                Completed
-              </p>
-
-              <p className="text-3xl font-bold">
-                0
-              </p>
-            </div>
-
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={<CheckCircle2 className="h-10 w-10 text-green-500" />}
+          title="Completed"
+          value={completed}
+        />
 
       </div>
 
-      {/* Table */}
-
       <Card className="rounded-3xl border-0 shadow-sm">
 
-        <CardContent className="p-12 text-center">
+        <CardContent className="p-0">
 
-          <Briefcase className="mx-auto h-16 w-16 text-slate-300" />
+          {services.length === 0 ? (
 
-          <h2 className="mt-6 text-2xl font-bold">
-            No Service Requests Yet
-          </h2>
+            <div className="p-12 text-center">
 
-          <p className="mt-3 text-slate-500">
-            Create your first client service request to begin
-            managing work.
-          </p>
+              <Briefcase className="mx-auto h-16 w-16 text-slate-300" />
 
-          <Button
-            asChild
-            className="mt-8"
-          >
-            <Link href="/staff/services/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Create First Service
-            </Link>
-          </Button>
+              <h2 className="mt-6 text-2xl font-bold">
+                No Service Requests Yet
+              </h2>
+
+              <Button asChild className="mt-8">
+
+                <Link href="/staff/services/new">
+                  Create First Service
+                </Link>
+
+              </Button>
+
+            </div>
+
+          ) : (
+
+            <table className="w-full">
+
+              <thead className="border-b bg-slate-50">
+
+                <tr>
+
+                  <th className="p-4 text-left">Service</th>
+                  <th className="p-4 text-left">Client</th>
+                  <th className="p-4 text-left">Status</th>
+                  <th className="p-4 text-left">Priority</th>
+                  <th className="p-4 text-left">Progress</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {services.map((service) => (
+
+                  <tr
+                    key={service.id}
+                    className="border-b hover:bg-slate-50"
+                  >
+
+                    <td className="p-4">
+
+                      <Link
+                        href={`/staff/services/${service.id}`}
+                        className="font-semibold text-blue-700 hover:underline"
+                      >
+                        {service.title}
+                      </Link>
+
+                    </td>
+
+                    <td className="p-4">
+
+                      {service.client?.company?.name ??
+                        `${service.client?.profile?.first_name ?? ''} ${service.client?.profile?.last_name ?? ''}`}
+
+                    </td>
+
+                    <td className="p-4">
+                      {service.status}
+                    </td>
+
+                    <td className="p-4">
+                      {service.priority}
+                    </td>
+
+                    <td className="p-4">
+                      {service.progress ?? 0}%
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          )}
 
         </CardContent>
 
       </Card>
 
     </div>
+  )
+}
+
+function StatCard({
+  icon,
+  title,
+  value,
+}: {
+  icon: React.ReactNode
+  title: string
+  value: number
+}) {
+  return (
+    <Card className="rounded-2xl border-0 shadow-sm">
+      <CardContent className="flex items-center gap-4 p-6">
+        {icon}
+        <div>
+          <p className="text-sm text-slate-500">
+            {title}
+          </p>
+          <p className="text-3xl font-bold">
+            {value}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
