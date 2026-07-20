@@ -1,4 +1,4 @@
-import { getResend } from '@/lib/email/resend'
+import { sendEmail } from './send-email'
 
 interface InviteProps {
   email: string
@@ -11,10 +11,7 @@ export async function sendClientInvite({
   firstName,
   temporaryPassword,
 }: InviteProps) {
-  const resend = getResend()
-
-  return resend.emails.send({
-    from: 'POG Advisory <notifications@pogidja.co.za>',
+  return sendEmail({
     to: email,
     subject: 'Welcome to the POG Advisory Client Portal',
 
