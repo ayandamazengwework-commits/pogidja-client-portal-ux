@@ -200,29 +200,22 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Footer */}
+      {/* Footer */}
 
-        <div className="mt-5 flex flex-col items-center gap-2 text-center sm:flex-row sm:justify-center sm:gap-6">
+<div className="mt-6 flex flex-col items-center gap-3 text-center">
 
-          <Link
-            href="/auth/register"
-            className="font-semibold text-[#1E88E5] hover:underline"
-          >
-            Create an Account
-          </Link>
+  <p className="text-sm text-slate-500">
+    Your portal account is created by your POG Advisory consultant.
+  </p>
 
-          <span className="hidden text-slate-300 sm:block">
-            •
-          </span>
+  <Link
+    href="/auth/staff-login"
+    className="font-medium text-slate-600 transition hover:text-[#1E88E5]"
+  >
+    Staff Login
+  </Link>
 
-          <Link
-            href="/auth/staff-login"
-            className="font-medium text-slate-600 hover:text-[#1E88E5]"
-          >
-            Staff Login
-          </Link>
-
-        </div>
+</div>
 
       </div>
 
