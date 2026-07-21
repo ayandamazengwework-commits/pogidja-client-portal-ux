@@ -40,12 +40,41 @@ export async function uploadDocument(
 
   const bucket = 'service-documents'
 
-  const { error: uploadError } =
-    await supabase.storage
-      .from(bucket)
-      .upload(storagePath, file)
+  console.log('================= START UPLOAD =================')
+  console.log('User:', user.id)
+  console.log('Service:', serviceId)
+  console.log('Bucket:', bucket)
+  console.log('Storage Path:', storagePath)
+  console.log('File Name:', file.name)
+  console.log('File Size:', file.size)
+  console.log('Mime Type:', file.type)
 
-  if (uploadError) throw uploadError
+  const {
+    data: uploadData,
+    error: uploadError,
+  } = await supabase.storage
+    .from(bucket)
+    .upload(storagePath, file)
+
+  console.log('Upload Data:', uploadData)
+  console.log('Upload Error:', uploadError)
+
+  if (uploadError) {
+    console.error(uploadError)
+    throw new Error(uploadError.message)
+  }
+
+  const folder = storagePath.split('/')[0]
+
+  const {
+    data: files,
+    error: listError,
+  } = await supabase.storage
+    .from(bucket)
+    .list(folder)
+
+  console.log('Folder Contents:', files)
+  console.log('List Error:', listError)
 
   const uploaderRole =
     profile?.role === 'client'
@@ -67,18 +96,27 @@ export async function uploadDocument(
         document_type: uploaderRole,
       })
 
-  if (documentError) throw documentError
+  console.log('Document Insert Error:', documentError)
 
-  await supabase
-    .from('activity_logs')
-    .insert({
-      user_id: user.id,
-      role: uploaderRole,
-      action: 'Document Uploaded',
-      description: file.name,
-      entity_type: 'service',
-      entity_id: serviceId,
-    })
+  if (documentError) {
+    throw documentError
+  }
+
+  const { error: activityError } =
+    await supabase
+      .from('activity_logs')
+      .insert({
+        user_id: user.id,
+        role: uploaderRole,
+        action: 'Document Uploaded',
+        description: file.name,
+        entity_type: 'service',
+        entity_id: serviceId,
+      })
+
+  console.log('Activity Error:', activityError)
+
+  console.log('================= END UPLOAD =================')
 
   revalidatePath(`/portal/cases/${serviceId}`)
   revalidatePath(`/staff/services/${serviceId}`)
