@@ -99,9 +99,20 @@ async function downloadDocument(
     })
   }
 
-  const { data, error } = await supabase.storage
-    .from(document.bucket_name)
-    .createSignedUrl(document.storage_path, 60)
+const folder = document.storage_path.split('/')[0]
+
+const { data: files, error } = await supabase.storage
+  .from(document.bucket_name)
+  .list(folder)
+
+console.log(files)
+console.log(error)
+
+return NextResponse.json({
+  database_path: document.storage_path,
+  files,
+  error,
+})
 
   console.log('================ DOCUMENT DOWNLOAD ================')
   console.log('Bucket:', document.bucket_name)
