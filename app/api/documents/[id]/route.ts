@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
@@ -20,7 +19,7 @@ export async function GET(
     )
   }
 
-  // Get logged in profile
+  // Logged in profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, role')
@@ -33,7 +32,7 @@ export async function GET(
     })
   }
 
-  // Staff can access everything
+  // Staff/Admin access
   if (
     profile.role === 'staff' ||
     profile.role === 'manager' ||
@@ -42,7 +41,7 @@ export async function GET(
     return downloadDocument(supabase, id)
   }
 
-  // Get logged in client
+  // Logged in client
   const { data: client } = await supabase
     .from('clients')
     .select('id')
@@ -55,7 +54,7 @@ export async function GET(
     })
   }
 
-  // Get requested document
+  // Requested document
   const { data: document } = await supabase
     .from('service_documents')
     .select('*')
@@ -68,7 +67,7 @@ export async function GET(
     })
   }
 
-  // Verify document belongs to this client's service
+  // Ensure document belongs to client
   const { data: service } = await supabase
     .from('services')
     .select('client_id')
@@ -100,29 +99,41 @@ async function downloadDocument(
     })
   }
 
-const { data, error } = await supabase.storage
-  .from(document.bucket_name)
-  .createSignedUrl(document.storage_path, 60)
+  const { data, error } = await supabase.storage
+    .from(document.bucket_name)
+    .createSignedUrl(document.storage_path, 60)
 
-console.log('================ DOCUMENT DOWNLOAD ================')
-console.log('Bucket:', document.bucket_name)
-console.log('Storage Path:', document.storage_path)
-console.log('Error:', error)
-console.log('Signed URL:', data)
-console.log('===================================================')
+  console.log('================ DOCUMENT DOWNLOAD ================')
+  console.log('Bucket:', document.bucket_name)
+  console.log('Storage Path:', document.storage_path)
+  console.log('Error:', error)
+  console.log('Signed URL:', data)
+  console.log('===================================================')
 
-if (error) {
-  return NextResponse.json(
-    {
-      bucket: document.bucket_name,
-      path: document.storage_path,
-      error,
-    },
-    { status: 500 }
-  )
-}
+  if (error) {
+    return NextResponse.json(
+      {
+        bucket: document.bucket_name,
+        path: document.storage_path,
+        error,
+      },
+      {
+        status: 500,
+      }
+    )
+  }
 
-return NextResponse.redirect(data.signedUrl)
+  if (!data?.signedUrl) {
+    return NextResponse.json(
+      {
+        message: 'No signed URL returned.',
+        bucket: document.bucket_name,
+        path: document.storage_path,
+      },
+      {
+        status: 500,
+      }
+    )
   }
 
   return NextResponse.redirect(data.signedUrl)
