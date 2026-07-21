@@ -100,17 +100,29 @@ async function downloadDocument(
     })
   }
 
-  const { data } = await supabase.storage
-    .from(document.bucket_name)
-    .createSignedUrl(document.storage_path, 60)
+const { data, error } = await supabase.storage
+  .from(document.bucket_name)
+  .createSignedUrl(document.storage_path, 60)
 
-  if (!data?.signedUrl) {
-    return new NextResponse(
-      'Unable to generate download link.',
-      {
-        status: 500,
-      }
-    )
+console.log('================ DOCUMENT DOWNLOAD ================')
+console.log('Bucket:', document.bucket_name)
+console.log('Storage Path:', document.storage_path)
+console.log('Error:', error)
+console.log('Signed URL:', data)
+console.log('===================================================')
+
+if (error) {
+  return NextResponse.json(
+    {
+      bucket: document.bucket_name,
+      path: document.storage_path,
+      error,
+    },
+    { status: 500 }
+  )
+}
+
+return NextResponse.redirect(data.signedUrl)
   }
 
   return NextResponse.redirect(data.signedUrl)
