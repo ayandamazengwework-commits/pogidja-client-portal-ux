@@ -32,11 +32,20 @@ export async function uploadProofOfPayment(
     .select('service_id')
     .single()
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
-  // Activity Log
+  // Create notification for staff
+  await supabase.from('notifications').insert({
+    title: 'Proof of Payment Uploaded',
+    message: 'A client uploaded proof of payment.',
+    type: 'payment',
+    entity_type: 'invoice',
+    entity_id: invoiceId,
+    created_by: user.id,
+    is_read: false,
+  })
+
+  // Log activity
   await supabase.from('activity_logs').insert({
     user_id: user.id,
     role: 'client',
@@ -46,22 +55,14 @@ export async function uploadProofOfPayment(
     entity_id: invoiceId,
   })
 
-  // Notification for staff
-  await supabase.from('notifications').insert({
-    title: 'Proof of Payment Uploaded',
-    message: 'A client has uploaded proof of payment.',
-    type: 'payment',
-    entity_type: 'invoice',
-    entity_id: invoiceId,
-    is_read: false,
-  })
+  if (invoice?.service_id) {
+    revalidatePath(`/staff/services/${invoice.service_id}`)
+    revalidatePath(`/portal/cases/${invoice.service_id}`)
+  }
 
   revalidatePath('/portal/invoices')
   revalidatePath('/staff/invoices')
-
-  if (invoice?.service_id) {
-    revalidatePath(`/staff/services/${invoice.service_id}`)
-  }
+  revalidatePath('/staff/dashboard')
 
   redirect('/portal/invoices')
 }
