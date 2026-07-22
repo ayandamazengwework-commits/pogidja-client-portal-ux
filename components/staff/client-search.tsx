@@ -9,6 +9,7 @@ import {
   Users,
   Pencil,
   Trash2,
+  Eye,
 } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/client'
@@ -19,9 +20,10 @@ import { Button } from '@/components/ui/button'
 
 interface Client {
   id: string
-  client_code: string | null
+  client_code: string |null
   status: string
   profile: {
+    id?: string
     first_name: string | null
     last_name: string | null
     email: string | null
@@ -62,26 +64,42 @@ export function ClientSearch({ clients }: Props) {
     })
   }, [clients, query])
 
-  async function deleteClient(id: string) {
+  async function deleteClient(client: Client) {
     const confirmed = window.confirm(
-      'Delete this client? This cannot be undone.'
+      `Delete ${
+        client.company?.name ??
+        `${client.profile?.first_name ?? ''} ${client.profile?.last_name ?? ''}`
+      }?\n\nThis action cannot be undone.`
     )
 
     if (!confirmed) return
 
-    setDeleting(id)
+    setDeleting(client.id)
 
-    await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id)
+    try {
+      await supabase
+        .from('clients')
+        .delete()
+        .eq('id', client.id)
 
-    router.refresh()
+      if (client.profile?.id) {
+        await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', client.profile.id)
+      }
+
+      router.refresh()
+    } finally {
+      setDeleting(null)
+    }
   }
 
   return (
     <div className="space-y-6">
+
       <div className="relative max-w-xl">
+
         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
         <Input
@@ -90,44 +108,50 @@ export function ClientSearch({ clients }: Props) {
           placeholder="Search by client, company, email or code..."
           className="pl-11"
         />
+
       </div>
 
-      {filteredClients.length ? (
+      {filteredClients.length > 0 ? (
+
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+
           {filteredClients.map((client) => {
-            const initials =
-              `${client.profile?.first_name?.[0] ?? ''}${client.profile?.last_name?.[0] ?? ''}`
+            const initials = `${client.profile?.first_name?.[0] ?? ''}${client.profile?.last_name?.[0] ?? ''}`
 
             return (
               <Card
                 key={client.id}
-                className="rounded-3xl border-0 shadow-sm transition hover:shadow-xl"
+                className="rounded-3xl border-0 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
               >
-                <CardContent className="space-y-6 p-6">
-                  <Link href={`/staff/clients/${client.id}`}>
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
-                        {initials || '?'}
-                      </div>
+                <CardContent className="p-6">
 
-                      <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-lg font-bold">
-                          {client.company?.name ||
-                            `${client.profile?.first_name ?? ''} ${client.profile?.last_name ?? ''}`}
-                        </h2>
+                  <div className="flex items-start gap-4">
 
-                        <p className="truncate text-sm text-slate-500">
-                          {client.profile?.email}
-                        </p>
-
-                        <p className="mt-1 text-sm text-slate-400">
-                          {client.profile?.phone || 'No phone number'}
-                        </p>
-                      </div>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700">
+                      {initials || '?'}
                     </div>
-                  </Link>
 
-                  <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+
+                      <h2 className="truncate text-lg font-bold">
+                        {client.company?.name ||
+                          `${client.profile?.first_name ?? ''} ${client.profile?.last_name ?? ''}`}
+                      </h2>
+
+                      <p className="truncate text-sm text-slate-500">
+                        {client.profile?.email}
+                      </p>
+
+                      <p className="mt-1 text-sm text-slate-400">
+                        {client.profile?.phone || 'No phone number'}
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between">
+
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         client.status === 'active'
@@ -143,13 +167,24 @@ export function ClientSearch({ clients }: Props) {
                     <span className="text-xs text-slate-400">
                       {client.client_code || '-'}
                     </span>
+
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="mt-6 grid grid-cols-3 gap-2">
+
                     <Button
                       asChild
                       variant="outline"
-                      className="flex-1"
+                    >
+                      <Link href={`/staff/clients/${client.id}`}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Link>
+                    </Button>
+
+                    <Button
+                      asChild
+                      variant="secondary"
                     >
                       <Link href={`/staff/clients/${client.id}/edit`}>
                         <Pencil className="mr-2 h-4 w-4" />
@@ -160,19 +195,30 @@ export function ClientSearch({ clients }: Props) {
                     <Button
                       variant="destructive"
                       disabled={deleting === client.id}
-                      onClick={() => deleteClient(client.id)}
+                      onClick={() => deleteClient(client)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="mr-2 h-4 w-4" />
+
+                      {deleting === client.id
+                        ? '...'
+                        : 'Delete'}
                     </Button>
+
                   </div>
+
                 </CardContent>
               </Card>
             )
           })}
+
         </div>
+
       ) : (
+
         <Card className="rounded-3xl">
+
           <CardContent className="py-16 text-center">
+
             <Users className="mx-auto mb-4 h-12 w-12 text-slate-300" />
 
             <h2 className="text-2xl font-bold">
@@ -180,11 +226,15 @@ export function ClientSearch({ clients }: Props) {
             </h2>
 
             <p className="mt-2 text-slate-500">
-              Try another search.
+              Try searching using a different name, company or email.
             </p>
+
           </CardContent>
+
         </Card>
+
       )}
+
     </div>
   )
 }
