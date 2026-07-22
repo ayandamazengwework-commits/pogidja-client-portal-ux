@@ -45,75 +45,41 @@ export async function GET(
     .eq('id', id)
     .single()
 
-  if (!document) {
-    return new NextResponse('Document not found', {
-      status: 404,
-    })
-  }
+const { data, error } = await supabase.storage
+  .from(document.bucket_name)
+  .createSignedUrl(document.storage_path, 60 * 10)
 
-  // ----------------------------------------------------
-  // STAFF ACCESS
-  // ----------------------------------------------------
+console.log('================ DOCUMENT DOWNLOAD ================')
+console.log('Bucket:', document.bucket_name)
+console.log('Storage Path:', document.storage_path)
+console.log('Signed URL:', data?.signedUrl)
+console.log('Error:', error)
+console.log('===================================================')
 
-  if (
-    profile.role === 'staff' ||
-    profile.role === 'manager' ||
-    profile.role === 'admin'
-  ) {
-    return generateDownload(supabase, document)
-  }
-
-  // ----------------------------------------------------
-  // CLIENT ACCESS
-  // ----------------------------------------------------
-
-  const { data: client } = await supabase
-    .from('clients')
-    .select('id')
-    .eq('profile_id', user.id)
-    .single()
-
-  if (!client) {
-    return new NextResponse('Unauthorized', {
-      status: 401,
-    })
-  }
-
-  const { data: service } = await supabase
-    .from('services')
-    .select('client_id')
-    .eq('id', document.service_id)
-    .single()
-
-  if (!service || service.client_id !== client.id) {
-    return new NextResponse('Forbidden', {
-      status: 403,
-    })
-  }
-
-  return generateDownload(supabase, document)
+if (error) {
+  return NextResponse.json(
+    {
+      bucket: document.bucket_name,
+      path: document.storage_path,
+      error,
+    },
+    {
+      status: 500,
+    }
+  )
 }
 
-async function generateDownload(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  document: {
-    bucket_name: string
-    storage_path: string
-    file_name: string
-  }
-) {
-  const { data, error } = await supabase.storage
-    .from(document.bucket_name)
-    .createSignedUrl(document.storage_path, 60)
-
-  if (error || !data?.signedUrl) {
-    return new NextResponse(
-      'Unable to generate download link.',
-      {
-        status: 500,
-      }
-    )
-  }
-
-  return NextResponse.redirect(data.signedUrl)
+if (!data?.signedUrl) {
+  return NextResponse.json(
+    {
+      message: 'No signed URL returned.',
+      bucket: document.bucket_name,
+      path: document.storage_path,
+    },
+    {
+      status: 500,
+    }
+  )
 }
+
+return NextResponse.redirect(data.signedUrl)
