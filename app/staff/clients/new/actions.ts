@@ -12,13 +12,7 @@ export async function createClientProfile(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    throw new Error('Not authenticated')
-  }
-
-  // =====================================================
-  // FORM
-  // =====================================================
+  if (!user) throw new Error('Not authenticated')
 
   const firstName = String(formData.get('first_name') ?? '')
   const lastName = String(formData.get('last_name') ?? '')
@@ -40,10 +34,6 @@ export async function createClientProfile(formData: FormData) {
   const postalCode = String(formData.get('postal_code') ?? '')
   const notes = String(formData.get('notes') ?? '')
 
-  // =====================================================
-  // INVITE USER
-  // =====================================================
-
   const { data: invite, error: inviteError } =
     await supabase.auth.admin.inviteUserByEmail(email, {
       data: {
@@ -54,59 +44,41 @@ export async function createClientProfile(formData: FormData) {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
     })
 
-  if (inviteError) {
-    throw new Error(inviteError.message)
-  }
+  if (inviteError) throw new Error(inviteError.message)
 
   const authUser = invite.user
 
-  if (!authUser) {
+  if (!authUser)
     throw new Error('Failed to create client account.')
-  }
-
-  // =====================================================
-  // PROFILE
-  // =====================================================
 
   const { data: profile, error: profileError } =
     await supabase
       .from('profiles')
       .insert({
         id: authUser.id,
-
         first_name: firstName,
         last_name: lastName,
         email,
         phone,
-
         role: 'client',
-
         company_name: companyName,
         id_number: idNumber,
         company_registration: companyRegistration,
         vat_number: vatNumber,
         tax_number: taxNumber,
-
         address,
         city,
         province,
         postal_code: postalCode,
-
         active: true,
         client_status: 'Pending',
-
         notes,
       })
       .select()
       .single()
 
-  if (profileError) {
+  if (profileError)
     throw new Error(profileError.message)
-  }
-
-  // =====================================================
-  // CLIENT
-  // =====================================================
 
   const clientCode = `POG-${Date.now()}`
 
@@ -121,13 +93,8 @@ export async function createClientProfile(formData: FormData) {
       .select()
       .single()
 
-  if (clientError) {
+  if (clientError)
     throw new Error(clientError.message)
-  }
-
-  // =====================================================
-  // DEFAULT SERVICE
-  // =====================================================
 
   const { data: service } = await supabase
     .from('services')
@@ -145,17 +112,11 @@ export async function createClientProfile(formData: FormData) {
     .select()
     .single()
 
-  // =====================================================
-  // FIRST MESSAGE
-  // =====================================================
-
   await supabase.from('messages').insert({
     sender_id: user.id,
     recipient_id: profile.id,
     service_id: service?.id,
-
     subject: 'Welcome to POG Advisory',
-
     body: `Welcome ${firstName}.
 
 Your client portal has been created.
@@ -176,10 +137,6 @@ Click the link to:
 We look forward to working with you.`,
   })
 
-  // =====================================================
-  // NOTIFICATION
-  // =====================================================
-
   await supabase.from('notifications').insert({
     user_id: profile.id,
     title: 'Welcome to POG Advisory',
@@ -189,10 +146,6 @@ We look forward to working with you.`,
     link: '/portal',
     read: false,
   })
-
-  // =====================================================
-  // ACTIVITY
-  // =====================================================
 
   await supabase.from('activity_logs').insert({
     user_id: user.id,
@@ -207,4 +160,94 @@ We look forward to working with you.`,
   revalidatePath('/staff/clients')
 
   redirect(`/staff/services/${service?.id}`)
+}
+
+export async function updateClient(
+  clientId: string,
+  formData: FormData
+) {
+  const supabase = await createClient()
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('profile_id')
+    .eq('id', clientId)
+    .single()
+
+  if (!client) throw new Error('Client not found.')
+
+  await supabase
+    .from('profiles')
+    .update({
+      first_name: String(formData.get('first_name') ?? ''),
+      last_name: String(formData.get('last_name') ?? ''),
+      email: String(formData.get('email') ?? ''),
+      phone: String(formData.get('phone') ?? ''),
+      company_name: String(formData.get('company_name') ?? ''),
+      id_number: String(formData.get('id_number') ?? ''),
+      company_registration: String(
+        formData.get('company_registration') ?? ''
+      ),
+      vat_number: String(formData.get('vat_number') ?? ''),
+      tax_number: String(formData.get('tax_number') ?? ''),
+      address: String(formData.get('address') ?? ''),
+      city: String(formData.get('city') ?? ''),
+      province: String(formData.get('province') ?? ''),
+      postal_code: String(formData.get('postal_code') ?? ''),
+      notes: String(formData.get('notes') ?? ''),
+    })
+    .eq('id', client.profile_id)
+
+  revalidatePath('/staff/clients')
+}
+
+export async function deleteClient(clientId: string) {
+  const supabase = await createClient()
+
+  const { data: client } = await supabase
+    .from('clients')
+    .select('profile_id')
+    .eq('id', clientId)
+    .single()
+
+  if (!client) throw new Error('Client not found.')
+
+  await supabase
+    .from('notifications')
+    .delete()
+    .eq('user_id', client.profile_id)
+
+  await supabase
+    .from('messages')
+    .delete()
+    .or(
+      `sender_id.eq.${client.profile_id},recipient_id.eq.${client.profile_id}`
+    )
+
+  await supabase
+    .from('activity_logs')
+    .delete()
+    .eq('client_id', clientId)
+
+  await supabase
+    .from('invoices')
+    .delete()
+    .eq('client_id', clientId)
+
+  await supabase
+    .from('services')
+    .delete()
+    .eq('client_id', clientId)
+
+  await supabase
+    .from('clients')
+    .delete()
+    .eq('id', clientId)
+
+  await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', client.profile_id)
+
+  revalidatePath('/staff/clients')
 }
