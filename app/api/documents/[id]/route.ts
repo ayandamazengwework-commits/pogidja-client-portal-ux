@@ -3,19 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: Request,
-  {
-    params,
-  }: {
-    params: Promise<{ id: string }>
-  }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
 
   const supabase = await createClient()
-
-  // --------------------------------------------------
-  // AUTH
-  // --------------------------------------------------
 
   const {
     data: { user },
@@ -26,6 +18,10 @@ export async function GET(
       new URL('/auth/login', request.url)
     )
   }
+
+  // ---------------------------------------------------
+  // Logged in profile
+  // ---------------------------------------------------
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -39,9 +35,9 @@ export async function GET(
     })
   }
 
-  // --------------------------------------------------
-  // STAFF / ADMIN
-  // --------------------------------------------------
+  // ---------------------------------------------------
+  // Staff/Admin can access everything
+  // ---------------------------------------------------
 
   if (
     profile.role === 'staff' ||
@@ -51,9 +47,9 @@ export async function GET(
     return downloadDocument(supabase, id)
   }
 
-  // --------------------------------------------------
-  // CLIENT
-  // --------------------------------------------------
+  // ---------------------------------------------------
+  // Client access
+  // ---------------------------------------------------
 
   const { data: client } = await supabase
     .from('clients')
@@ -67,10 +63,6 @@ export async function GET(
     })
   }
 
-  // --------------------------------------------------
-  // DOCUMENT
-  // --------------------------------------------------
-
   const { data: document } = await supabase
     .from('service_documents')
     .select('*')
@@ -82,10 +74,6 @@ export async function GET(
       status: 404,
     })
   }
-
-  // --------------------------------------------------
-  // VERIFY OWNERSHIP
-  // --------------------------------------------------
 
   const { data: service } = await supabase
     .from('services')
@@ -102,46 +90,44 @@ export async function GET(
   return downloadDocument(supabase, id)
 }
 
-// ==================================================
+// ======================================================
 // DOWNLOAD
-// ==================================================
+// ======================================================
 
 async function downloadDocument(
   supabase: Awaited<ReturnType<typeof createClient>>,
   id: string
 ) {
-  const { data: document } = await supabase
+  const { data: document, error } = await supabase
     .from('service_documents')
     .select('*')
     .eq('id', id)
     .single()
 
-  if (!document) {
+  if (error || !document) {
     return new NextResponse('Document not found', {
       status: 404,
     })
   }
 
-  const { data, error } = await supabase.storage
-    .from(document.bucket_name)
-    .createSignedUrl(
-      document.storage_path,
-      60 * 10
-    )
-
   console.log('================ DOCUMENT DOWNLOAD ================')
   console.log('Bucket:', document.bucket_name)
-  console.log('Storage Path:', document.storage_path)
-  console.log('Signed URL:', data?.signedUrl)
-  console.log('Error:', error)
+  console.log('Path:', document.storage_path)
+
+  const { data: file, error: downloadError } =
+    await supabase.storage
+      .from(document.bucket_name)
+      .download(document.storage_path)
+
+  console.log('Download Error:', downloadError)
   console.log('===================================================')
 
-  if (error) {
+  if (downloadError || !file) {
     return NextResponse.json(
       {
         bucket: document.bucket_name,
         path: document.storage_path,
-        error,
+        error: downloadError,
       },
       {
         status: 500,
@@ -149,18 +135,12 @@ async function downloadDocument(
     )
   }
 
-  if (!data?.signedUrl) {
-    return NextResponse.json(
-      {
-        message: 'No signed URL returned.',
-        bucket: document.bucket_name,
-        path: document.storage_path,
-      },
-      {
-        status: 500,
-      }
-    )
-  }
-
-  return NextResponse.redirect(data.signedUrl)
+  return new NextResponse(file, {
+    headers: {
+      'Content-Type':
+        document.mime_type || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${document.file_name}"`,
+      'Cache-Control': 'private, max-age=0',
+    },
+  })
 }
