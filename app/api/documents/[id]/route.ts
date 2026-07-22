@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(
   request: Request,
@@ -36,7 +38,7 @@ export async function GET(
   }
 
   // ---------------------------------------------------
-  // Staff/Admin can access everything
+  // Staff/Admin
   // ---------------------------------------------------
 
   if (
@@ -44,11 +46,11 @@ export async function GET(
     profile.role === 'manager' ||
     profile.role === 'admin'
   ) {
-    return downloadDocument(supabase, id)
+    return downloadDocument(id)
   }
 
   // ---------------------------------------------------
-  // Client access
+  // Client
   // ---------------------------------------------------
 
   const { data: client } = await supabase
@@ -87,18 +89,15 @@ export async function GET(
     })
   }
 
-  return downloadDocument(supabase, id)
+  return downloadDocument(id)
 }
 
 // ======================================================
 // DOWNLOAD
 // ======================================================
 
-async function downloadDocument(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  id: string
-) {
-  const { data: document, error } = await supabase
+async function downloadDocument(id: string) {
+  const { data: document, error } = await supabaseAdmin
     .from('service_documents')
     .select('*')
     .eq('id', id)
@@ -115,7 +114,7 @@ async function downloadDocument(
   console.log('Path:', document.storage_path)
 
   const { data: file, error: downloadError } =
-    await supabase.storage
+    await supabaseAdmin.storage
       .from(document.bucket_name)
       .download(document.storage_path)
 
