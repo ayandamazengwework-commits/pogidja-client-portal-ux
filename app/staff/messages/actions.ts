@@ -16,25 +16,25 @@ export async function sendMessage(formData: FormData) {
     throw new Error('Not authenticated')
   }
 
-  const recipientId = formData.get('recipientId') as string
-  const serviceId = formData.get('serviceId') as string | null
-  const subject = formData.get('subject') as string
-  const body = formData.get('body') as string
+  const recipientId = String(formData.get('recipientId') ?? '')
+  const serviceId = String(formData.get('serviceId') ?? '')
+  const subject = String(formData.get('subject') ?? '').trim()
+  const body = String(formData.get('body') ?? '').trim()
 
   if (!recipientId || !body) {
     throw new Error('Missing required fields')
   }
 
-  // ----------------------------------------------------
-  // Create Message
-  // ----------------------------------------------------
+  // =====================================================
+  // SEND MESSAGE
+  // =====================================================
 
   const { error } = await supabase
     .from('messages')
     .insert({
       sender_id: user.id,
       recipient_id: recipientId,
-      service_id: serviceId,
+      service_id: serviceId || null,
       subject,
       body,
       read: false,
@@ -42,35 +42,52 @@ export async function sendMessage(formData: FormData) {
 
   if (error) throw error
 
-  // ----------------------------------------------------
-  // Recipient Profile
-  // ----------------------------------------------------
+  // =====================================================
+  // RECIPIENT
+  // =====================================================
 
   const { data: recipient } = await supabase
     .from('profiles')
-    .select('email, first_name')
+    .select(`
+      first_name,
+      last_name,
+      email,
+      company_name
+    `)
     .eq('id', recipientId)
     .single()
 
-  // ----------------------------------------------------
-  // Email
-  // ----------------------------------------------------
+  // =====================================================
+  // EMAIL
+  // =====================================================
 
   if (recipient?.email) {
     try {
       await sendEmail({
         to: recipient.email,
-        subject: subject || 'New message from POG Advisory',
+        subject: subject || 'New Message from POG Advisory',
         html: `
-          <h2>Hello ${recipient.first_name ?? 'Client'},</h2>
+          <div style="font-family:Arial,sans-serif;padding:30px">
 
-          <p>You have received a new message from the POG Advisory team.</p>
+            <h2>Hello ${recipient.first_name ?? 'Client'},</h2>
 
-          <p>${body}</p>
+            <p>You have received a new secure message from the POG Advisory team.</p>
 
-          <hr>
+            ${
+              subject
+                ? `<p><strong>Subject:</strong> ${subject}</p>`
+                : ''
+            }
 
-          <p>Please log into your portal to reply.</p>
+            <div style="margin:20px 0;padding:20px;background:#f6f8fa;border-radius:10px">
+              ${body.replace(/\n/g, '<br/>')}
+            </div>
+
+            <p>Please log into your client portal to respond.</p>
+
+            <p>Regards,<br/>POG Advisory</p>
+
+          </div>
         `,
       })
     } catch (err) {
@@ -78,14 +95,17 @@ export async function sendMessage(formData: FormData) {
     }
   }
 
-  // ----------------------------------------------------
-  // Client Notification
-  // ----------------------------------------------------
+  // =====================================================
+  // CLIENT NOTIFICATION
+  // =====================================================
 
   await supabase.from('notifications').insert({
     user_id: recipientId,
     title: subject || 'New Message',
-    message: body,
+    message:
+      body.length > 180
+        ? `${body.substring(0, 180)}...`
+        : body,
     type: 'message',
     link: serviceId
       ? `/portal/cases/${serviceId}`
@@ -93,19 +113,22 @@ export async function sendMessage(formData: FormData) {
     read: false,
   })
 
-  // ----------------------------------------------------
-  // Activity Log
-  // ----------------------------------------------------
+  // =====================================================
+  // ACTIVITY LOG
+  // =====================================================
 
   await supabase.from('activity_logs').insert({
     user_id: user.id,
-    action: 'Message Sent',
-    description: subject || 'New message',
+    role: 'staff',
     entity_type: 'message',
-    entity_id: serviceId,
+    entity_id: recipientId,
+    action: 'Message Sent',
+    description:
+      subject || 'Message sent to client',
   })
 
   revalidatePath('/staff/messages')
+  revalidatePath('/staff/notifications')
   revalidatePath('/portal/messages')
   revalidatePath('/portal/notifications')
 }
