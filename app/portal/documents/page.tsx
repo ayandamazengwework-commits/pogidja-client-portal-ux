@@ -11,6 +11,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+import { UploadDocumentForm } from '@/components/portal/upload-document-form'
+
 export default async function DocumentsPage() {
   const supabase = await createClient()
 
@@ -20,7 +22,6 @@ export default async function DocumentsPage() {
 
   if (!user) return null
 
-  // Logged in client
   const { data: client } = await supabase
     .from('clients')
     .select('id')
@@ -29,7 +30,6 @@ export default async function DocumentsPage() {
 
   if (!client) return null
 
-  // Client services
   const { data: services } = await supabase
     .from('services')
     .select('id,title')
@@ -54,48 +54,49 @@ export default async function DocumentsPage() {
 
   return (
     <div className="space-y-8">
-<section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
-  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-6 text-white shadow-xl md:p-10">
 
-    <div>
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
-      <p className="text-sm uppercase tracking-[0.3em] text-blue-200">
-        CLIENT DOCUMENTS
-      </p>
+          <div>
 
-      <h1 className="mt-3 text-3xl font-bold md:text-5xl">
-        Documents
-      </h1>
+            <p className="text-sm uppercase tracking-[0.3em] text-blue-200">
+              CLIENT DOCUMENTS
+            </p>
 
-      <p className="mt-4 max-w-2xl text-slate-300">
-        Securely access every document shared
-        between you and POG Advisory.
-      </p>
+            <h1 className="mt-3 text-3xl font-bold md:text-5xl">
+              Documents
+            </h1>
 
-    </div>
+            <p className="mt-4 max-w-2xl text-slate-300">
+              Securely access every document shared
+              between you and POG Advisory.
+            </p>
 
-    <Card className="border-0 bg-white/10 backdrop-blur">
+          </div>
 
-      <CardContent className="p-6 text-center">
+          <Card className="border-0 bg-white/10 backdrop-blur">
 
-        <FileText className="mx-auto mb-3 h-10 w-10 text-blue-200" />
+            <CardContent className="p-6 text-center">
 
-        <p className="text-sm text-slate-300">
-          Total Documents
-        </p>
+              <FileText className="mx-auto mb-3 h-10 w-10 text-blue-200" />
 
-        <p className="mt-2 text-4xl font-bold">
-          {documents.length}
-        </p>
+              <p className="text-sm text-slate-300">
+                Total Documents
+              </p>
 
-      </CardContent>
+              <p className="mt-2 text-4xl font-bold">
+                {documents.length}
+              </p>
 
-    </Card>
+            </CardContent>
 
-  </div>
+          </Card>
 
-</section>
+        </div>
+
+      </section>
 
       <div className="relative">
 
@@ -107,6 +108,12 @@ export default async function DocumentsPage() {
         />
 
       </div>
+
+      {/* Upload Area */}
+
+      <UploadDocumentForm
+        serviceId={services?.[0]?.id ?? ''}
+      />
 
       {documents.length > 0 ? (
 
@@ -121,41 +128,49 @@ export default async function DocumentsPage() {
 
             return (
 
-             <Card
-  key={document.id}
-  className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg"
->
+              <Card
+                key={document.id}
+                className="rounded-3xl border-0 shadow-sm transition hover:shadow-lg"
+              >
+
                 <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
 
                   <div className="flex items-center gap-4">
 
                     <div className="rounded-2xl bg-blue-100 p-3">
 
-  <FileText className="h-7 w-7 text-blue-700" />
+                      <FileText className="h-7 w-7 text-blue-700" />
 
-</div>
+                    </div>
 
                     <div>
 
                       <h3 className="font-semibold">
-                        {document.file_name}
+                        {document.title || document.file_name}
                       </h3>
 
                       <p className="text-sm text-muted-foreground">
                         {service?.title}
                       </p>
-<p className="mt-2 text-xs text-slate-500">
 
-  {Math.round(document.file_size / 1024)} KB
+                      <p className="mt-1 text-xs text-blue-600 font-medium">
+                        {document.category ?? 'General'}
+                      </p>
 
-  {" • "}
+                      <p className="mt-2 text-xs text-slate-500">
 
-  {document.mime_type}
+                        {Math.round(document.file_size / 1024)} KB
 
-</p>
-                      <p className="text-xs text-slate-400 mt-1">
+                        {" • "}
+
+                        {document.mime_type}
+
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-400">
 
                         Uploaded by{' '}
+
                         {document.uploaded_by_role === 'client'
                           ? 'You'
                           : 'POG Advisory'}
@@ -172,10 +187,10 @@ export default async function DocumentsPage() {
 
                   </div>
 
-                 <Button
-  asChild
-  className="w-full md:w-auto"
->
+                  <Button
+                    asChild
+                    className="w-full md:w-auto"
+                  >
 
                     <Link
                       href={`/api/documents/${document.id}`}
@@ -213,8 +228,7 @@ export default async function DocumentsPage() {
             </h2>
 
             <p className="mt-3 text-slate-500">
-              Documents uploaded by you or POG Advisory
-              will appear here.
+              Upload your documents here or wait for POG Advisory to share files with you.
             </p>
 
           </CardContent>
