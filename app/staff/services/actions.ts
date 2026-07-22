@@ -200,3 +200,91 @@ export async function saveInternalNotes(
 
   revalidatePath(`/staff/services/${serviceId}`)
 }
+
+/* ==========================================================
+   MANUAL CLIENT NOTIFICATION
+========================================================== */
+
+export async function notifyClient(
+  serviceId: string,
+  title: string,
+  message: string
+) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: service } = await supabase
+    .from('services')
+    .select(`
+      title,
+      client:clients(
+        profile_id
+      )
+    `)
+    .eq('id', serviceId)
+    .single()
+
+  if (!service) throw new Error('Service not found')
+
+  const profileId = service.client?.profile_id
+
+  if (!profileId) throw new Error('Client profile not found')
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('email, first_name')
+    .eq('id', profileId)
+    .single()
+
+  // Portal notification
+  await supabase.from('notifications').insert({
+    user_id: profileId,
+    title,
+    message,
+    type: 'service',
+    link: `/portal/cases/${serviceId}`,
+    read: false,
+  })
+
+  // Email
+  if (profile?.email) {
+    try {
+      await sendEmail({
+        to: profile.email,
+        subject: title,
+        html: `
+          <h2>Hello ${profile.first_name ?? 'Client'},</h2>
+
+          <p>${message}</p>
+
+          <p>
+            Service:
+            <strong>${service.title}</strong>
+          </p>
+
+          <p>Please log into your portal for further details.</p>
+        `,
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  // Activity Log
+  await supabase.from('activity_logs').insert({
+    user_id: user.id,
+    entity_type: 'service',
+    entity_id: serviceId,
+    action: 'Client Notified',
+    description: title,
+  })
+
+  revalidatePath(`/staff/services/${serviceId}`)
+  revalidatePath('/portal')
+  revalidatePath('/portal/notifications')
+}
