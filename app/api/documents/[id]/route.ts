@@ -19,7 +19,10 @@ export async function GET(
     )
   }
 
-  // Logged in profile
+  // ----------------------------------------------------
+  // PROFILE
+  // ----------------------------------------------------
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, role')
@@ -32,16 +35,38 @@ export async function GET(
     })
   }
 
-  // Staff/Admin access
+  // ----------------------------------------------------
+  // DOCUMENT
+  // ----------------------------------------------------
+
+  const { data: document } = await supabase
+    .from('service_documents')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (!document) {
+    return new NextResponse('Document not found', {
+      status: 404,
+    })
+  }
+
+  // ----------------------------------------------------
+  // STAFF ACCESS
+  // ----------------------------------------------------
+
   if (
     profile.role === 'staff' ||
     profile.role === 'manager' ||
     profile.role === 'admin'
   ) {
-    return downloadDocument(supabase, id)
+    return generateDownload(supabase, document)
   }
 
-  // Logged in client
+  // ----------------------------------------------------
+  // CLIENT ACCESS
+  // ----------------------------------------------------
+
   const { data: client } = await supabase
     .from('clients')
     .select('id')
@@ -54,20 +79,6 @@ export async function GET(
     })
   }
 
-  // Requested document
-  const { data: document } = await supabase
-    .from('service_documents')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (!document) {
-    return new NextResponse('Document not found', {
-      status: 404,
-    })
-  }
-
-  // Ensure document belongs to client
   const { data: service } = await supabase
     .from('services')
     .select('client_id')
@@ -80,67 +91,24 @@ export async function GET(
     })
   }
 
-  return downloadDocument(supabase, id)
+  return generateDownload(supabase, document)
 }
 
-async function downloadDocument(
+async function generateDownload(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  id: string
+  document: {
+    bucket_name: string
+    storage_path: string
+    file_name: string
+  }
 ) {
-  const { data: document } = await supabase
-    .from('service_documents')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await supabase.storage
+    .from(document.bucket_name)
+    .createSignedUrl(document.storage_path, 60)
 
-  if (!document) {
-    return new NextResponse('Document not found', {
-      status: 404,
-    })
-  }
-
-const folder = document.storage_path.split('/')[0]
-
-const { data: files, error } = await supabase.storage
-  .from(document.bucket_name)
-  .list(folder)
-
-console.log(files)
-console.log(error)
-
-return NextResponse.json({
-  database_path: document.storage_path,
-  files,
-  error,
-})
-
-  console.log('================ DOCUMENT DOWNLOAD ================')
-  console.log('Bucket:', document.bucket_name)
-  console.log('Storage Path:', document.storage_path)
-  console.log('Error:', error)
-  console.log('Signed URL:', data)
-  console.log('===================================================')
-
-  if (error) {
-    return NextResponse.json(
-      {
-        bucket: document.bucket_name,
-        path: document.storage_path,
-        error,
-      },
-      {
-        status: 500,
-      }
-    )
-  }
-
-  if (!data?.signedUrl) {
-    return NextResponse.json(
-      {
-        message: 'No signed URL returned.',
-        bucket: document.bucket_name,
-        path: document.storage_path,
-      },
+  if (error || !data?.signedUrl) {
+    return new NextResponse(
+      'Unable to generate download link.',
       {
         status: 500,
       }
