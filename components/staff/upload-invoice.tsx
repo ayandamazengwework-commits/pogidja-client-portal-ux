@@ -35,19 +35,12 @@ export function UploadInvoice({
         })
 
       if (storageError) throw storageError
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage
-        .from('invoice-pdfs')
-        .getPublicUrl(fileName)
-
-      const { error: updateError } = await supabase
-        .from('invoices')
-        .update({
-          invoice_url: publicUrl,
-        })
-        .eq('id', invoiceId)
+await supabase
+  .from('invoices')
+  .update({
+    invoice_url: fileName,
+  })
+  .eq('id', invoiceId)
 
       if (updateError) throw updateError
 
