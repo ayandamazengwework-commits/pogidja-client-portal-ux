@@ -18,13 +18,9 @@ const sourceSerif = Source_Serif_4({
 })
 
 export const metadata = {
-  title: {
-    default: 'POG Advisory Portal',
-    template: '%s | POG Advisory',
-  },
-
+  title: 'POG Advisory Portal',
   description:
-    'Secure client portal for POG Advisory. Manage services, documents, invoices and communication.',
+    'Secure client portal for POG Advisory clients to manage services, documents, invoices and communication.',
 
   openGraph: {
     title: 'POG Advisory Portal',
@@ -34,7 +30,7 @@ export const metadata = {
     siteName: 'POG Advisory',
     images: [
       {
-        url: 'https://www.pogadvisoryportal.co.za/og-image.png',
+        url: '/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png',
         width: 1200,
         height: 630,
         alt: 'POG Advisory Portal',
@@ -50,12 +46,8 @@ export const metadata = {
     description:
       'Secure client portal for POG Advisory clients.',
     images: [
-      'https://www.pogadvisoryportal.co.za/og-image.png',
+      '/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png',
     ],
-  },
-
-  icons: {
-    icon: '/favicon.ico',
   },
 }
 
