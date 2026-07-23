@@ -71,8 +71,8 @@ if (!authUser) {
 }
 
   const { data: profile, error: profileError } =
-    await supabase
-      .from('profiles')
+  await supabaseAdmin
+    .from('profiles')
       .insert({
         id: authUser.id,
         first_name: firstName,
@@ -101,9 +101,9 @@ if (!authUser) {
 
   const clientCode = `POG-${Date.now()}`
 
-  const { data: client, error: clientError } =
-    await supabase
-      .from('clients')
+const { data: client, error: clientError } =
+  await supabaseAdmin
+    .from('clients')
       .insert({
         profile_id: profile.id,
         client_code: clientCode,
@@ -115,8 +115,8 @@ if (!authUser) {
   if (clientError)
     throw new Error(clientError.message)
 
-  const { data: service } = await supabase
-    .from('services')
+  const { data: service } = await supabaseAdmin
+  .from('services')
     .insert({
       client_id: client.id,
       title: 'Client Onboarding',
@@ -131,7 +131,7 @@ if (!authUser) {
     .select()
     .single()
 
-  await supabase.from('messages').insert({
+  await supabaseAdmin.from('messages').insert({
     sender_id: user.id,
     recipient_id: profile.id,
     service_id: service?.id,
@@ -156,7 +156,7 @@ Click the link to:
 We look forward to working with you.`,
   })
 
-  await supabase.from('notifications').insert({
+  await supabaseAdmin.from('notifications').insert({
     user_id: profile.id,
     title: 'Welcome to POG Advisory',
     message:
@@ -166,7 +166,7 @@ We look forward to working with you.`,
     read: false,
   })
 
-  await supabase.from('activity_logs').insert({
+ await supabaseAdmin.from('activity_logs').insert({
     user_id: user.id,
     role: 'staff',
     client_id: client.id,
