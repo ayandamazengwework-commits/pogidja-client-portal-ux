@@ -88,7 +88,6 @@ if (!authUser) {
   await supabase
     .from('profiles')
 .update({
-       id: authUser.id,
       first_name: firstName,
       last_name: lastName,
       email,
