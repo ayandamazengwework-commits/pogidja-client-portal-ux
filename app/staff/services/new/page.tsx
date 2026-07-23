@@ -60,19 +60,7 @@ export default async function NewServicePage() {
 
 
   // Staff
-  const {
-    data: staff,
-    error: staffError,
-  } = await supabase
-    .from('profiles')
-    .select(
-      'id, first_name, last_name, role'
-    )
-    .in('role', [
-      'staff',
-      'manager',
-      'admin',
-    ])
+ const staff = []
 
 
   if (staffError) {
