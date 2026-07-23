@@ -1,0 +1,69 @@
+
+> my-project@0.1.0 build /workspaces/pogidja-client-portal-ux
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 23.7s
+  Skipping validation of types
+  Finished TypeScript config validation in 16ms ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/35) ...
+  Generating static pages using 1 worker (8/35) 
+  Generating static pages using 1 worker (17/35) 
+  Generating static pages using 1 worker (26/35) 
+✓ Generating static pages using 1 worker (35/35) in 915ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /activate-account
+├ ƒ /api/documents/[id]
+├ ƒ /api/staff/clients/create
+├ ƒ /auth/callback
+├ ○ /auth/forgot-password
+├ ○ /auth/login
+├ ○ /auth/register
+├ ○ /auth/reset-password
+├ ○ /auth/staff-login
+├ ○ /auth/verified
+├ ƒ /portal
+├ ƒ /portal/cases
+├ ƒ /portal/cases/[id]
+├ ƒ /portal/documents
+├ ƒ /portal/invoices
+├ ƒ /portal/invoices/[id]
+├ ƒ /portal/messages
+├ ƒ /portal/my-requests
+├ ƒ /portal/notifications
+├ ƒ /portal/onboarding
+├ ƒ /portal/profile
+├ ƒ /portal/request-service
+├ ƒ /staff
+├ ƒ /staff/cases
+├ ƒ /staff/cases/[id]
+├ ƒ /staff/clients
+├ ƒ /staff/clients/[id]
+├ ƒ /staff/clients/new
+├ ƒ /staff/documents
+├ ƒ /staff/invoices
+├ ƒ /staff/invoices/new
+├ ƒ /staff/messages
+├ ƒ /staff/notifications
+├ ƒ /staff/requests
+├ ƒ /staff/requests/[id]
+├ ƒ /staff/services
+├ ƒ /staff/services/[id]
+├ ƒ /staff/services/new
+└ ƒ /staff/settings
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
