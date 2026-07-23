@@ -58,7 +58,10 @@ let authUser
 
 const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-console.log('REDIRECT URL:', redirectUrl)
+console.log({
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+  redirectUrl,
+})
 
 try {
   const { data, error } =
@@ -70,6 +73,19 @@ try {
       },
       redirectTo: redirectUrl,
     })
+
+  console.log('Invite data:', data)
+  console.log('Invite error:', error)
+
+  if (error) {
+    throw error
+  }
+
+  authUser = data.user
+} catch (err) {
+  console.error('INVITE FAILED:', err)
+  throw err
+}
 
   console.log('Invite data:', data)
   console.log('Invite error:', error)
