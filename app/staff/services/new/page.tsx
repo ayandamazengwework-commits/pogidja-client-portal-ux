@@ -13,8 +13,12 @@ import { NewServiceForm } from '@/components/services/new-service-form'
 export default async function NewServicePage() {
   const supabase = await createClient()
 
+
   // Clients
-  const { data: clients } = await supabase
+  const {
+    data: clients,
+    error: clientsError,
+  } = await supabase
     .from('clients')
     .select(`
       id,
@@ -28,14 +32,38 @@ export default async function NewServicePage() {
     `)
     .order('created_at')
 
+
+  if (clientsError) {
+    console.error(
+      'CLIENTS QUERY ERROR:',
+      clientsError
+    )
+  }
+
+
   // Categories
-  const { data: categories } = await supabase
+  const {
+    data: categories,
+    error: categoriesError,
+  } = await supabase
     .from('service_categories')
     .select('*')
     .order('name')
 
+
+  if (categoriesError) {
+    console.error(
+      'CATEGORIES QUERY ERROR:',
+      categoriesError
+    )
+  }
+
+
   // Staff
-  const { data: staff } = await supabase
+  const {
+    data: staff,
+    error: staffError,
+  } = await supabase
     .from('profiles')
     .select(
       'id, first_name, last_name, role'
@@ -46,8 +74,18 @@ export default async function NewServicePage() {
       'admin',
     ])
 
+
+  if (staffError) {
+    console.error(
+      'STAFF QUERY ERROR:',
+      staffError
+    )
+  }
+
+
   return (
     <div className="space-y-8">
+
 
       {/* Hero */}
 
@@ -55,15 +93,18 @@ export default async function NewServicePage() {
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
+
           <div>
 
             <p className="text-sm uppercase tracking-[0.3em] text-blue-200">
               SERVICE MANAGEMENT
             </p>
 
+
             <h1 className="mt-3 text-3xl font-bold md:text-5xl">
               Create New Service
             </h1>
+
 
             <p className="mt-4 max-w-2xl text-slate-300">
               Create a new service request,
@@ -71,7 +112,9 @@ export default async function NewServicePage() {
               tracking progress immediately.
             </p>
 
+
           </div>
+
 
           <Card className="border-0 bg-white/10 backdrop-blur">
 
@@ -79,21 +122,27 @@ export default async function NewServicePage() {
 
               <Briefcase className="mx-auto mb-3 h-10 w-10 text-blue-200" />
 
+
               <p className="text-sm text-slate-300">
                 Available Categories
               </p>
+
 
               <p className="mt-2 text-4xl font-bold">
                 {categories?.length ?? 0}
               </p>
 
+
             </CardContent>
 
           </Card>
 
+
         </div>
 
       </section>
+
+
 
       <div className="flex justify-start">
 
@@ -112,7 +161,10 @@ export default async function NewServicePage() {
 
         </Button>
 
+
       </div>
+
+
 
       <Card className="rounded-3xl border-0 shadow-sm">
 
@@ -124,9 +176,12 @@ export default async function NewServicePage() {
             staff={staff ?? []}
           />
 
+
         </CardContent>
 
+
       </Card>
+
 
     </div>
   )
