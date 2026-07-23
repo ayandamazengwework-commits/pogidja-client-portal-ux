@@ -84,14 +84,10 @@ if (!authUser) {
   throw new Error('Failed to create client account.')
 }
 
- const { data: profile, error: profileError } =
+const { data: profile, error: profileError } =
   await supabase
     .from('profiles')
-.update({
-
-  console.log('PROFILE:', profile)
-console.log('PROFILE ERROR:', profileError)
-  
+    .update({
       first_name: firstName,
       last_name: lastName,
       email,
@@ -112,6 +108,9 @@ console.log('PROFILE ERROR:', profileError)
     .eq('id', authUser.id)
     .select()
     .single()
+
+console.log('PROFILE:', profile)
+console.log('PROFILE ERROR:', profileError)
 
 if (profileError) {
   throw new Error(profileError.message)
