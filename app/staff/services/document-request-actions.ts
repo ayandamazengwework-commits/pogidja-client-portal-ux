@@ -30,50 +30,66 @@ export async function requestDocuments({
   // Client
   // ---------------------------------------------------
 
-  const { data: client } = await supabase
-    .from('clients')
-    .select('profile_id')
-    .eq('id', clientId)
-    .single()
+  const { data: client, error: clientError } =
+    await supabase
+      .from('clients')
+      .select('profile_id')
+      .eq('id', clientId)
+      .single()
 
-  if (!client) {
+  if (clientError || !client) {
     throw new Error('Client not found')
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email, first_name')
-    .eq('id', client.profile_id)
-    .single()
+
+  const { data: profile } =
+    await supabase
+      .from('profiles')
+      .select('email, first_name')
+      .eq('id', client.profile_id)
+      .single()
+
 
   // ---------------------------------------------------
-  // Save request
+  // Save document request
   // ---------------------------------------------------
 
-  await supabase
-    .from('document_requests')
-    .insert({
-      service_id: serviceId,
-      client_id: clientId,
-      requested_documents: documents,
-      status: 'Pending',
-    })
+  const { error: documentError } =
+    await supabase
+      .from('document_requests')
+      .insert({
+        service_id: serviceId,
+        client_id: clientId,
+        requested_documents: documents,
+        status: 'Pending',
+      })
+
+  if (documentError) {
+    throw new Error(documentError.message)
+  }
+
 
   // ---------------------------------------------------
   // Notification
   // ---------------------------------------------------
 
-  await supabase
-    .from('notifications')
-    .insert({
-      user_id: client.profile_id,
-      title: 'Documents Requested',
-      message:
-        'Your advisor has requested additional documents.',
-      type: 'documents',
-      link: `/portal/cases/${serviceId}`,
-      read: false,
-    })
+  const { error: notificationError } =
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: client.profile_id,
+        title: 'Documents Requested',
+        message:
+          'Your advisor has requested additional documents.',
+        type: 'documents',
+        link: `/portal/cases/${serviceId}`,
+        read: false,
+      })
+
+  if (notificationError) {
+    throw new Error(notificationError.message)
+  }
+
 
   // ---------------------------------------------------
   // Activity
@@ -88,6 +104,7 @@ export async function requestDocuments({
       entity_type: 'service',
       entity_id: serviceId,
     })
+
 
   // ---------------------------------------------------
   // Email
@@ -105,13 +122,23 @@ export async function requestDocuments({
 
           <pre style="font-family:Arial;font-size:15px;">${documents}</pre>
 
-          <p>Please log into your client portal and upload them at your earliest convenience.</p>
+          <p>
+            Please log into your client portal and upload them at your earliest convenience.
+          </p>
         `,
       })
     } catch (err) {
-      console.error(err)
+      console.error(
+        'Document request email failed:',
+        err
+      )
     }
   }
+
+
+  // ---------------------------------------------------
+  // Refresh pages
+  // ---------------------------------------------------
 
   revalidatePath(`/staff/services/${serviceId}`)
   revalidatePath('/portal')
