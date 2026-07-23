@@ -34,15 +34,15 @@ export async function createClientProfile(formData: FormData) {
   const postalCode = String(formData.get('postal_code') ?? '')
   const notes = String(formData.get('notes') ?? '')
 
-  const { data: invite, error: inviteError } =
-    await supabase.auth.admin.inviteUserByEmail(email, {
-      data: {
-        role: 'client',
-        first_name: firstName,
-        last_name: lastName,
-      },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-    })
+const { data: invite, error: inviteError } =
+  await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    data: {
+      role: 'client',
+      first_name: firstName,
+      last_name: lastName,
+    },
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+  })
 
   if (inviteError) throw new Error(inviteError.message)
 
