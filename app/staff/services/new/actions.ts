@@ -125,7 +125,12 @@ export async function updateService(formData: FormData) {
     entity_id: serviceId,
   })
 
-  revalidatePath('/staff/services')
-  revalidatePath(`/staff/services/${serviceId}`)
-  revalidatePath('/portal')
+ revalidatePath('/staff/services')
+revalidatePath(`/staff/services/${service.id}`)
+revalidatePath(`/staff/clients/${clientId}`)
+
+return {
+  success: true,
+  id: service.id,
 }
+
