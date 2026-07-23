@@ -70,34 +70,34 @@ if (!authUser) {
   throw new Error('Failed to create client account.')
 }
 
-  const { data: profile, error: profileError } =
-  await supabaseAdmin
+ const { data: profile, error: profileError } =
+  await supabase
     .from('profiles')
-      .insert({
-        id: authUser.id,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone,
-        role: 'client',
-        company_name: companyName,
-        id_number: idNumber,
-        company_registration: companyRegistration,
-        vat_number: vatNumber,
-        tax_number: taxNumber,
-        address,
-        city,
-        province,
-        postal_code: postalCode,
-        active: true,
-        client_status: 'Pending',
-        notes,
-      })
-      .select()
-      .single()
+    .update({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      company_name: companyName,
+      id_number: idNumber,
+      company_registration: companyRegistration,
+      vat_number: vatNumber,
+      tax_number: taxNumber,
+      address,
+      city,
+      province,
+      postal_code: postalCode,
+      active: true,
+      client_status: 'Pending',
+      notes,
+    })
+    .eq('id', authUser.id)
+    .select()
+    .single()
 
-  if (profileError)
-    throw new Error(profileError.message)
+if (profileError) {
+  throw new Error(profileError.message)
+}
 
   const clientCode = `POG-${Date.now()}`
 
