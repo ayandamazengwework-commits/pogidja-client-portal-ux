@@ -53,8 +53,12 @@ console.log(
   !!process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 console.log('EMAIL:', email)
-
+  
 let authUser
+
+const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+
+console.log('REDIRECT URL:', redirectUrl)
 
 try {
   const { data, error } =
@@ -64,7 +68,7 @@ try {
         first_name: firstName,
         last_name: lastName,
       },
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      redirectTo: redirectUrl,
     })
 
   console.log('Invite data:', data)
