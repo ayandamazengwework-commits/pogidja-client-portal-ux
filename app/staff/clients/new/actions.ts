@@ -87,7 +87,7 @@ if (!authUser) {
  const { data: profile, error: profileError } =
   await supabase
     .from('profiles')
-    .upsert({
+.update({
        id: authUser.id,
       first_name: firstName,
       last_name: lastName,
