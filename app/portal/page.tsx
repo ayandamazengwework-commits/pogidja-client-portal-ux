@@ -216,7 +216,7 @@ export default async function PortalPage() {
               <div className="flex gap-3">
 
                 <Link
-                  href={`/portal/services/${service.id}`}
+                  href={`/portal/cases/${service.id}`}
                 >
 
                   <Button>
