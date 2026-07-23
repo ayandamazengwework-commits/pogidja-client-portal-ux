@@ -1,74 +1,32 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl
+import { createClient } from '@/lib/supabase/server'
+
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
 
   const code = searchParams.get('code')
-  const next = searchParams.get('next')
 
-  if (!code) {
-    return NextResponse.redirect(
-      `${origin}/auth/error`
+  if (code) {
+    const supabase = await createClient()
+
+    const { error } = await supabase.auth.exchangeCodeForSession(
+      code
+    )
+
+    if (!error) {
+      return NextResponse.redirect(
+        `${origin}/portal`
+      )
+    }
+
+    console.error(
+      'Auth callback error:',
+      error.message
     )
   }
-
-  const supabase = await createClient()
-
-  const { error } =
-    await supabase.auth.exchangeCodeForSession(code)
-
-  if (error) {
-    return NextResponse.redirect(
-      `${origin}/auth/error`
-    )
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.redirect(
-      `${origin}/auth/login`
-    )
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  // --------------------------------------------------
-  // Password recovery
-  // --------------------------------------------------
-
-  if (next) {
-    return NextResponse.redirect(
-      `${origin}${next}`
-    )
-  }
-
-  // --------------------------------------------------
-  // Staff
-  // --------------------------------------------------
-
-  if (
-    profile?.role === 'staff' ||
-    profile?.role === 'manager' ||
-    profile?.role === 'admin'
-  ) {
-    return NextResponse.redirect(
-      `${origin}/staff`
-    )
-  }
-
-  // --------------------------------------------------
-  // Client
-  // --------------------------------------------------
 
   return NextResponse.redirect(
-    `${origin}/portal/onboarding`
+    `${origin}/auth/login?error=callback`
   )
 }
