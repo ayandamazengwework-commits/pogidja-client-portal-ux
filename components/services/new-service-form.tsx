@@ -63,9 +63,12 @@ export function NewServiceForm({
       <CardContent className="p-8">
 
         <form
-          action={createService}
-          className="space-y-6"
-        >
+  action={async (formData) => {
+    await createService(formData)
+    window.location.href = "/staff/services"
+  }}
+  className="space-y-6"
+>
 
           {/* Client */}
 
