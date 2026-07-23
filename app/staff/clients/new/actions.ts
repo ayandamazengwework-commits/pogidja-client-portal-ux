@@ -85,8 +85,8 @@ if (!authUser) {
 }
 
 const { data: profile, error: profileError } =
-  await supabase
-    .from('profiles')
+  await supabaseAdmin
+  .from('profiles')
     .update({
       first_name: firstName,
       last_name: lastName,
@@ -121,18 +121,21 @@ if (profileError) {
 const { data: client, error: clientError } =
   await supabaseAdmin
     .from('clients')
-      .insert({
-        profile_id: profile.id,
-        client_code: clientCode,
-        status: 'Pending',
-      })
-      .select()
-      .single()
-  console.log('CLIENT:', client)
+    .insert({
+      profile_id: profile.id,
+      client_code: clientCode,
+      status: 'active',
+      onboarding_status: 'Pending Documents',
+    })
+    .select()
+    .single()
+
+console.log('CLIENT:', client)
 console.log('CLIENT ERROR:', clientError)
 
-  if (clientError)
-    throw new Error(clientError.message)
+if (clientError) {
+  throw new Error(clientError.message)
+}
 
   const { data: service, error: serviceError } =
   await supabaseAdmin
