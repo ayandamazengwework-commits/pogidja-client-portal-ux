@@ -34,22 +34,41 @@ export async function createClientProfile(formData: FormData) {
   const postalCode = String(formData.get('postal_code') ?? '')
   const notes = String(formData.get('notes') ?? '')
 
-const { data: invite, error: inviteError } =
-  await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    data: {
-      role: 'client',
-      first_name: firstName,
-      last_name: lastName,
-    },
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-  })
+console.log(
+  'SERVICE ROLE EXISTS:',
+  !!process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+console.log('EMAIL:', email)
 
-  if (inviteError) throw new Error(inviteError.message)
+let authUser
 
-  const authUser = invite.user
+try {
+  const { data, error } =
+    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: {
+        role: 'client',
+        first_name: firstName,
+        last_name: lastName,
+      },
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+    })
 
-  if (!authUser)
-    throw new Error('Failed to create client account.')
+  console.log('Invite data:', data)
+  console.log('Invite error:', error)
+
+  if (error) {
+    throw error
+  }
+
+  authUser = data.user
+} catch (err) {
+  console.error('INVITE FAILED:', err)
+  throw err
+}
+
+if (!authUser) {
+  throw new Error('Failed to create client account.')
+}
 
   const { data: profile, error: profileError } =
     await supabase
