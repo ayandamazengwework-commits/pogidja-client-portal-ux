@@ -128,6 +128,8 @@ const { data: client, error: clientError } =
       })
       .select()
       .single()
+  console.log('CLIENT:', client)
+console.log('CLIENT ERROR:', clientError)
 
   if (clientError)
     throw new Error(clientError.message)
@@ -147,7 +149,8 @@ const { data: client, error: clientError } =
     })
     .select()
     .single()
-
+console.log('SERVICE:', service)
+console.log('SERVICE ERROR:', serviceError)
 
 if (serviceError) {
   throw new Error(serviceError.message)
@@ -188,6 +191,7 @@ Click the link to:
 
 We look forward to working with you.`,
   })
+  console.log('MESSAGE:', messageResult)
 
   await supabaseAdmin.from('notifications').insert({
     user_id: profile.id,
@@ -198,6 +202,7 @@ We look forward to working with you.`,
     link: '/portal',
     read: false,
   })
+  console.log('NOTIFICATION:', notificationResult)
 
  await supabaseAdmin.from('activity_logs').insert({
     user_id: user.id,
@@ -208,6 +213,7 @@ We look forward to working with you.`,
     action: 'Client Created',
     description: `${firstName} ${lastName} onboarded`,
   })
+  console.log('ACTIVITY:', activityResult)
 
   revalidatePath('/staff/clients')
 
