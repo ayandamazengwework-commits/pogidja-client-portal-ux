@@ -17,11 +17,46 @@ const sourceSerif = Source_Serif_4({
   weight: ['400', '600', '700'],
 })
 
-export const metadata: Metadata = {
-  title: 'POG Advisory & Chartered Accountants — Client Portal',
+export const metadata = {
+  title: {
+    default: 'POG Advisory Portal',
+    template: '%s | POG Advisory',
+  },
+
   description:
-    'Secure client portal for POG Advisory & Chartered Accountants. Track your cases, share documents, view invoices and message your accountant.',
-  generator: 'v0.app',
+    'Secure client portal for POG Advisory. Manage services, documents, invoices and communication.',
+
+  openGraph: {
+    title: 'POG Advisory Portal',
+    description:
+      'Secure client portal for POG Advisory clients.',
+    url: 'https://www.pogadvisoryportal.co.za',
+    siteName: 'POG Advisory',
+    images: [
+      {
+        url: 'https://www.pogadvisoryportal.co.za/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'POG Advisory Portal',
+      },
+    ],
+    locale: 'en_ZA',
+    type: 'website',
+  },
+
+  twitter: {
+    card: 'summary_large_image',
+    title: 'POG Advisory Portal',
+    description:
+      'Secure client portal for POG Advisory clients.',
+    images: [
+      'https://www.pogadvisoryportal.co.za/og-image.png',
+    ],
+  },
+
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export const viewport: Viewport = {
