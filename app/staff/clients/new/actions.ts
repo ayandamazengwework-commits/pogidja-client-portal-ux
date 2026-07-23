@@ -33,7 +33,21 @@ export async function createClientProfile(formData: FormData) {
   const province = String(formData.get('province') ?? '')
   const postalCode = String(formData.get('postal_code') ?? '')
   const notes = String(formData.get('notes') ?? '')
+const serviceTitle = String(
+  formData.get('service_title') ?? ''
+)
 
+const serviceType = String(
+  formData.get('service_type') ?? ''
+)
+
+const serviceDescription = String(
+  formData.get('service_description') ?? ''
+)
+
+const documentRequests = String(
+  formData.get('document_requests') ?? ''
+)
 console.log(
   'SERVICE ROLE EXISTS:',
   !!process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -73,7 +87,7 @@ if (!authUser) {
  const { data: profile, error: profileError } =
   await supabase
     .from('profiles')
-    .update({
+    .upsert({
       first_name: firstName,
       last_name: lastName,
       email,
@@ -115,14 +129,14 @@ const { data: client, error: clientError } =
   if (clientError)
     throw new Error(clientError.message)
 
-  const { data: service } = await supabaseAdmin
-  .from('services')
+  const { data: service, error: serviceError } =
+  await supabaseAdmin
+    .from('services')
     .insert({
       client_id: client.id,
-      title: 'Client Onboarding',
-      service_type: 'Onboarding',
-      description:
-        'Waiting for required client documents.',
+      title: serviceTitle,
+      service_type: serviceType,
+      description: serviceDescription,
       status: 'Waiting For Documents',
       priority: 'Normal',
       progress: 5,
@@ -131,6 +145,22 @@ const { data: client, error: clientError } =
     .select()
     .single()
 
+
+if (serviceError) {
+  throw new Error(serviceError.message)
+}
+  if (documentRequests && service) {
+
+  await supabaseAdmin
+    .from('document_requests')
+    .insert({
+      service_id: service.id,
+      client_id: client.id,
+      requested_documents: documentRequests,
+      status: 'Pending',
+    })
+
+}
   await supabaseAdmin.from('messages').insert({
     sender_id: user.id,
     recipient_id: profile.id,
