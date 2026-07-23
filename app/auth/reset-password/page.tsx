@@ -44,23 +44,58 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.auth.updateUser({
-      password,
-    })
 
-    if (error) {
-      setError(error.message)
+    // Check that Supabase has an active invitation session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+
+    console.log('PASSWORD SESSION:', session)
+
+
+    if (!session) {
+      setError(
+        'Your invitation session has expired. Please request a new invitation.'
+      )
       setLoading(false)
       return
     }
 
+
+    const { error: updateError } =
+      await supabase.auth.updateUser({
+        password,
+      })
+
+
+    if (updateError) {
+      console.error(updateError)
+
+      setError(updateError.message)
+      setLoading(false)
+      return
+    }
+
+
+    // Mark invitation as accepted
+    await supabase
+      .from('profiles')
+      .update({
+        invitation_accepted: true,
+      })
+      .eq('id', session.user.id)
+
+
     setSuccess(true)
     setLoading(false)
 
+
     setTimeout(() => {
-      router.push('/auth/login')
+      router.push('/portal')
     }, 2500)
   }
+
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md items-center px-6">
@@ -70,14 +105,15 @@ export default function ResetPasswordPage() {
         <CardHeader>
 
           <CardTitle className="text-3xl">
-            Reset Password
+            Create Your Password
           </CardTitle>
 
           <CardDescription>
-            Choose a new password for your account.
+            Welcome to POG Advisory. Set your password to activate your client portal.
           </CardDescription>
 
         </CardHeader>
+
 
         <CardContent>
 
@@ -92,11 +128,11 @@ export default function ResetPasswordPage() {
               </h2>
 
               <p className="text-muted-foreground">
-                Your password has been changed successfully.
+                Your client portal has been activated successfully.
               </p>
 
               <p className="text-sm text-slate-500">
-                Redirecting to login...
+                Redirecting to your portal...
               </p>
 
             </div>
@@ -110,7 +146,9 @@ export default function ResetPasswordPage() {
 
               <div>
 
-                <Label>New Password</Label>
+                <Label>
+                  New Password
+                </Label>
 
                 <div className="relative mt-2">
 
@@ -120,7 +158,9 @@ export default function ResetPasswordPage() {
                     type="password"
                     className="h-12 pl-12"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) =>
+                      setPassword(e.target.value)
+                    }
                     required
                   />
 
@@ -128,9 +168,12 @@ export default function ResetPasswordPage() {
 
               </div>
 
+
               <div>
 
-                <Label>Confirm Password</Label>
+                <Label>
+                  Confirm Password
+                </Label>
 
                 <div className="relative mt-2">
 
@@ -140,7 +183,9 @@ export default function ResetPasswordPage() {
                     type="password"
                     className="h-12 pl-12"
                     value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
+                    onChange={(e) =>
+                      setConfirm(e.target.value)
+                    }
                     required
                   />
 
@@ -148,14 +193,17 @@ export default function ResetPasswordPage() {
 
               </div>
 
+
               {error && (
                 <p className="text-sm text-red-600">
                   {error}
                 </p>
               )}
 
+
               <Button
-                className="w-full h-12"
+                type="submit"
+                className="h-12 w-full"
                 disabled={loading}
               >
 
@@ -163,9 +211,12 @@ export default function ResetPasswordPage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
 
-                Update Password
+                {loading
+                  ? 'Updating Password...'
+                  : 'Activate Portal'}
 
               </Button>
+
 
             </form>
 
