@@ -46,21 +46,24 @@ export default async function RequestDetailsPage({
     notFound()
   }
 
-  const { data: service } = await supabase
-    .from('services')
-    .select(`
-      *,
-      service_categories (
-        name
-      )
-    `)
-    .eq('id', id)
-    .eq('client_id', client.id)
-    .single()
+ const { data: service, error } = await supabase
+  .from('services')
+  .select(`
+    *,
+    service_categories (
+      name
+    )
+  `)
+  .eq('id', id)
+  .eq('client_id', client.id)
+  .maybeSingle()
 
-  if (!service) {
-    notFound()
-  }
+console.log('SERVICE ERROR:', error)
+console.log('SERVICE DATA:', service)
+
+if (!service) {
+  notFound()
+}
 
   const { data: documents } = await supabase
     .from('service_documents')
