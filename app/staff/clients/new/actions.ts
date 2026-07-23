@@ -88,6 +88,10 @@ if (!authUser) {
   await supabase
     .from('profiles')
 .update({
+
+  console.log('PROFILE:', profile)
+console.log('PROFILE ERROR:', profileError)
+  
       first_name: firstName,
       last_name: lastName,
       email,
