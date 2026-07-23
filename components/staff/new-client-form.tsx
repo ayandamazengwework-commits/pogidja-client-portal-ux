@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { createClientProfile } from '@/app/staff/clients/new/actions'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, { CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,7 +16,6 @@ export function NewClientForm() {
   return (
     <Card className="rounded-3xl border-0 shadow-sm">
       <CardContent className="p-8">
-
         <form
           action={async (formData) => {
             setLoading(true)
@@ -24,123 +23,89 @@ export function NewClientForm() {
           }}
           className="space-y-10"
         >
-
-          {/* PERSONAL DETAILS */}
+          {/* CLIENT */}
 
           <section className="space-y-6">
-
             <div>
               <h2 className="text-xl font-bold">
-                Personal Information
+                Client Information
               </h2>
 
               <p className="text-sm text-slate-500">
-                Basic client information.
+                Personal details for the new client.
               </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-
               <div>
                 <Label>First Name *</Label>
-                <Input
-                  name="first_name"
-                  required
-                />
+                <Input name="first_name" required />
               </div>
 
               <div>
                 <Label>Last Name *</Label>
-                <Input
-                  name="last_name"
-                  required
-                />
+                <Input name="last_name" required />
               </div>
 
               <div>
                 <Label>Email *</Label>
                 <Input
-                  type="email"
                   name="email"
+                  type="email"
                   required
                 />
               </div>
 
               <div>
-                <Label>Phone Number</Label>
-                <Input
-                  name="phone"
-                />
+                <Label>Phone</Label>
+                <Input name="phone" />
               </div>
 
               <div>
                 <Label>ID Number</Label>
-                <Input
-                  name="id_number"
-                />
+                <Input name="id_number" />
               </div>
-
             </div>
-
           </section>
 
           {/* COMPANY */}
 
           <section className="space-y-6">
-
             <div>
               <h2 className="text-xl font-bold">
                 Company Details
               </h2>
-
-              <p className="text-sm text-slate-500">
-                Leave blank if the client is an individual.
-              </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-
               <div>
                 <Label>Company Name</Label>
-                <Input
-                  name="company_name"
-                />
+                <Input name="company_name" />
               </div>
 
               <div>
                 <Label>Company Registration</Label>
-                <Input
-                  name="company_registration"
-                />
+                <Input name="company_registration" />
               </div>
 
               <div>
                 <Label>VAT Number</Label>
-                <Input
-                  name="vat_number"
-                />
+                <Input name="vat_number" />
               </div>
 
               <div>
                 <Label>Income Tax Number</Label>
-                <Input
-                  name="tax_number"
-                />
+                <Input name="tax_number" />
               </div>
-
             </div>
-
           </section>
 
           {/* ADDRESS */}
 
           <section className="space-y-6">
-
-            <div>
-              <h2 className="text-xl font-bold">
-                Address
-              </h2>
-            </div>
+            <h2 className="text-xl font-bold">
+              Address
+            </h2>
 
             <Textarea
               rows={3}
@@ -148,52 +113,104 @@ export function NewClientForm() {
             />
 
             <div className="grid gap-6 md:grid-cols-3">
-
               <div>
                 <Label>City</Label>
-                <Input
-                  name="city"
-                />
+                <Input name="city" />
               </div>
 
               <div>
                 <Label>Province</Label>
-                <Input
-                  name="province"
-                />
+                <Input name="province" />
               </div>
 
               <div>
                 <Label>Postal Code</Label>
-                <Input
-                  name="postal_code"
-                />
+                <Input name="postal_code" />
               </div>
-
             </div>
-
           </section>
 
-          {/* FIRST REQUEST */}
+          {/* SERVICE */}
 
           <section className="space-y-6">
-
             <div>
               <h2 className="text-xl font-bold">
-                First Request
+                First Service
               </h2>
 
               <p className="text-sm text-slate-500">
-                What is the client approaching POG Advisory for?
+                This becomes the client's first case.
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <div>
+                <Label>Service Title *</Label>
+                <Input
+                  name="service_title"
+                  placeholder="Annual Returns"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label>Service Type *</Label>
+                <Input
+                  name="service_type"
+                  placeholder="Company Compliance"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                rows={4}
+                name="service_description"
+                placeholder="Describe the work to be completed..."
+              />
+            </div>
+          </section>
+
+          {/* DOCUMENT REQUESTS */}
+
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold">
+                Initial Document Request
+              </h2>
+
+              <p className="text-sm text-slate-500">
+                One document per line.
               </p>
             </div>
 
             <Textarea
-              rows={5}
-              name="notes"
-              placeholder="Example: Register VAT, Company Annual Returns, Payroll, Tax Clearance..."
+              rows={8}
+              name="document_requests"
+              placeholder={`Certified ID Copy
+Proof of Address
+Company Registration Certificate
+VAT Certificate
+Income Tax Number`}
             />
+          </section>
 
+          {/* NOTES */}
+
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold">
+                Internal Staff Notes
+              </h2>
+            </div>
+
+            <Textarea
+              rows={4}
+              name="notes"
+              placeholder="Visible to staff only."
+            />
           </section>
 
           <Button
@@ -203,11 +220,9 @@ export function NewClientForm() {
           >
             {loading
               ? 'Creating Client...'
-              : 'Create Client'}
+              : 'Create Client & Send Invitation'}
           </Button>
-
         </form>
-
       </CardContent>
     </Card>
   )
