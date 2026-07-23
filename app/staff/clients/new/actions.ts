@@ -87,19 +87,6 @@ try {
   throw err
 }
 
-  console.log('Invite data:', data)
-  console.log('Invite error:', error)
-
-  if (error) {
-    throw error
-  }
-
-  authUser = data.user
-} catch (err) {
-  console.error('INVITE FAILED:', err)
-  throw err
-}
-
 if (!authUser) {
   throw new Error('Failed to create client account.')
 }
