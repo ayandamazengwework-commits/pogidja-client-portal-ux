@@ -170,7 +170,9 @@ if (serviceError) {
     })
 
 }
-  await supabaseAdmin.from('messages').insert({
+const messageResult = await supabaseAdmin
+  .from('messages')
+  .insert({
     sender_id: user.id,
     recipient_id: profile.id,
     service_id: service?.id,
@@ -194,7 +196,8 @@ Click the link to:
 
 We look forward to working with you.`,
   })
-  console.log('MESSAGE:', messageResult)
+
+console.log('MESSAGE:', messageResult)
 
   await supabaseAdmin.from('notifications').insert({
     user_id: profile.id,
