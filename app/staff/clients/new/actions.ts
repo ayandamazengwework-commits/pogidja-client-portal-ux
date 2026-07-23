@@ -199,7 +199,9 @@ We look forward to working with you.`,
 
 console.log('MESSAGE:', messageResult)
 
-  await supabaseAdmin.from('notifications').insert({
+ const notificationResult = await supabaseAdmin
+  .from('notifications')
+  .insert({
     user_id: profile.id,
     title: 'Welcome to POG Advisory',
     message:
@@ -208,9 +210,12 @@ console.log('MESSAGE:', messageResult)
     link: '/portal',
     read: false,
   })
-  console.log('NOTIFICATION:', notificationResult)
 
- await supabaseAdmin.from('activity_logs').insert({
+console.log('NOTIFICATION:', notificationResult)
+
+ const activityResult = await supabaseAdmin
+  .from('activity_logs')
+  .insert({
     user_id: user.id,
     role: 'staff',
     client_id: client.id,
@@ -219,7 +224,8 @@ console.log('MESSAGE:', messageResult)
     action: 'Client Created',
     description: `${firstName} ${lastName} onboarded`,
   })
-  console.log('ACTIVITY:', activityResult)
+
+console.log('ACTIVITY:', activityResult)
 
   revalidatePath('/staff/clients')
 
