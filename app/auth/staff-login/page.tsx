@@ -35,16 +35,19 @@ export default function StaffLoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+   const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+})
 
-    if (error) {
-      setLoading(false)
-      setError(error.message)
-      return
-    }
+console.log('LOGIN DATA:', data)
+console.log('LOGIN ERROR:', error)
+
+if (error) {
+  setLoading(false)
+  setError(error.message)
+  return
+}
 
     router.push('/staff')
     router.refresh()
