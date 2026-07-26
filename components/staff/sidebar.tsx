@@ -112,11 +112,6 @@ export function StaffSidebar({
     priority
     className="h-auto w-full object-contain"
   />
-
-  <p className="mt-3 text-sm text-slate-500">
-    Staff Workspace
-  </p>
-
 </div>
 
       {/* Navigation */}
