@@ -14,7 +14,7 @@ import {
   LogOut,
   Loader2,
 } from 'lucide-react'
-
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 
@@ -102,16 +102,22 @@ export function StaffSidebar({
 
       {/* Logo */}
 
-      <div className="border-b border-slate-200 px-8 py-7">
-        <h1 className="text-2xl font-bold tracking-tight">
-          POG
-          <span className="text-[#1E88E5]"> Advisory</span>
-        </h1>
+     <div className="border-b border-slate-200 px-6 py-6">
 
-        <p className="mt-1 text-sm text-slate-500">
-          Staff Workspace
-        </p>
-      </div>
+  <Image
+    src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
+    alt="POG Advisory"
+    width={220}
+    height={70}
+    priority
+    className="h-auto w-full object-contain"
+  />
+
+  <p className="mt-3 text-sm text-slate-500">
+    Staff Workspace
+  </p>
+
+</div>
 
       {/* Navigation */}
 
