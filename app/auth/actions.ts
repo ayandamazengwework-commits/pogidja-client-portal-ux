@@ -8,7 +8,10 @@ export async function sendClientOTP(
   const supabase = await createClient()
 
   const reference =
-    clientReference.trim().toUpperCase()
+  clientReference
+    .trim()
+    .replace(/\s+/g, '')
+    .toUpperCase()
 
   if (!reference) {
     return {
@@ -35,10 +38,10 @@ export async function sendClientOTP(
         client_reference
         `
       )
-      .eq(
-        'client_reference',
-        reference
-      )
+      .ilike(
+  'client_reference',
+  reference
+)
       .eq(
         'role',
         'client'
