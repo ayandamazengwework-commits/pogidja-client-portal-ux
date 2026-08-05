@@ -1,11 +1,11 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function sendClientOTP(
   clientReference: string
 ) {
-  const supabase = await createClient()
+const supabase = supabaseAdmin
 
   const reference =
   clientReference
