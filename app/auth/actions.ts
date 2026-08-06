@@ -75,12 +75,13 @@ const supabase = supabaseAdmin
   const {
     error,
   } =
-    await supabase.auth.signInWithOtp({
-      email: client.email,
-      options: {
-        shouldCreateUser: false,
-      },
-    })
+  await supabase.auth.signInWithOtp({
+  email: client.email,
+  options: {
+    shouldCreateUser: false,
+    emailRedirectTo: undefined,
+  },
+})
 
 
   if (error) {
