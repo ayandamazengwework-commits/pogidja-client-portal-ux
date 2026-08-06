@@ -5,7 +5,8 @@ import { revalidatePath } from 'next/cache'
 
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-
+import { sendEmail } from '@/lib/email/send-email'
+import { clientWelcomeEmail } from '@/lib/email/templates/client-welcome'
 
 function generateClientReference() {
 
@@ -396,7 +397,42 @@ export async function createClientProfile(
     )
 
   }
+/*
+ ===========================
+ SEND WELCOME EMAIL
+ ===========================
+*/
 
+try {
+
+  await sendEmail({
+
+    to: email,
+
+    subject: 'Welcome to POG Advisory Client Portal',
+
+    html: clientWelcomeEmail({
+
+      firstName,
+
+      clientReference,
+
+    }),
+
+  })
+
+  console.log(
+    'WELCOME EMAIL SENT'
+  )
+
+} catch (error) {
+
+  console.error(
+    'WELCOME EMAIL FAILED:',
+    error
+  )
+
+}
 
 
 
