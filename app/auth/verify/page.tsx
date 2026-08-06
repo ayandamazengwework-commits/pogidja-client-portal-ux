@@ -158,7 +158,7 @@ export default function VerifyPage() {
 
 
           <p className="mt-2 text-center text-sm text-slate-600">
-            We've sent a 6 digit verification code
+            We've sent a 8 digit verification code
             to your registered email address.
           </p>
 
