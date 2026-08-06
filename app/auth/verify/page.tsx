@@ -206,13 +206,13 @@ export default function VerifyPage() {
               )
             }
 
-            placeholder="123456"
+            placeholder="12345678"
 
             maxLength={8}
 
             inputMode="numeric"
 
-            className="h-16 text-center text-3xl tracking-[0.5em]"
+            className="h-16 text-center text-3xl tracking-[0.35em]"
 
             required
 
