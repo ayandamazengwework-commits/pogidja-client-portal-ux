@@ -208,7 +208,7 @@ export default function VerifyPage() {
 
             placeholder="123456"
 
-            maxLength={6}
+            maxLength={8}
 
             inputMode="numeric"
 
