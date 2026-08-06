@@ -403,7 +403,11 @@ export async function createClientProfile(
  ===========================
 */
 
+console.log('BEFORE EMAIL')
+
 try {
+
+  console.log('CALLING sendEmail')
 
   await sendEmail({
 
@@ -421,21 +425,15 @@ try {
 
   })
 
-  console.log(
-    'WELCOME EMAIL SENT'
-  )
+  console.log('WELCOME EMAIL SENT')
 
 } catch (error) {
 
-  console.error(
-    'WELCOME EMAIL FAILED:',
-    error
-  )
+  console.error('WELCOME EMAIL FAILED:', error)
 
 }
 
-
-
+console.log('AFTER EMAIL')
 
   /*
    ===========================
