@@ -25,31 +25,49 @@ export async function updateServiceStatus(
     throw new Error('Not authenticated')
   }
 
+  if (!serviceId) {
+    throw new Error('Service ID is required')
+  }
+
+  if (!status) {
+    throw new Error('Status is required')
+  }
+
   /*
-  Get service + client
+  --------------------------------------------------------
+  GET SERVICE + CLIENT
+  --------------------------------------------------------
   */
 
-  const { data: service, error: serviceError } =
-    await supabase
-      .from('services')
-      .select(`
-        *,
-        client:clients(
-          profile_id
-        )
-      `)
-      .eq('id', serviceId)
-      .single()
+  const {
+    data: service,
+    error: serviceError,
+  } = await supabase
+    .from('services')
+    .select(`
+      *,
+      client:clients(
+        profile_id
+      )
+    `)
+    .eq('id', serviceId)
+    .single()
 
   if (serviceError || !service) {
+    console.error(
+      'SERVICE FETCH ERROR:',
+      serviceError
+    )
+
     throw new Error('Service not found')
   }
 
   const previousStatus = service.status
 
   /*
-  Don't create a notification if
-  the status hasn't actually changed.
+  --------------------------------------------------------
+  DON'T DO ANYTHING IF STATUS DID NOT CHANGE
+  --------------------------------------------------------
   */
 
   if (previousStatus === status) {
@@ -57,26 +75,34 @@ export async function updateServiceStatus(
   }
 
   /*
-  Update service
+  --------------------------------------------------------
+  UPDATE SERVICE
+  --------------------------------------------------------
   */
 
-  const { error: updateError } =
-    await supabase
-      .from('services')
-      .update({
-        status,
-      })
-      .eq('id', serviceId)
+  const {
+    error: updateError,
+  } = await supabase
+    .from('services')
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', serviceId)
 
   if (updateError) {
     throw new Error(updateError.message)
   }
 
   /*
-  Activity log
+  --------------------------------------------------------
+  ACTIVITY LOG
+  --------------------------------------------------------
   */
 
-  await supabase
+  const {
+    error: activityError,
+  } = await supabase
     .from('activity_logs')
     .insert({
       user_id: user.id,
@@ -91,8 +117,17 @@ export async function updateServiceStatus(
       entity_id: service.id,
     })
 
+  if (activityError) {
+    console.error(
+      'ACTIVITY LOG FAILED:',
+      activityError
+    )
+  }
+
   /*
-  Get client profile
+  --------------------------------------------------------
+  GET CLIENT PROFILE
+  --------------------------------------------------------
   */
 
   const clientProfileId =
@@ -101,10 +136,14 @@ export async function updateServiceStatus(
   if (clientProfileId) {
 
     /*
-    Portal notification
+    ------------------------------------------------------
+    CREATE PORTAL NOTIFICATION
+    ------------------------------------------------------
     */
 
-    await supabase
+    const {
+      error: notificationError,
+    } = await supabase
       .from('notifications')
       .insert({
         user_id: clientProfileId,
@@ -122,24 +161,44 @@ export async function updateServiceStatus(
         read: false,
       })
 
+    if (notificationError) {
+      console.error(
+        'SERVICE NOTIFICATION FAILED:',
+        notificationError
+      )
+    }
+
     /*
-    Get client email
+    ------------------------------------------------------
+    GET CLIENT EMAIL
+    ------------------------------------------------------
     */
 
-    const { data: profile } =
-      await supabase
-        .from('profiles')
-        .select(
-          'email, first_name'
-        )
-        .eq(
-          'id',
-          clientProfileId
-        )
-        .single()
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from('profiles')
+      .select(
+        'email, first_name'
+      )
+      .eq(
+        'id',
+        clientProfileId
+      )
+      .single()
+
+    if (profileError) {
+      console.error(
+        'CLIENT PROFILE FETCH FAILED:',
+        profileError
+      )
+    }
 
     /*
-    Email client
+    ------------------------------------------------------
+    SEND EMAIL
+    ------------------------------------------------------
     */
 
     if (profile?.email) {
@@ -154,201 +213,205 @@ export async function updateServiceStatus(
             `Service Update - ${service.title}`,
 
           html: `
-            <!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+  <body
+    style="
+      margin:0;
+      padding:0;
+      background:#f8fafc;
+      font-family:Arial,Helvetica,sans-serif;
+      color:#0f172a;
+    "
+  >
 
-            <html>
-              <body
-                style="
-                  margin:0;
-                  padding:0;
-                  background:#f8fafc;
-                  font-family:Arial,Helvetica,sans-serif;
-                  color:#0f172a;
-                "
-              >
+    <div
+      style="
+        max-width:600px;
+        margin:40px auto;
+        background:#ffffff;
+        border-radius:16px;
+        overflow:hidden;
+        border:1px solid #e2e8f0;
+      "
+    >
 
-                <div
-                  style="
-                    max-width:600px;
-                    margin:40px auto;
-                    background:#ffffff;
-                    border-radius:16px;
-                    overflow:hidden;
-                    border:1px solid #e2e8f0;
-                  "
-                >
+      <div
+        style="
+          background:#0f2747;
+          padding:28px;
+          text-align:center;
+        "
+      >
 
-                  <div
-                    style="
-                      background:#0f2747;
-                      padding:28px;
-                      text-align:center;
-                    "
-                  >
+        <h1
+          style="
+            margin:0;
+            color:#ffffff;
+            font-size:22px;
+          "
+        >
+          POG Advisory
+        </h1>
 
-                    <h1
-                      style="
-                        margin:0;
-                        color:#ffffff;
-                        font-size:22px;
-                      "
-                    >
-                      POG Advisory
-                    </h1>
+        <p
+          style="
+            margin:8px 0 0;
+            color:#cbd5e1;
+            font-size:14px;
+          "
+        >
+          Client Portal Update
+        </p>
 
-                    <p
-                      style="
-                        margin:8px 0 0;
-                        color:#cbd5e1;
-                        font-size:14px;
-                      "
-                    >
-                      Client Portal Update
-                    </p>
+      </div>
 
-                  </div>
+      <div
+        style="
+          padding:32px;
+        "
+      >
 
-                  <div
-                    style="
-                      padding:32px;
-                    "
-                  >
+        <h2
+          style="
+            margin-top:0;
+            font-size:22px;
+          "
+        >
+          Hello ${profile.first_name ?? 'Client'},
+        </h2>
 
-                    <h2
-                      style="
-                        margin-top:0;
-                        font-size:22px;
-                      "
-                    >
-                      Hello ${profile.first_name ?? 'Client'},
-                    </h2>
+        <p
+          style="
+            color:#475569;
+            line-height:1.6;
+          "
+        >
+          There has been an update to your
+          service on the POG Advisory Client Portal.
+        </p>
 
-                    <p
-                      style="
-                        color:#475569;
-                        line-height:1.6;
-                      "
-                    >
-                      There has been an update to your
-                      service on the POG Advisory Client Portal.
-                    </p>
+        <div
+          style="
+            margin:24px 0;
+            padding:20px;
+            background:#f8fafc;
+            border-radius:12px;
+            border:1px solid #e2e8f0;
+          "
+        >
 
-                    <div
-                      style="
-                        margin:24px 0;
-                        padding:20px;
-                        background:#f8fafc;
-                        border-radius:12px;
-                        border:1px solid #e2e8f0;
-                      "
-                    >
+          <p
+            style="
+              margin:0 0 10px;
+              font-size:13px;
+              color:#64748b;
+            "
+          >
+            SERVICE
+          </p>
 
-                      <p
-                        style="
-                          margin:0 0 10px;
-                          font-size:13px;
-                          color:#64748b;
-                        "
-                      >
-                        SERVICE
-                      </p>
+          <p
+            style="
+              margin:0 0 18px;
+              font-size:18px;
+              font-weight:bold;
+            "
+          >
+            ${service.title}
+          </p>
 
-                      <p
-                        style="
-                          margin:0 0 18px;
-                          font-size:18px;
-                          font-weight:bold;
-                        "
-                      >
-                        ${service.title}
-                      </p>
+          <p
+            style="
+              margin:0 0 8px;
+              color:#64748b;
+            "
+          >
+            Previous status:
+            <strong>
+              ${previousStatus}
+            </strong>
+          </p>
 
-                      <p
-                        style="
-                          margin:0 0 6px;
-                          color:#64748b;
-                        "
-                      >
-                        Previous status:
-                        <strong>
-                          ${previousStatus}
-                        </strong>
-                      </p>
+          <p
+            style="
+              margin:0;
+              color:#64748b;
+            "
+          >
+            New status:
+            <strong>
+              ${status}
+            </strong>
+          </p>
 
-                      <p
-                        style="
-                          margin:0;
-                          color:#64748b;
-                        "
-                      >
-                        New status:
-                        <strong>
-                          ${status}
-                        </strong>
-                      </p>
+        </div>
 
-                    </div>
+        <p
+          style="
+            color:#475569;
+            line-height:1.6;
+          "
+        >
+          Please log into your client portal
+          to view the latest information.
+        </p>
 
-                    <p
-                      style="
-                        color:#475569;
-                        line-height:1.6;
-                      "
-                    >
-                      Please log into your client portal
-                      to view the latest information.
-                    </p>
+        <div
+          style="
+            text-align:center;
+            margin:30px 0;
+          "
+        >
 
-                    <div
-                      style="
-                        text-align:center;
-                        margin:30px 0;
-                      "
-                    >
+          <a
+            href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${service.id}"
+            style="
+              display:inline-block;
+              padding:14px 24px;
+              background:#1E88E5;
+              color:#ffffff;
+              text-decoration:none;
+              border-radius:10px;
+              font-weight:bold;
+            "
+          >
+            View Service
+          </a>
 
-                      <a
-                        href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${service.id}"
-                        style="
-                          display:inline-block;
-                          padding:14px 24px;
-                          background:#1E88E5;
-                          color:#ffffff;
-                          text-decoration:none;
-                          border-radius:10px;
-                          font-weight:bold;
-                        "
-                      >
-                        View Service
-                      </a>
+        </div>
 
-                    </div>
+        <p
+          style="
+            margin-top:30px;
+            color:#64748b;
+            font-size:14px;
+            line-height:1.6;
+          "
+        >
+          Kind regards,<br />
+          <strong>POG Advisory Team</strong>
+        </p>
 
-                    <p
-                      style="
-                        margin-top:30px;
-                        color:#64748b;
-                        font-size:14px;
-                        line-height:1.6;
-                      "
-                    >
-                      Kind regards,<br />
-                      <strong>POG Advisory Team</strong>
-                    </p>
+      </div>
 
-                  </div>
+    </div>
 
-                </div>
-
-              </body>
-            </html>
+  </body>
+</html>
           `,
         })
+
+        console.log(
+          'SERVICE STATUS EMAIL SENT:',
+          profile.email
+        )
 
       } catch (error) {
 
         /*
-        Email failure should NOT
-        break the service update.
+        Email failure must NOT
+        undo the service update.
         */
 
         console.error(
@@ -360,18 +423,26 @@ export async function updateServiceStatus(
   }
 
   /*
-  Refresh relevant pages
+  --------------------------------------------------------
+  REVALIDATE
+  --------------------------------------------------------
   */
 
   revalidatePath(
     `/staff/services/${serviceId}`
   )
 
-  revalidatePath('/staff/services')
+  revalidatePath(
+    '/staff/services'
+  )
 
-  revalidatePath('/portal')
+  revalidatePath(
+    '/portal'
+  )
 
-  revalidatePath('/portal/notifications')
+  revalidatePath(
+    '/portal/notifications'
+  )
 }
 
 
@@ -409,8 +480,11 @@ export async function toggleChecklistItem(
     )
     .single()
 
-  if (error) {
-    throw new Error(error.message)
+  if (error || !item) {
+    throw new Error(
+      error?.message ??
+        'Checklist item not found'
+    )
   }
 
   const completed =
@@ -487,6 +561,12 @@ export async function createChecklistItem(
     throw new Error('Not authenticated')
   }
 
+  if (!title.trim()) {
+    throw new Error(
+      'Checklist title is required'
+    )
+  }
+
   const {
     error,
   } = await supabase
@@ -494,7 +574,7 @@ export async function createChecklistItem(
     .insert({
       service_id: serviceId,
 
-      title,
+      title: title.trim(),
 
       completed: false,
     })
@@ -517,7 +597,7 @@ export async function createChecklistItem(
       action:
         'Checklist Item Added',
 
-      description: title,
+      description: title.trim(),
     })
 
   revalidatePath(
@@ -607,6 +687,24 @@ export async function notifyClient(
     throw new Error('Not authenticated')
   }
 
+  if (!title.trim()) {
+    throw new Error(
+      'Notification title is required'
+    )
+  }
+
+  if (!message.trim()) {
+    throw new Error(
+      'Notification message is required'
+    )
+  }
+
+  /*
+  --------------------------------------------------------
+  GET SERVICE + CLIENT
+  --------------------------------------------------------
+  */
+
   const {
     data: service,
     error: serviceError,
@@ -642,8 +740,15 @@ export async function notifyClient(
     )
   }
 
+  /*
+  --------------------------------------------------------
+  GET CLIENT PROFILE
+  --------------------------------------------------------
+  */
+
   const {
     data: profile,
+    error: profileError,
   } = await supabase
     .from('profiles')
     .select(
@@ -655,8 +760,17 @@ export async function notifyClient(
     )
     .single()
 
+  if (profileError) {
+    console.error(
+      'PROFILE FETCH ERROR:',
+      profileError
+    )
+  }
+
   /*
-  Portal notification
+  --------------------------------------------------------
+  PORTAL NOTIFICATION
+  --------------------------------------------------------
   */
 
   const {
@@ -666,9 +780,9 @@ export async function notifyClient(
     .insert({
       user_id: profileId,
 
-      title,
+      title: title.trim(),
 
-      message,
+      message: message.trim(),
 
       type: 'service',
 
@@ -686,7 +800,9 @@ export async function notifyClient(
   }
 
   /*
-  Email notification
+  --------------------------------------------------------
+  EMAIL NOTIFICATION
+  --------------------------------------------------------
   */
 
   if (profile?.email) {
@@ -697,142 +813,161 @@ export async function notifyClient(
 
         to: profile.email,
 
-        subject: title,
+        subject: title.trim(),
 
         html: `
-          <!DOCTYPE html>
+<!DOCTYPE html>
+<html>
+  <body
+    style="
+      margin:0;
+      padding:0;
+      background:#f8fafc;
+      font-family:Arial,Helvetica,sans-serif;
+      color:#0f172a;
+    "
+  >
 
-          <html>
-            <body
-              style="
-                margin:0;
-                padding:0;
-                background:#f8fafc;
-                font-family:Arial,Helvetica,sans-serif;
-                color:#0f172a;
-              "
-            >
+    <div
+      style="
+        max-width:600px;
+        margin:40px auto;
+        background:#ffffff;
+        border-radius:16px;
+        overflow:hidden;
+        border:1px solid #e2e8f0;
+      "
+    >
 
-              <div
-                style="
-                  max-width:600px;
-                  margin:40px auto;
-                  background:#ffffff;
-                  border-radius:16px;
-                  overflow:hidden;
-                  border:1px solid #e2e8f0;
-                "
-              >
+      <div
+        style="
+          background:#0f2747;
+          padding:28px;
+          text-align:center;
+        "
+      >
 
-                <div
-                  style="
-                    background:#0f2747;
-                    padding:28px;
-                    text-align:center;
-                  "
-                >
+        <h1
+          style="
+            margin:0;
+            color:#ffffff;
+            font-size:22px;
+          "
+        >
+          POG Advisory
+        </h1>
 
-                  <h1
-                    style="
-                      margin:0;
-                      color:#ffffff;
-                      font-size:22px;
-                    "
-                  >
-                    POG Advisory
-                  </h1>
+        <p
+          style="
+            margin:8px 0 0;
+            color:#cbd5e1;
+            font-size:14px;
+          "
+        >
+          Client Portal
+        </p>
 
-                  <p
-                    style="
-                      margin:8px 0 0;
-                      color:#cbd5e1;
-                    "
-                  >
-                    Client Portal
-                  </p>
+      </div>
 
-                </div>
+      <div
+        style="
+          padding:32px;
+        "
+      >
 
-                <div
-                  style="
-                    padding:32px;
-                  "
-                >
+        <h2>
+          Hello ${profile.first_name ?? 'Client'},
+        </h2>
 
-                  <h2>
-                    Hello ${profile.first_name ?? 'Client'},
-                  </h2>
+        <p
+          style="
+            color:#475569;
+            line-height:1.6;
+          "
+        >
+          ${message.trim()}
+        </p>
 
-                  <p
-                    style="
-                      color:#475569;
-                      line-height:1.6;
-                    "
-                  >
-                    ${message}
-                  </p>
+        <div
+          style="
+            margin:24px 0;
+            padding:20px;
+            background:#f8fafc;
+            border-radius:12px;
+            border:1px solid #e2e8f0;
+          "
+        >
 
-                  <div
-                    style="
-                      margin:24px 0;
-                      padding:20px;
-                      background:#f8fafc;
-                      border-radius:12px;
-                    "
-                  >
+          <p
+            style="
+              margin:0 0 8px;
+              font-size:13px;
+              color:#64748b;
+            "
+          >
+            SERVICE
+          </p>
 
-                    <strong>
-                      Service
-                    </strong>
+          <p
+            style="
+              margin:0;
+              font-size:18px;
+              font-weight:bold;
+            "
+          >
+            ${service.title}
+          </p>
 
-                    <p>
-                      ${service.title}
-                    </p>
+        </div>
 
-                  </div>
+        <div
+          style="
+            text-align:center;
+            margin:30px 0;
+          "
+        >
 
-                  <div
-                    style="
-                      text-align:center;
-                      margin:30px 0;
-                    "
-                  >
+          <a
+            href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${serviceId}"
+            style="
+              display:inline-block;
+              padding:14px 24px;
+              background:#1E88E5;
+              color:#ffffff;
+              text-decoration:none;
+              border-radius:10px;
+              font-weight:bold;
+            "
+          >
+            Open Service
+          </a>
 
-                    <a
-                      href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${serviceId}"
-                      style="
-                        display:inline-block;
-                        padding:14px 24px;
-                        background:#1E88E5;
-                        color:#ffffff;
-                        text-decoration:none;
-                        border-radius:10px;
-                        font-weight:bold;
-                      "
-                    >
-                      Open Service
-                    </a>
+        </div>
 
-                  </div>
+        <p
+          style="
+            color:#64748b;
+            font-size:14px;
+            line-height:1.6;
+          "
+        >
+          Kind regards,<br />
+          <strong>POG Advisory Team</strong>
+        </p>
 
-                  <p
-                    style="
-                      color:#64748b;
-                      font-size:14px;
-                    "
-                  >
-                    Kind regards,<br />
-                    <strong>POG Advisory Team</strong>
-                  </p>
+      </div>
 
-                </div>
+    </div>
 
-              </div>
-
-            </body>
-          </html>
+  </body>
+</html>
         `,
       })
+
+      console.log(
+        'CLIENT NOTIFICATION EMAIL SENT:',
+        profile.email
+      )
 
     } catch (error) {
 
@@ -844,7 +979,9 @@ export async function notifyClient(
   }
 
   /*
-  Activity log
+  --------------------------------------------------------
+  ACTIVITY LOG
+  --------------------------------------------------------
   */
 
   await supabase
@@ -859,8 +996,15 @@ export async function notifyClient(
       action:
         'Client Notified',
 
-      description: title,
+      description:
+        title.trim(),
     })
+
+  /*
+  --------------------------------------------------------
+  REVALIDATE
+  --------------------------------------------------------
+  */
 
   revalidatePath(
     `/staff/services/${serviceId}`
