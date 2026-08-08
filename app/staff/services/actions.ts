@@ -15,11 +15,11 @@ export async function updateServiceStatus(
   serviceId: string,
   status: string
 ) {
-  console.log('========================================')
+  console.log('==========================================')
   console.log('UPDATE SERVICE STATUS STARTED')
   console.log('SERVICE ID:', serviceId)
   console.log('NEW STATUS:', status)
-  console.log('========================================')
+  console.log('==========================================')
 
   const supabase = await createClient()
 
@@ -32,14 +32,17 @@ export async function updateServiceStatus(
   console.log('AUTH ERROR:', authError)
 
   if (!user) {
+    console.error('UPDATE SERVICE STATUS FAILED: NOT AUTHENTICATED')
     throw new Error('Not authenticated')
   }
 
   if (!serviceId) {
+    console.error('UPDATE SERVICE STATUS FAILED: NO SERVICE ID')
     throw new Error('Service ID is required')
   }
 
   if (!status) {
+    console.error('UPDATE SERVICE STATUS FAILED: NO STATUS')
     throw new Error('Status is required')
   }
 
@@ -48,6 +51,8 @@ export async function updateServiceStatus(
   GET SERVICE + CLIENT
   --------------------------------------------------------
   */
+
+  console.log('FETCHING SERVICE:', serviceId)
 
   const {
     data: service,
@@ -63,12 +68,12 @@ export async function updateServiceStatus(
     .eq('id', serviceId)
     .single()
 
-  console.log('SERVICE DATA:', service)
-  console.log('SERVICE ERROR:', serviceError)
+  console.log('SERVICE:', service)
+  console.log('SERVICE FETCH ERROR:', serviceError)
 
   if (serviceError || !service) {
     console.error(
-      'SERVICE FETCH ERROR:',
+      'SERVICE FETCH FAILED:',
       serviceError
     )
 
@@ -88,10 +93,13 @@ export async function updateServiceStatus(
 
   if (previousStatus === status) {
     console.log(
-      'STATUS DID NOT CHANGE - STOPPING FUNCTION'
+      'STATUS DID NOT CHANGE - NOTHING TO DO'
     )
 
-    return
+    return {
+      success: true,
+      changed: false,
+    }
   }
 
   /*
@@ -99,6 +107,8 @@ export async function updateServiceStatus(
   UPDATE SERVICE
   --------------------------------------------------------
   */
+
+  console.log('UPDATING SERVICE STATUS...')
 
   const {
     error: updateError,
@@ -113,6 +123,11 @@ export async function updateServiceStatus(
   console.log('SERVICE UPDATE ERROR:', updateError)
 
   if (updateError) {
+    console.error(
+      'SERVICE STATUS UPDATE FAILED:',
+      updateError
+    )
+
     throw new Error(updateError.message)
   }
 
@@ -126,7 +141,10 @@ export async function updateServiceStatus(
   --------------------------------------------------------
   */
 
+  console.log('CREATING ACTIVITY LOG...')
+
   const {
+    data: activityLog,
     error: activityError,
   } = await supabase
     .from('activity_logs')
@@ -142,16 +160,20 @@ export async function updateServiceStatus(
 
       entity_id: service.id,
     })
+    .select()
+    .single()
 
-  console.log(
-    'ACTIVITY LOG ERROR:',
-    activityError
-  )
+  console.log('ACTIVITY LOG:', activityLog)
+  console.log('ACTIVITY LOG ERROR:', activityError)
 
   if (activityError) {
     console.error(
       'ACTIVITY LOG FAILED:',
       activityError
+    )
+  } else {
+    console.log(
+      'ACTIVITY LOG CREATED SUCCESSFULLY'
     )
   }
 
@@ -169,17 +191,9 @@ export async function updateServiceStatus(
     clientProfileId
   )
 
-  /*
-  --------------------------------------------------------
-  IMPORTANT:
-  IF THERE IS NO PROFILE ID, WE CANNOT CREATE
-  THE CLIENT NOTIFICATION OR SEND THE EMAIL.
-  --------------------------------------------------------
-  */
-
   if (!clientProfileId) {
     console.error(
-      'NO CLIENT PROFILE ID FOUND - SKIPPING NOTIFICATION AND EMAIL'
+      'NO CLIENT PROFILE ID FOUND'
     )
 
     revalidatePath(
@@ -190,7 +204,12 @@ export async function updateServiceStatus(
       '/staff/services'
     )
 
-    return
+    return {
+      success: true,
+      changed: true,
+      notificationSent: false,
+      emailSent: false,
+    }
   }
 
   /*
@@ -200,8 +219,7 @@ export async function updateServiceStatus(
   */
 
   console.log(
-    'CREATING PORTAL NOTIFICATION FOR:',
-    clientProfileId
+    'CREATING PORTAL NOTIFICATION...'
   )
 
   const {
@@ -228,12 +246,12 @@ export async function updateServiceStatus(
     .single()
 
   console.log(
-    'NOTIFICATION CREATED:',
+    'PORTAL NOTIFICATION:',
     notification
   )
 
   console.log(
-    'NOTIFICATION ERROR:',
+    'PORTAL NOTIFICATION ERROR:',
     notificationError
   )
 
@@ -241,6 +259,10 @@ export async function updateServiceStatus(
     console.error(
       'SERVICE NOTIFICATION FAILED:',
       notificationError
+    )
+  } else {
+    console.log(
+      'PORTAL NOTIFICATION CREATED SUCCESSFULLY'
     )
   }
 
@@ -251,8 +273,7 @@ export async function updateServiceStatus(
   */
 
   console.log(
-    'FETCHING CLIENT PROFILE:',
-    clientProfileId
+    'FETCHING CLIENT PROFILE...'
   )
 
   const {
@@ -292,13 +313,9 @@ export async function updateServiceStatus(
   --------------------------------------------------------
   */
 
-  if (!profile?.email) {
+  let emailSent = false
 
-    console.error(
-      'NO CLIENT EMAIL FOUND - EMAIL NOT SENT'
-    )
-
-  } else {
+  if (profile?.email) {
 
     console.log(
       'CLIENT EMAIL FOUND:',
@@ -306,7 +323,7 @@ export async function updateServiceStatus(
     )
 
     console.log(
-      'ABOUT TO SEND SERVICE STATUS EMAIL...'
+      'STARTING SERVICE STATUS EMAIL...'
     )
 
     try {
@@ -434,7 +451,9 @@ export async function updateServiceStatus(
             "
           >
             Previous status:
-            <strong>${previousStatus}</strong>
+            <strong>
+              ${previousStatus}
+            </strong>
           </p>
 
           <p
@@ -444,7 +463,9 @@ export async function updateServiceStatus(
             "
           >
             New status:
-            <strong>${status}</strong>
+            <strong>
+              ${status}
+            </strong>
           </p>
 
         </div>
@@ -504,8 +525,10 @@ export async function updateServiceStatus(
         `,
       })
 
+      emailSent = true
+
       console.log(
-        '========================================'
+        '=========================================='
       )
 
       console.log(
@@ -513,18 +536,18 @@ export async function updateServiceStatus(
       )
 
       console.log(
-        'EMAIL TO:',
+        'EMAIL:',
         profile.email
       )
 
       console.log(
-        '========================================'
+        '=========================================='
       )
 
     } catch (error) {
 
       console.error(
-        '========================================'
+        '=========================================='
       )
 
       console.error(
@@ -532,13 +555,25 @@ export async function updateServiceStatus(
       )
 
       console.error(
+        'EMAIL:',
+        profile.email
+      )
+
+      console.error(
+        'ERROR:',
         error
       )
 
       console.error(
-        '========================================'
+        '=========================================='
       )
     }
+
+  } else {
+
+    console.error(
+      'NO CLIENT EMAIL AVAILABLE - EMAIL NOT SENT'
+    )
   }
 
   /*
@@ -546,6 +581,10 @@ export async function updateServiceStatus(
   REVALIDATE
   --------------------------------------------------------
   */
+
+  console.log(
+    'REVALIDATING SERVICE PAGES...'
+  )
 
   revalidatePath(
     `/staff/services/${serviceId}`
@@ -564,9 +603,25 @@ export async function updateServiceStatus(
   )
 
   console.log(
-    'UPDATE SERVICE STATUS COMPLETED'
+    'UPDATE SERVICE STATUS FINISHED'
   )
+
+  console.log(
+    'EMAIL SENT:',
+    emailSent
+  )
+
+  console.log('==========================================')
+
+  return {
+    success: true,
+    changed: true,
+    notificationSent:
+      !notificationError,
+    emailSent,
+  }
 }
+
 
 /*
 ==========================================================
@@ -640,7 +695,9 @@ export async function toggleChecklistItem(
     )
   }
 
-  await supabase
+  const {
+    error: activityError,
+  } = await supabase
     .from('activity_logs')
     .insert({
       user_id: user.id,
@@ -656,6 +713,13 @@ export async function toggleChecklistItem(
 
       description: item.title,
     })
+
+  if (activityError) {
+    console.error(
+      'CHECKLIST ACTIVITY LOG FAILED:',
+      activityError
+    )
+  }
 
   revalidatePath(
     `/staff/services/${serviceId}`
@@ -707,7 +771,9 @@ export async function createChecklistItem(
     )
   }
 
-  await supabase
+  const {
+    error: activityError,
+  } = await supabase
     .from('activity_logs')
     .insert({
       user_id: user.id,
@@ -721,6 +787,13 @@ export async function createChecklistItem(
 
       description: title.trim(),
     })
+
+  if (activityError) {
+    console.error(
+      'CHECKLIST ITEM ACTIVITY LOG FAILED:',
+      activityError
+    )
+  }
 
   revalidatePath(
     `/staff/services/${serviceId}`
@@ -766,7 +839,9 @@ export async function saveInternalNotes(
     )
   }
 
-  await supabase
+  const {
+    error: activityError,
+  } = await supabase
     .from('activity_logs')
     .insert({
       user_id: user.id,
@@ -781,6 +856,13 @@ export async function saveInternalNotes(
       description:
         'Internal notes updated',
     })
+
+  if (activityError) {
+    console.error(
+      'INTERNAL NOTES ACTIVITY LOG FAILED:',
+      activityError
+    )
+  }
 
   revalidatePath(
     `/staff/services/${serviceId}`
@@ -806,12 +888,6 @@ export async function createDocumentRequest(
   if (!user) {
     throw new Error('Unauthorized')
   }
-
-  /*
-  --------------------------------------------------------
-  GET FORM DATA
-  --------------------------------------------------------
-  */
 
   const serviceId =
     String(
@@ -980,6 +1056,10 @@ export async function createDocumentRequest(
       'DOCUMENT NOTIFICATION FAILED:',
       notificationError
     )
+  } else {
+    console.log(
+      'DOCUMENT NOTIFICATION CREATED'
+    )
   }
 
   /*
@@ -1016,6 +1096,11 @@ export async function createDocumentRequest(
   */
 
   if (profile?.email) {
+
+    console.log(
+      'SENDING DOCUMENT REQUEST EMAIL TO:',
+      profile.email
+    )
 
     try {
 
@@ -1266,16 +1351,15 @@ export async function createDocumentRequest(
 
     } catch (error) {
 
-      /*
-      Email failure must NOT
-      undo the document request.
-      */
-
       console.error(
         'DOCUMENT REQUEST EMAIL FAILED:',
         error
       )
     }
+  } else {
+    console.error(
+      'NO CLIENT EMAIL FOUND FOR DOCUMENT REQUEST'
+    )
   }
 
   /*
@@ -1312,6 +1396,10 @@ export async function createDocumentRequest(
     console.error(
       'DOCUMENT REQUEST ACTIVITY LOG FAILED:',
       activityError
+    )
+  } else {
+    console.log(
+      'DOCUMENT REQUEST ACTIVITY LOG CREATED'
     )
   }
 
@@ -1356,11 +1444,21 @@ export async function notifyClient(
   title: string,
   message: string
 ) {
+  console.log('==========================================')
+  console.log('NOTIFY CLIENT STARTED')
+  console.log('SERVICE ID:', serviceId)
+  console.log('TITLE:', title)
+  console.log('==========================================')
+
   const supabase = await createClient()
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser()
+
+  console.log('AUTH USER:', user?.id)
+  console.log('AUTH ERROR:', authError)
 
   if (!user) {
     throw new Error('Not authenticated')
@@ -1401,6 +1499,12 @@ export async function notifyClient(
     )
     .single()
 
+  console.log('SERVICE:', service)
+  console.log(
+    'SERVICE ERROR:',
+    serviceError
+  )
+
   if (
     serviceError ||
     !service
@@ -1412,6 +1516,11 @@ export async function notifyClient(
 
   const profileId =
     service.client?.profile_id
+
+  console.log(
+    'CLIENT PROFILE ID:',
+    profileId
+  )
 
   if (!profileId) {
     throw new Error(
@@ -1439,12 +1548,15 @@ export async function notifyClient(
     )
     .single()
 
-  if (profileError) {
-    console.error(
-      'PROFILE FETCH ERROR:',
-      profileError
-    )
-  }
+  console.log(
+    'CLIENT PROFILE:',
+    profile
+  )
+
+  console.log(
+    'PROFILE ERROR:',
+    profileError
+  )
 
   /*
   --------------------------------------------------------
@@ -1452,7 +1564,12 @@ export async function notifyClient(
   --------------------------------------------------------
   */
 
+  console.log(
+    'CREATING CLIENT NOTIFICATION...'
+  )
+
   const {
+    data: notification,
     error: notificationError,
   } = await supabase
     .from('notifications')
@@ -1470,11 +1587,27 @@ export async function notifyClient(
 
       read: false,
     })
+    .select()
+    .single()
+
+  console.log(
+    'NOTIFICATION:',
+    notification
+  )
+
+  console.log(
+    'NOTIFICATION ERROR:',
+    notificationError
+  )
 
   if (notificationError) {
     console.error(
       'NOTIFICATION FAILED:',
       notificationError
+    )
+  } else {
+    console.log(
+      'CLIENT NOTIFICATION CREATED SUCCESSFULLY'
     )
   }
 
@@ -1484,7 +1617,14 @@ export async function notifyClient(
   --------------------------------------------------------
   */
 
+  let emailSent = false
+
   if (profile?.email) {
+
+    console.log(
+      'SENDING CLIENT NOTIFICATION EMAIL TO:',
+      profile.email
+    )
 
     try {
 
@@ -1628,18 +1768,49 @@ export async function notifyClient(
         `,
       })
 
+      emailSent = true
+
       console.log(
-        'CLIENT NOTIFICATION EMAIL SENT:',
+        '=========================================='
+      )
+
+      console.log(
+        'CLIENT NOTIFICATION EMAIL SENT'
+      )
+
+      console.log(
+        'EMAIL:',
         profile.email
+      )
+
+      console.log(
+        '=========================================='
       )
 
     } catch (error) {
 
       console.error(
-        'CLIENT NOTIFICATION EMAIL FAILED:',
+        '=========================================='
+      )
+
+      console.error(
+        'CLIENT NOTIFICATION EMAIL FAILED'
+      )
+
+      console.error(
         error
       )
+
+      console.error(
+        '=========================================='
+      )
     }
+
+  } else {
+
+    console.error(
+      'NO CLIENT EMAIL FOUND - EMAIL NOT SENT'
+    )
   }
 
   /*
@@ -1648,7 +1819,13 @@ export async function notifyClient(
   --------------------------------------------------------
   */
 
-  await supabase
+  console.log(
+    'CREATING CLIENT NOTIFICATION ACTIVITY LOG...'
+  )
+
+  const {
+    error: activityError,
+  } = await supabase
     .from('activity_logs')
     .insert({
       user_id: user.id,
@@ -1663,6 +1840,22 @@ export async function notifyClient(
       description:
         title.trim(),
     })
+
+  console.log(
+    'CLIENT NOTIFICATION ACTIVITY LOG ERROR:',
+    activityError
+  )
+
+  if (activityError) {
+    console.error(
+      'CLIENT NOTIFICATION ACTIVITY LOG FAILED:',
+      activityError
+    )
+  } else {
+    console.log(
+      'CLIENT NOTIFICATION ACTIVITY LOG CREATED'
+    )
+  }
 
   /*
   --------------------------------------------------------
@@ -1681,4 +1874,22 @@ export async function notifyClient(
   revalidatePath(
     '/portal/notifications'
   )
+
+  console.log(
+    'NOTIFY CLIENT FINISHED'
+  )
+
+  console.log(
+    'EMAIL SENT:',
+    emailSent
+  )
+
+  console.log('==========================================')
+
+  return {
+    success: true,
+    notificationSent:
+      !notificationError,
+    emailSent,
+  }
 }
