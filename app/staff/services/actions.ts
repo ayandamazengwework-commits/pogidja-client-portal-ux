@@ -15,11 +15,21 @@ export async function updateServiceStatus(
   serviceId: string,
   status: string
 ) {
+  console.log('========================================')
+  console.log('UPDATE SERVICE STATUS STARTED')
+  console.log('SERVICE ID:', serviceId)
+  console.log('NEW STATUS:', status)
+  console.log('========================================')
+
   const supabase = await createClient()
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser()
+
+  console.log('AUTH USER:', user?.id)
+  console.log('AUTH ERROR:', authError)
 
   if (!user) {
     throw new Error('Not authenticated')
@@ -53,6 +63,9 @@ export async function updateServiceStatus(
     .eq('id', serviceId)
     .single()
 
+  console.log('SERVICE DATA:', service)
+  console.log('SERVICE ERROR:', serviceError)
+
   if (serviceError || !service) {
     console.error(
       'SERVICE FETCH ERROR:',
@@ -64,6 +77,9 @@ export async function updateServiceStatus(
 
   const previousStatus = service.status
 
+  console.log('PREVIOUS STATUS:', previousStatus)
+  console.log('NEW STATUS:', status)
+
   /*
   --------------------------------------------------------
   DON'T DO ANYTHING IF STATUS DID NOT CHANGE
@@ -71,6 +87,10 @@ export async function updateServiceStatus(
   */
 
   if (previousStatus === status) {
+    console.log(
+      'STATUS DID NOT CHANGE - STOPPING FUNCTION'
+    )
+
     return
   }
 
@@ -90,9 +110,15 @@ export async function updateServiceStatus(
     })
     .eq('id', serviceId)
 
+  console.log('SERVICE UPDATE ERROR:', updateError)
+
   if (updateError) {
     throw new Error(updateError.message)
   }
+
+  console.log(
+    'SERVICE STATUS UPDATED SUCCESSFULLY'
+  )
 
   /*
   --------------------------------------------------------
@@ -117,6 +143,11 @@ export async function updateServiceStatus(
       entity_id: service.id,
     })
 
+  console.log(
+    'ACTIVITY LOG ERROR:',
+    activityError
+  )
+
   if (activityError) {
     console.error(
       'ACTIVITY LOG FAILED:',
@@ -126,93 +157,168 @@ export async function updateServiceStatus(
 
   /*
   --------------------------------------------------------
-  GET CLIENT PROFILE
+  GET CLIENT PROFILE ID
   --------------------------------------------------------
   */
 
   const clientProfileId =
     service.client?.profile_id
 
-  if (clientProfileId) {
+  console.log(
+    'CLIENT PROFILE ID:',
+    clientProfileId
+  )
 
-    /*
-    ------------------------------------------------------
-    CREATE PORTAL NOTIFICATION
-    ------------------------------------------------------
-    */
+  /*
+  --------------------------------------------------------
+  IMPORTANT:
+  IF THERE IS NO PROFILE ID, WE CANNOT CREATE
+  THE CLIENT NOTIFICATION OR SEND THE EMAIL.
+  --------------------------------------------------------
+  */
 
-    const {
-      error: notificationError,
-    } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: clientProfileId,
+  if (!clientProfileId) {
+    console.error(
+      'NO CLIENT PROFILE ID FOUND - SKIPPING NOTIFICATION AND EMAIL'
+    )
 
-        title: 'Service Status Updated',
+    revalidatePath(
+      `/staff/services/${serviceId}`
+    )
 
-        message:
-          `${service.title} is now ${status}.`,
+    revalidatePath(
+      '/staff/services'
+    )
 
-        type: 'service',
+    return
+  }
 
-        link:
-          `/portal/cases/${service.id}`,
+  /*
+  --------------------------------------------------------
+  CREATE PORTAL NOTIFICATION
+  --------------------------------------------------------
+  */
 
-        read: false,
-      })
+  console.log(
+    'CREATING PORTAL NOTIFICATION FOR:',
+    clientProfileId
+  )
 
-    if (notificationError) {
-      console.error(
-        'SERVICE NOTIFICATION FAILED:',
-        notificationError
-      )
-    }
+  const {
+    data: notification,
+    error: notificationError,
+  } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: clientProfileId,
 
-    /*
-    ------------------------------------------------------
-    GET CLIENT EMAIL
-    ------------------------------------------------------
-    */
+      title: 'Service Status Updated',
 
-    const {
-      data: profile,
-      error: profileError,
-    } = await supabase
-      .from('profiles')
-      .select(
-        'email, first_name'
-      )
-      .eq(
-        'id',
-        clientProfileId
-      )
-      .single()
+      message:
+        `${service.title} is now ${status}.`,
 
-    if (profileError) {
-      console.error(
-        'CLIENT PROFILE FETCH FAILED:',
-        profileError
-      )
-    }
+      type: 'service',
 
-    /*
-    ------------------------------------------------------
-    SEND EMAIL
-    ------------------------------------------------------
-    */
+      link:
+        `/portal/cases/${service.id}`,
 
-    if (profile?.email) {
+      read: false,
+    })
+    .select()
+    .single()
 
-      try {
+  console.log(
+    'NOTIFICATION CREATED:',
+    notification
+  )
 
-        await sendEmail({
+  console.log(
+    'NOTIFICATION ERROR:',
+    notificationError
+  )
 
-          to: profile.email,
+  if (notificationError) {
+    console.error(
+      'SERVICE NOTIFICATION FAILED:',
+      notificationError
+    )
+  }
 
-          subject:
-            `Service Update - ${service.title}`,
+  /*
+  --------------------------------------------------------
+  GET CLIENT EMAIL
+  --------------------------------------------------------
+  */
 
-          html: `
+  console.log(
+    'FETCHING CLIENT PROFILE:',
+    clientProfileId
+  )
+
+  const {
+    data: profile,
+    error: profileError,
+  } = await supabase
+    .from('profiles')
+    .select(
+      'email, first_name'
+    )
+    .eq(
+      'id',
+      clientProfileId
+    )
+    .single()
+
+  console.log(
+    'CLIENT PROFILE:',
+    profile
+  )
+
+  console.log(
+    'CLIENT PROFILE ERROR:',
+    profileError
+  )
+
+  if (profileError) {
+    console.error(
+      'CLIENT PROFILE FETCH FAILED:',
+      profileError
+    )
+  }
+
+  /*
+  --------------------------------------------------------
+  SEND EMAIL
+  --------------------------------------------------------
+  */
+
+  if (!profile?.email) {
+
+    console.error(
+      'NO CLIENT EMAIL FOUND - EMAIL NOT SENT'
+    )
+
+  } else {
+
+    console.log(
+      'CLIENT EMAIL FOUND:',
+      profile.email
+    )
+
+    console.log(
+      'ABOUT TO SEND SERVICE STATUS EMAIL...'
+    )
+
+    try {
+
+      await sendEmail({
+
+        to: profile.email,
+
+        subject:
+          `Service Update - ${service.title}`,
+
+        html: `
 <!DOCTYPE html>
 <html>
   <body
@@ -328,9 +434,7 @@ export async function updateServiceStatus(
             "
           >
             Previous status:
-            <strong>
-              ${previousStatus}
-            </strong>
+            <strong>${previousStatus}</strong>
           </p>
 
           <p
@@ -340,9 +444,7 @@ export async function updateServiceStatus(
             "
           >
             New status:
-            <strong>
-              ${status}
-            </strong>
+            <strong>${status}</strong>
           </p>
 
         </div>
@@ -399,21 +501,43 @@ export async function updateServiceStatus(
 
   </body>
 </html>
-          `,
-        })
+        `,
+      })
 
-        console.log(
-          'SERVICE STATUS EMAIL SENT:',
-          profile.email
-        )
+      console.log(
+        '========================================'
+      )
 
-      } catch (error) {
+      console.log(
+        'SERVICE STATUS EMAIL SENT SUCCESSFULLY'
+      )
 
-        console.error(
-          'SERVICE STATUS EMAIL FAILED:',
-          error
-        )
-      }
+      console.log(
+        'EMAIL TO:',
+        profile.email
+      )
+
+      console.log(
+        '========================================'
+      )
+
+    } catch (error) {
+
+      console.error(
+        '========================================'
+      )
+
+      console.error(
+        'SERVICE STATUS EMAIL FAILED'
+      )
+
+      console.error(
+        error
+      )
+
+      console.error(
+        '========================================'
+      )
     }
   }
 
@@ -438,8 +562,11 @@ export async function updateServiceStatus(
   revalidatePath(
     '/portal/notifications'
   )
-}
 
+  console.log(
+    'UPDATE SERVICE STATUS COMPLETED'
+  )
+}
 
 /*
 ==========================================================
