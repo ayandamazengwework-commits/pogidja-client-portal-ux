@@ -14,11 +14,12 @@ import {
   LogOut,
   Loader2,
 } from 'lucide-react'
-import Image from 'next/image'
+
 import { createClient } from '@/lib/supabase/client'
+
 import { Button } from '@/components/ui/button'
 
-const navigation = [
+export const staffNavigation = [
   {
     name: 'Dashboard',
     href: '/staff',
@@ -81,7 +82,8 @@ export function StaffSidebar({
     : 'Unknown User'
 
   const role = profile
-    ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+    ? profile.role.charAt(0).toUpperCase() +
+      profile.role.slice(1)
     : 'Staff'
 
   async function handleLogout() {
@@ -98,27 +100,40 @@ export function StaffSidebar({
   }
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-slate-200 bg-white xl:flex xl:w-72">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex">
 
-      {/* Logo */}
+      {/* ====================================================== */}
+      {/* LOGO                                                   */}
+      {/* ====================================================== */}
 
-     <div className="border-b border-slate-200 px-6 py-6">
+      <div className="flex h-[92px] items-center border-b border-slate-200 px-6">
+        <Link
+          href="/staff"
+          className="flex items-center gap-3"
+        >
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#17365D] text-lg font-bold text-white shadow-sm">
+            P
+          </div>
 
-  <Image
-    src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
-    alt="POG Advisory"
-    width={220}
-    height={70}
-    priority
-    className="h-auto w-full object-contain"
-  />
-</div>
+          <div className="leading-tight">
+            <p className="text-sm font-bold tracking-tight text-slate-900">
+              POG ADVISORY
+            </p>
 
-      {/* Navigation */}
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+              & Chartered Accountants Inc.
+            </p>
+          </div>
+        </Link>
+      </div>
+
+      {/* ====================================================== */}
+      {/* NAVIGATION                                              */}
+      {/* ====================================================== */}
 
       <nav className="flex-1 overflow-y-auto p-4">
         <div className="space-y-1">
-          {navigation.map((item) => {
+          {staffNavigation.map((item) => {
             const Icon = item.icon
 
             const active =
@@ -131,31 +146,36 @@ export function StaffSidebar({
                 href={item.href}
                 className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
                   active
-                    ? 'bg-[#1E88E5] text-white shadow-md'
+                    ? 'bg-[#1E88E5] text-white shadow-md shadow-blue-100'
                     : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                <span>{item.name}</span>
+
+                <span>
+                  {item.name}
+                </span>
               </Link>
             )
           })}
         </div>
       </nav>
 
-      {/* Logged-in User */}
+      {/* ====================================================== */}
+      {/* LOGGED-IN USER                                          */}
+      {/* ====================================================== */}
 
       <div className="border-t border-slate-200 p-5">
         <div className="rounded-2xl bg-slate-50 p-4">
 
           <div className="mb-4 flex items-center gap-3">
 
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1E88E5] text-sm font-bold text-white">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#1E88E5] text-sm font-bold text-white">
               {initials}
             </div>
 
             <div className="min-w-0">
-              <p className="truncate font-semibold">
+              <p className="truncate font-semibold text-slate-900">
                 {fullName}
               </p>
 
