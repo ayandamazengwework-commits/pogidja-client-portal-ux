@@ -11,28 +11,49 @@ export function Logo({
   variant = 'default',
   showText = true,
 }: LogoProps) {
-  const textColor =
-    variant === 'light' ? 'text-white' : 'text-primary'
+  const isLight = variant === 'light'
 
-  const subColor =
-    variant === 'light'
-      ? 'text-white/60'
-      : 'text-muted-foreground'
+  const textColor = isLight
+    ? 'text-white'
+    : 'text-[#17365D]'
+
+  const subColor = isLight
+    ? 'text-white/65'
+    : 'text-slate-500'
 
   return (
-    <div className={cn('flex items-center gap-3', className)}>
-      {/* Logo Mark */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-        <span className="font-serif text-lg font-bold tracking-tight">
+    <div
+      className={cn(
+        'flex items-center gap-3',
+        className
+      )}
+    >
+      {/* ===================================================== */}
+      {/* LOGO MARK                                               */}
+      {/* ===================================================== */}
+
+      <div
+        className={cn(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg shadow-sm',
+          isLight
+            ? 'bg-white text-[#17365D]'
+            : 'bg-[#17365D] text-white'
+        )}
+      >
+        <span className="font-serif text-xl font-bold leading-none">
           P
         </span>
       </div>
 
+      {/* ===================================================== */}
+      {/* COMPANY NAME                                           */}
+      {/* ===================================================== */}
+
       {showText && (
-        <div className="flex min-w-0 flex-col leading-none">
+        <div className="flex min-w-0 flex-col justify-center leading-none">
           <span
             className={cn(
-              'font-serif text-sm font-bold leading-tight tracking-tight',
+              'font-serif text-[13px] font-bold leading-tight tracking-[0.02em]',
               textColor
             )}
           >
@@ -41,7 +62,7 @@ export function Logo({
 
           <span
             className={cn(
-              'mt-1 text-[9px] font-medium uppercase leading-tight tracking-wide',
+              'mt-1 max-w-[175px] text-[8px] font-semibold uppercase leading-[1.25] tracking-[0.06em]',
               subColor
             )}
           >
