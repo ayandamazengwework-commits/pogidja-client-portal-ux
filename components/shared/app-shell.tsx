@@ -114,7 +114,7 @@ function SidebarNav({
                 className={cn(
                   'h-5 min-w-5 justify-center rounded-full px-1.5 text-[11px]',
                   isPortal
-                    ? 'border-0 bg-[#E7B84B] text-[#17365D]'
+                    ? 'border-0 bg-[#1E88E5] text-white'
                     : 'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >
@@ -144,7 +144,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = useState(false)
 
   /*
-   * The portal gets the new client-facing design.
+   * The portal gets the client-facing design.
    *
    * Staff pages keep their existing styling.
    */
@@ -225,9 +225,7 @@ export function AppShell({
           <div
             className={cn(
               'flex items-center gap-3 rounded-xl px-2.5 py-2.5',
-              isPortal
-                ? 'bg-slate-50'
-                : 'bg-transparent'
+              isPortal ? 'bg-slate-50' : 'bg-transparent'
             )}
           >
             <Avatar className="h-9 w-9 shrink-0">
@@ -235,7 +233,7 @@ export function AppShell({
                 className={cn(
                   'text-xs font-semibold',
                   isPortal
-                    ? 'bg-[#E7B84B] text-[#17365D]'
+                    ? 'bg-[#1E88E5] text-white'
                     : 'bg-sidebar-primary text-sidebar-primary-foreground'
                 )}
               >
@@ -299,7 +297,8 @@ export function AppShell({
                 size="icon"
                 className={cn(
                   'lg:hidden',
-                  isPortal && 'text-slate-700 hover:bg-slate-100'
+                  isPortal &&
+                    'text-slate-700 hover:bg-slate-100'
                 )}
               >
                 <Menu className="h-5 w-5" />
@@ -408,7 +407,7 @@ export function AppShell({
                   className={cn(
                     'absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold',
                     isPortal
-                      ? 'bg-[#E7B84B] text-[#17365D]'
+                      ? 'bg-[#1E88E5] text-white'
                       : 'bg-destructive text-white'
                   )}
                 >
