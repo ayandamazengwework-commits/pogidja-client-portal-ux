@@ -5,52 +5,73 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/send-email'
 
-export async function createDocumentRequest(
-  formData: FormData
-) {
+interface RequestDocumentsInput {
+  serviceId: string
+  clientId: string
+  documents: string
+}
+
+export async function requestDocuments({
+  serviceId,
+  clientId,
+  documents,
+}: RequestDocumentsInput) {
   const supabase = await createClient()
+
+  console.log('========================================')
+  console.log('DOCUMENT REQUEST STARTED')
+  console.log('SERVICE ID:', serviceId)
+  console.log('CLIENT ID:', clientId)
+  console.log('========================================')
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
+  console.log('STAFF USER:', user?.id)
+
   if (!user) {
-    throw new Error('Unauthorized')
+    throw new Error('Not authenticated')
   }
 
-  const serviceId = String(
-    formData.get('service_id') ?? ''
-  )
-
-  const clientId = String(
-    formData.get('client_id') ?? ''
-  )
-
-  const title = String(
-    formData.get('title') ?? ''
-  )
-
-  const description = String(
-    formData.get('description') ?? ''
-  )
-
   if (!serviceId) {
-    throw new Error('Service is required')
+    throw new Error('Service ID is required')
   }
 
   if (!clientId) {
-    throw new Error('Client is required')
+    throw new Error('Client ID is required')
   }
 
-  if (!title) {
-    throw new Error('Document title is required')
+  if (!documents.trim()) {
+    throw new Error('Please enter the documents required')
   }
 
-  /*
-  ==========================================================
-  GET SERVICE + CLIENT INFORMATION
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // CLIENT
+  // ---------------------------------------------------
+
+  const {
+    data: client,
+    error: clientError,
+  } = await supabase
+    .from('clients')
+    .select(`
+      id,
+      profile_id
+    `)
+    .eq('id', clientId)
+    .single()
+
+  console.log('CLIENT:', client)
+  console.log('CLIENT ERROR:', clientError)
+
+  if (clientError || !client) {
+    throw new Error('Client not found')
+  }
+
+  // ---------------------------------------------------
+  // SERVICE
+  // ---------------------------------------------------
 
   const {
     data: service,
@@ -60,47 +81,103 @@ export async function createDocumentRequest(
     .select(`
       id,
       title,
-      client:clients(
-        id,
-        profile_id
-      )
+      client_id
     `)
     .eq('id', serviceId)
     .single()
+
+  console.log('SERVICE:', service)
+  console.log('SERVICE ERROR:', serviceError)
 
   if (serviceError || !service) {
     throw new Error('Service not found')
   }
 
-  const clientProfileId =
-    service.client?.profile_id
-
-  if (!clientProfileId) {
+  if (service.client_id !== clientId) {
     throw new Error(
-      'Client profile not found'
+      'This service does not belong to the selected client'
     )
   }
 
-  /*
-  ==========================================================
-  CREATE DOCUMENT REQUEST
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // CLIENT PROFILE
+  // ---------------------------------------------------
 
   const {
-    data: documentRequest,
+    data: profile,
+    error: profileError,
+  } = await supabase
+    .from('profiles')
+    .select(`
+      email,
+      first_name
+    `)
+    .eq('id', client.profile_id)
+    .single()
+
+  console.log('CLIENT PROFILE:', profile)
+  console.log('CLIENT PROFILE ERROR:', profileError)
+
+  // ---------------------------------------------------
+  // CREATE DOCUMENT REQUESTS
+  // ---------------------------------------------------
+  //
+  // Each line entered by staff becomes its own
+  // document request.
+  // ---------------------------------------------------
+
+  const requestedDocuments = documents
+    .split('\n')
+    .map((document) => document.trim())
+    .filter(Boolean)
+
+  if (requestedDocuments.length === 0) {
+    throw new Error(
+      'Please enter at least one document'
+    )
+  }
+
+  console.log(
+    'DOCUMENTS TO CREATE:',
+    requestedDocuments
+  )
+
+  const documentRows = requestedDocuments.map(
+    (document) => ({
+      service_id: serviceId,
+      client_id: clientId,
+      title: document,
+      description:
+        `Document requested for ${service.title}`,
+      required: true,
+      uploaded: false,
+      uploaded_at: null,
+      uploaded_document: null,
+      created_by: user.id,
+    })
+  )
+
+  console.log(
+    'CREATING DOCUMENT REQUESTS...'
+  )
+
+  const {
+    data: createdDocuments,
     error: documentError,
   } = await supabase
     .from('document_requests')
-    .insert({
-      service_id: serviceId,
-      client_id: clientId,
-      title,
-      description,
-      created_by: user.id,
-    })
+    .insert(documentRows)
     .select()
-    .single()
+
+  console.log(
+    'CREATED DOCUMENT REQUESTS:',
+    createdDocuments
+  )
+
+  console.log(
+    'DOCUMENT REQUEST ERROR:',
+    documentError
+  )
 
   if (documentError) {
     throw new Error(
@@ -108,44 +185,31 @@ export async function createDocumentRequest(
     )
   }
 
-  /*
-  ==========================================================
-  ACTIVITY LOG
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // PORTAL NOTIFICATION
+  // ---------------------------------------------------
 
-  await supabase
-    .from('activity_logs')
-    .insert({
-      user_id: user.id,
-      client_id: clientId,
-      role: 'staff',
-      action: 'Requested Document',
-      description:
-        `${title} requested for ${service.title}`,
-      entity_type: 'service',
-      entity_id: serviceId,
-    })
-
-  /*
-  ==========================================================
-  CLIENT NOTIFICATION
-  ==========================================================
-  */
+  console.log(
+    'CREATING PORTAL NOTIFICATION...'
+  )
 
   const {
     error: notificationError,
   } = await supabase
     .from('notifications')
     .insert({
-      user_id: clientProfileId,
+      user_id: client.profile_id,
 
-      title: 'New Document Required',
+      title: 'Documents Requested',
 
       message:
-        `${title} is required for your ${service.title} service.`,
+        `Your advisor has requested ${requestedDocuments.length} document${
+          requestedDocuments.length === 1
+            ? ''
+            : 's'
+        } for ${service.title}.`,
 
-      type: 'document',
+      type: 'documents',
 
       link:
         `/portal/cases/${serviceId}`,
@@ -153,443 +217,318 @@ export async function createDocumentRequest(
       read: false,
     })
 
+  console.log(
+    'NOTIFICATION ERROR:',
+    notificationError
+  )
+
+  /*
+   * Notification failure should not undo
+   * the document request.
+   */
+
   if (notificationError) {
     console.error(
-      'DOCUMENT NOTIFICATION FAILED:',
+      'DOCUMENT REQUEST NOTIFICATION FAILED:',
       notificationError
     )
   }
 
-  /*
-  ==========================================================
-  GET CLIENT EMAIL
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // ACTIVITY LOG
+  // ---------------------------------------------------
+
+  console.log(
+    'CREATING ACTIVITY LOG...'
+  )
 
   const {
-    data: profile,
-    error: profileError,
+    error: activityError,
   } = await supabase
-    .from('profiles')
-    .select(
-      'email, first_name'
-    )
-    .eq(
-      'id',
-      clientProfileId
-    )
-    .single()
+    .from('activity_logs')
+    .insert({
+      user_id: user.id,
 
-  if (profileError) {
+      role: 'staff',
+
+      client_id: clientId,
+
+      action: 'Requested Documents',
+
+      description:
+        requestedDocuments.join(', '),
+
+      entity_type: 'service',
+
+      entity_id: serviceId,
+    })
+
+  console.log(
+    'ACTIVITY LOG ERROR:',
+    activityError
+  )
+
+  if (activityError) {
     console.error(
-      'CLIENT PROFILE LOOKUP FAILED:',
-      profileError
+      'DOCUMENT REQUEST ACTIVITY LOG FAILED:',
+      activityError
     )
   }
 
-  /*
-  ==========================================================
-  EMAIL CLIENT
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // EMAIL
+  // ---------------------------------------------------
 
   if (profile?.email) {
+    console.log(
+      'SENDING DOCUMENT REQUEST EMAIL TO:',
+      profile.email
+    )
+
     try {
       await sendEmail({
         to: profile.email,
 
         subject:
-          `Document Required - ${service.title}`,
+          `Documents Required - ${service.title}`,
 
         html: `
-          <!DOCTYPE html>
+<!DOCTYPE html>
 
-          <html>
+<html>
 
-            <head>
-              <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1.0"
-              />
-              <meta
-                http-equiv="Content-Type"
-                content="text/html; charset=UTF-8"
-              />
-              <title>
-                Document Required
-              </title>
-            </head>
+  <body
+    style="
+      margin:0;
+      padding:0;
+      background:#f8fafc;
+      font-family:Arial,Helvetica,sans-serif;
+      color:#0f172a;
+    "
+  >
 
-            <body
-              style="
-                margin:0;
-                padding:0;
-                background:#f4f7fb;
-                font-family:Arial,Helvetica,sans-serif;
-                color:#172033;
-              "
-            >
+    <div
+      style="
+        max-width:600px;
+        margin:40px auto;
+        background:#ffffff;
+        border-radius:16px;
+        overflow:hidden;
+        border:1px solid #e2e8f0;
+      "
+    >
 
-              <div
-                style="
-                  width:100%;
-                  padding:40px 16px;
-                  box-sizing:border-box;
-                "
-              >
+      <!-- HEADER -->
 
-                <div
-                  style="
-                    max-width:620px;
-                    margin:0 auto;
-                    background:#ffffff;
-                    border-radius:18px;
-                    overflow:hidden;
-                    border:1px solid #e2e8f0;
-                    box-shadow:0 8px 30px rgba(15,39,71,0.06);
-                  "
-                >
+      <div
+        style="
+          background:#0f2747;
+          padding:28px;
+          text-align:center;
+        "
+      >
 
-                  <!-- HEADER -->
+        <h1
+          style="
+            margin:0;
+            color:#ffffff;
+            font-size:20px;
+            line-height:1.3;
+          "
+        >
+          POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+        </h1>
 
-                  <div
-                    style="
-                      background:#17365D;
-                      padding:32px 28px;
-                      text-align:center;
-                    "
-                  >
+        <p
+          style="
+            margin:8px 0 0;
+            color:#cbd5e1;
+            font-size:14px;
+          "
+        >
+          Secure Client Portal
+        </p>
 
-                    <div
-                      style="
-                        display:inline-block;
-                        padding:10px 14px;
-                        background:#1E88E5;
-                        border-radius:10px;
-                        margin-bottom:14px;
-                      "
-                    >
+      </div>
 
-                      <span
-                        style="
-                          display:block;
-                          color:#ffffff;
-                          font-size:20px;
-                          font-weight:700;
-                          line-height:1;
-                        "
-                      >
-                        P
-                      </span>
+      <!-- CONTENT -->
 
-                    </div>
+      <div
+        style="
+          padding:32px;
+        "
+      >
 
-                    <h1
-                      style="
-                        margin:0;
-                        color:#ffffff;
-                        font-size:20px;
-                        line-height:1.3;
-                        font-weight:700;
-                        letter-spacing:0.3px;
-                      "
-                    >
-                      POG ADVISORY
-                    </h1>
+        <h2
+          style="
+            margin-top:0;
+            font-size:22px;
+          "
+        >
+          Hello ${profile.first_name ?? 'Client'},
+        </h2>
 
-                    <p
-                      style="
-                        margin:7px 0 0;
-                        color:#cbd8e8;
-                        font-size:12px;
-                        line-height:1.5;
-                        letter-spacing:0.5px;
-                        text-transform:uppercase;
-                      "
-                    >
-                      AND CHARTERED ACCOUNTANTS INC.
-                    </p>
+        <p
+          style="
+            color:#475569;
+            line-height:1.6;
+          "
+        >
+          Your advisor has requested additional
+          documents for your accounting service.
+        </p>
 
-                  </div>
+        <!-- SERVICE + DOCUMENTS -->
 
-                  <!-- CONTENT -->
+        <div
+          style="
+            margin:24px 0;
+            padding:20px;
+            background:#f8fafc;
+            border-radius:12px;
+            border:1px solid #e2e8f0;
+          "
+        >
 
-                  <div
-                    style="
-                      padding:36px 32px;
-                    "
-                  >
+          <p
+            style="
+              margin:0 0 10px;
+              font-size:13px;
+              color:#64748b;
+            "
+          >
+            SERVICE
+          </p>
 
-                    <p
-                      style="
-                        margin:0 0 8px;
-                        color:#1E88E5;
-                        font-size:12px;
-                        line-height:1.5;
-                        font-weight:700;
-                        letter-spacing:1.5px;
-                        text-transform:uppercase;
-                      "
-                    >
-                      Document Request
-                    </p>
+          <p
+            style="
+              margin:0 0 24px;
+              font-size:18px;
+              font-weight:bold;
+            "
+          >
+            ${service.title}
+          </p>
 
-                    <h2
-                      style="
-                        margin:0;
-                        color:#17365D;
-                        font-size:25px;
-                        line-height:1.3;
-                        font-weight:700;
-                      "
-                    >
-                      Hello ${profile.first_name ?? 'Client'},
-                    </h2>
+          <p
+            style="
+              margin:0 0 12px;
+              font-size:13px;
+              color:#64748b;
+            "
+          >
+            DOCUMENTS REQUIRED
+          </p>
 
-                    <p
-                      style="
-                        margin:18px 0 0;
-                        color:#475569;
-                        font-size:15px;
-                        line-height:1.7;
-                      "
-                    >
-                      A document is required from you
-                      to continue processing your
-                      accounting service.
-                    </p>
+          <ul
+            style="
+              margin:0;
+              padding-left:20px;
+              color:#334155;
+              line-height:1.8;
+            "
+          >
 
-                    <!-- DOCUMENT CARD -->
+            ${requestedDocuments
+              .map(
+                (document) =>
+                  `<li>${document}</li>`
+              )
+              .join('')}
 
-                    <div
-                      style="
-                        margin:28px 0 20px;
-                        padding:22px;
-                        background:#f8fafc;
-                        border-radius:14px;
-                        border:1px solid #e2e8f0;
-                      "
-                    >
+          </ul>
 
-                      <p
-                        style="
-                          margin:0 0 9px;
-                          color:#64748b;
-                          font-size:11px;
-                          line-height:1.4;
-                          font-weight:700;
-                          letter-spacing:1px;
-                          text-transform:uppercase;
-                        "
-                      >
-                        Document Required
-                      </p>
+        </div>
 
-                      <p
-                        style="
-                          margin:0;
-                          color:#17365D;
-                          font-size:18px;
-                          line-height:1.4;
-                          font-weight:700;
-                        "
-                      >
-                        ${title}
-                      </p>
+        <p
+          style="
+            color:#475569;
+            line-height:1.6;
+          "
+        >
+          Please log into your secure client portal
+          to upload the requested documents.
+        </p>
 
-                      ${
-                        description
-                          ? `
-                            <p
-                              style="
-                                margin:14px 0 0;
-                                color:#475569;
-                                font-size:14px;
-                                line-height:1.7;
-                              "
-                            >
-                              ${description}
-                            </p>
-                          `
-                          : ''
-                      }
+        <!-- BUTTON -->
 
-                    </div>
+        <div
+          style="
+            text-align:center;
+            margin:30px 0;
+          "
+        >
 
-                    <!-- SERVICE -->
+          <a
+            href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${serviceId}"
+            style="
+              display:inline-block;
+              padding:14px 24px;
+              background:#1E88E5;
+              color:#ffffff;
+              text-decoration:none;
+              border-radius:10px;
+              font-weight:bold;
+            "
+          >
+            Upload Documents
+          </a>
 
-                    <div
-                      style="
-                        margin:20px 0;
-                        padding:16px 18px;
-                        background:#eef6ff;
-                        border-left:4px solid #1E88E5;
-                        border-radius:8px;
-                      "
-                    >
+        </div>
 
-                      <p
-                        style="
-                          margin:0;
-                          color:#475569;
-                          font-size:14px;
-                          line-height:1.6;
-                        "
-                      >
-                        <strong
-                          style="
-                            color:#17365D;
-                          "
-                        >
-                          Service:
-                        </strong>
+        <!-- FOOTER -->
 
-                        ${service.title}
+        <p
+          style="
+            margin-top:30px;
+            color:#64748b;
+            font-size:14px;
+            line-height:1.6;
+          "
+        >
+          Kind regards,<br />
+          <strong>
+            POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+          </strong>
+        </p>
 
-                      </p>
+      </div>
 
-                    </div>
+    </div>
 
-                    <p
-                      style="
-                        margin:24px 0 0;
-                        color:#475569;
-                        font-size:15px;
-                        line-height:1.7;
-                      "
-                    >
-                      Please sign in to your secure
-                      client portal to upload the
-                      requested document.
-                    </p>
+  </body>
 
-                    <!-- BUTTON -->
-
-                    <div
-                      style="
-                        text-align:center;
-                        margin:32px 0;
-                      "
-                    >
-
-                      <a
-                        href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${serviceId}"
-                        style="
-                          display:inline-block;
-                          padding:14px 26px;
-                          background:#1E88E5;
-                          color:#ffffff;
-                          text-decoration:none;
-                          border-radius:10px;
-                          font-size:14px;
-                          font-weight:700;
-                        "
-                      >
-                        Upload Document
-                      </a>
-
-                    </div>
-
-                    <p
-                      style="
-                        margin:30px 0 0;
-                        padding-top:24px;
-                        border-top:1px solid #e2e8f0;
-                        color:#64748b;
-                        font-size:13px;
-                        line-height:1.7;
-                      "
-                    >
-                      Kind regards,<br />
-
-                      <strong
-                        style="
-                          color:#17365D;
-                        "
-                      >
-                        POG ADVISORY
-                      </strong>
-
-                      <br />
-
-                      AND CHARTERED ACCOUNTANTS INC.
-
-                    </p>
-
-                  </div>
-
-                  <!-- FOOTER -->
-
-                  <div
-                    style="
-                      padding:20px 28px;
-                      background:#f8fafc;
-                      border-top:1px solid #e2e8f0;
-                      text-align:center;
-                    "
-                  >
-
-                    <p
-                      style="
-                        margin:0;
-                        color:#94a3b8;
-                        font-size:11px;
-                        line-height:1.6;
-                      "
-                    >
-                      This email was sent from the
-                      POG Advisory secure client portal.
-                    </p>
-
-                    <p
-                      style="
-                        margin:5px 0 0;
-                        color:#94a3b8;
-                        font-size:11px;
-                      "
-                    >
-                      Please do not reply directly
-                      to this automated email.
-                    </p>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </body>
-
-          </html>
+</html>
         `,
       })
 
       console.log(
-        'DOCUMENT REQUEST EMAIL SENT'
+        'DOCUMENT REQUEST EMAIL SENT:',
+        profile.email
       )
 
     } catch (error) {
-      /*
-      Email failure should NOT
-      prevent the document request
-      from being created.
-      */
-
       console.error(
         'DOCUMENT REQUEST EMAIL FAILED:',
         error
       )
     }
+  } else {
+    console.log(
+      'NO CLIENT EMAIL FOUND - EMAIL NOT SENT'
+    )
   }
 
-  /*
-  ==========================================================
-  REFRESH PAGES
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // REFRESH PAGES
+  // ---------------------------------------------------
 
   revalidatePath(
     `/staff/services/${serviceId}`
+  )
+
+  revalidatePath(
+    '/staff/services'
   )
 
   revalidatePath(
@@ -601,6 +540,32 @@ export async function createDocumentRequest(
   )
 
   revalidatePath(
+    '/portal/documents'
+  )
+
+  revalidatePath(
     '/portal/notifications'
   )
+
+  console.log(
+    '========================================'
+  )
+
+  console.log(
+    'DOCUMENT REQUEST COMPLETED'
+  )
+
+  console.log(
+    'DOCUMENT COUNT:',
+    requestedDocuments.length
+  )
+
+  console.log(
+    '========================================'
+  )
+
+  return {
+    success: true,
+    count: requestedDocuments.length,
+  }
 }
