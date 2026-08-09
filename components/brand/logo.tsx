@@ -11,22 +11,41 @@ export function Logo({
   variant = 'default',
   showText = true,
 }: LogoProps) {
-  const textColor = variant === 'light' ? 'text-white' : 'text-primary'
+  const textColor =
+    variant === 'light' ? 'text-white' : 'text-primary'
+
   const subColor =
-    variant === 'light' ? 'text-white/60' : 'text-muted-foreground'
+    variant === 'light'
+      ? 'text-white/60'
+      : 'text-muted-foreground'
 
   return (
     <div className={cn('flex items-center gap-3', className)}>
+      {/* Logo Mark */}
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-        <span className="font-serif text-lg font-bold tracking-tight">P</span>
+        <span className="font-serif text-lg font-bold tracking-tight">
+          P
+        </span>
       </div>
+
       {showText && (
-        <div className="flex flex-col leading-none">
-          <span className={cn('font-serif text-base font-bold', textColor)}>
-            Pogidja
+        <div className="flex min-w-0 flex-col leading-none">
+          <span
+            className={cn(
+              'font-serif text-sm font-bold leading-tight tracking-tight',
+              textColor
+            )}
+          >
+            POG ADVISORY
           </span>
-          <span className={cn('text-[11px] font-medium tracking-wide', subColor)}>
-            Tax Practice
+
+          <span
+            className={cn(
+              'mt-1 text-[9px] font-medium uppercase leading-tight tracking-wide',
+              subColor
+            )}
+          >
+            AND CHARTERED ACCOUNTANTS INC.
           </span>
         </div>
       )}
