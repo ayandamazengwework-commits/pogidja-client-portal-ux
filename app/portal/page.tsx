@@ -7,12 +7,14 @@ import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 
 import Link from 'next/link'
+
 import {
   Clock3,
   FileText,
   MessageSquare,
   Receipt,
   Upload,
+  ArrowRight,
 } from 'lucide-react'
 
 export default async function PortalPage() {
@@ -53,9 +55,11 @@ export default async function PortalPage() {
   return (
     <div className="space-y-8">
 
-      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white">
+      {/* HERO */}
 
-        <p className="text-sm uppercase tracking-[0.35em] text-blue-200">
+      <section className="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-[#17365D] p-8 text-white shadow-xl">
+
+        <p className="text-sm font-semibold uppercase tracking-[0.35em] text-[#D9B95B]">
           CLIENT PORTAL
         </p>
 
@@ -64,180 +68,292 @@ export default async function PortalPage() {
         </h1>
 
         <p className="mt-3 max-w-2xl text-slate-300">
-          Your accountant manages your application.
-          You can view progress, upload requested
-          documents and communicate through the portal.
+          POG ADVISORY AND CHARTERED ACCOUNTANTS INC. manages your
+          accounting services. You can track progress, upload
+          requested documents and communicate with your advisor
+          through the portal.
         </p>
 
       </section>
 
+      {/* QUICK STATS */}
+
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
 
-        <Card>
+        {/* ACTIVE SERVICES */}
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+
           <CardContent className="p-6">
 
-            <Clock3 className="mb-4 h-8 w-8 text-[#1E88E5]" />
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
 
-            <p className="text-sm text-slate-500">
+              <Clock3 className="h-6 w-6 text-primary" />
+
+            </div>
+
+            <p className="text-sm text-muted-foreground">
               Active Services
             </p>
 
-            <h2 className="text-3xl font-bold">
+            <h2 className="mt-1 text-3xl font-bold">
               {services?.length ?? 0}
             </h2>
 
           </CardContent>
+
         </Card>
 
-        <Card>
+        {/* DOCUMENTS */}
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+
           <CardContent className="p-6">
 
-            <Upload className="mb-4 h-8 w-8 text-[#1E88E5]" />
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
 
-            <p className="text-sm text-slate-500">
+              <Upload className="h-6 w-6 text-primary" />
+
+            </div>
+
+            <p className="text-sm text-muted-foreground">
               Upload Documents
             </p>
 
             <Link href="/portal/documents">
 
               <Button className="mt-4 w-full">
-
-                Open
-
+                Open Documents
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
 
             </Link>
 
           </CardContent>
+
         </Card>
 
-        <Card>
+        {/* MESSAGES */}
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+
           <CardContent className="p-6">
 
-            <MessageSquare className="mb-4 h-8 w-8 text-[#1E88E5]" />
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
 
-            <p className="text-sm text-slate-500">
+              <MessageSquare className="h-6 w-6 text-primary" />
+
+            </div>
+
+            <p className="text-sm text-muted-foreground">
               Messages
             </p>
 
             <Link href="/portal/messages">
 
               <Button className="mt-4 w-full">
-
-                View
-
+                View Messages
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
 
             </Link>
 
           </CardContent>
+
         </Card>
 
-        <Card>
+        {/* INVOICES */}
+
+        <Card className="rounded-3xl border-0 shadow-sm">
+
           <CardContent className="p-6">
 
-            <Receipt className="mb-4 h-8 w-8 text-[#1E88E5]" />
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
 
-            <p className="text-sm text-slate-500">
+              <Receipt className="h-6 w-6 text-primary" />
+
+            </div>
+
+            <p className="text-sm text-muted-foreground">
               Invoices
             </p>
 
             <Link href="/portal/invoices">
 
               <Button className="mt-4 w-full">
-
-                View
-
+                View Invoices
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
 
             </Link>
 
           </CardContent>
+
         </Card>
 
       </div>
 
-      <div className="space-y-6">
+      {/* SERVICES */}
 
-        {services?.map((service) => (
+      <section className="space-y-5">
 
-          <Card
-            key={service.id}
-            className="rounded-3xl"
-          >
+        <div>
 
-            <CardContent className="space-y-5 p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-primary">
+            Your Services
+          </p>
 
-              <div className="flex items-center justify-between">
+          <h2 className="mt-1 text-2xl font-bold">
+            Current Services
+          </h2>
 
-                <div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Track the progress of your accounting services.
+          </p>
 
-                  <h2 className="text-2xl font-bold">
-                    {service.title}
-                  </h2>
+        </div>
 
-                  <p className="text-slate-500">
-                    {service.service_type}
-                  </p>
+        {services && services.length > 0 ? (
+
+          services.map((service) => (
+
+            <Card
+              key={service.id}
+              className="rounded-3xl border-0 shadow-sm"
+            >
+
+              <CardContent className="space-y-6 p-8">
+
+                {/* SERVICE HEADER */}
+
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                  <div>
+
+                    <h2 className="text-2xl font-bold">
+                      {service.title}
+                    </h2>
+
+                    <p className="mt-1 text-muted-foreground">
+                      {service.service_type}
+                    </p>
+
+                  </div>
+
+                  <div className="w-fit rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+                    {service.status}
+                  </div>
 
                 </div>
 
-                <div className="rounded-full bg-blue-100 px-4 py-2 font-semibold text-blue-700">
+                {/* PROGRESS */}
 
-                  {service.status}
+                <div className="space-y-3">
+
+                  <div className="flex items-center justify-between text-sm">
+
+                    <span className="font-medium">
+                      Service Progress
+                    </span>
+
+                    <span className="font-semibold text-primary">
+                      {service.progress ?? 0}%
+                    </span>
+
+                  </div>
+
+                  <Progress
+                    value={service.progress ?? 0}
+                    className="h-3"
+                  />
 
                 </div>
 
+                {/* SERVICE META */}
+
+                <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+
+                  <span>
+                    {service.progress ?? 0}% Complete
+                  </span>
+
+                  <span>
+                    Due:{' '}
+                    {service.due_date
+                      ? new Date(
+                          service.due_date
+                        ).toLocaleDateString()
+                      : 'Not Set'}
+                  </span>
+
+                </div>
+
+                {/* ACTION */}
+
+                <div className="flex justify-end border-t pt-5">
+
+                  <Link
+                    href={`/portal/cases/${service.id}`}
+                  >
+
+                    <Button>
+
+                      <FileText className="mr-2 h-4 w-4" />
+
+                      View Service
+
+                      <ArrowRight className="ml-2 h-4 w-4" />
+
+                    </Button>
+
+                  </Link>
+
+                </div>
+
+              </CardContent>
+
+            </Card>
+
+          ))
+
+        ) : (
+
+          <Card className="rounded-3xl border-0 shadow-sm">
+
+            <CardContent className="p-12 text-center">
+
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+
+                <FileText className="h-8 w-8 text-primary" />
+
               </div>
 
-              <Progress value={service.progress} />
+              <h3 className="mt-5 text-xl font-bold">
+                No Services Yet
+              </h3>
 
-              <div className="flex justify-between text-sm">
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                You currently don't have any active services.
+                When POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+                creates a service for you, it will appear here.
+              </p>
 
-                <span>
+              <Link href="/portal/request-service">
 
-                  {service.progress}% Complete
+                <Button className="mt-6">
+                  Request a Service
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
 
-                </span>
-
-                <span>
-
-                  Due:{' '}
-                  {service.due_date
-                    ? new Date(
-                        service.due_date
-                      ).toLocaleDateString()
-                    : 'Not Set'}
-
-                </span>
-
-              </div>
-
-              <div className="flex gap-3">
-
-                <Link
-                  href={`/portal/cases/${service.id}`}
-                >
-
-                  <Button>
-
-                    <FileText className="mr-2 h-4 w-4" />
-
-                    Open
-
-                  </Button>
-
-                </Link>
-
-              </div>
+              </Link>
 
             </CardContent>
 
           </Card>
 
-        ))}
+        )}
 
-      </div>
+      </section>
 
     </div>
   )
