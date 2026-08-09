@@ -11,8 +11,9 @@ export async function sendClientWelcomeEmail({
 }) {
   return sendEmail({
     to: email,
+
     subject:
-      'Welcome to the POG Advisory & Chartered Accountants Inc. Client Portal',
+      'Welcome to POG ADVISORY & CHARTERED ACCOUNTANTS INC. Client Portal',
 
     html: `
       <!DOCTYPE html>
@@ -64,9 +65,20 @@ export async function sendClientWelcomeEmail({
                   margin:8px 0 0;
                   color:#cbd5e1;
                   font-size:13px;
+                  font-weight:600;
                 "
               >
                 AND CHARTERED ACCOUNTANTS INC.
+              </p>
+
+              <p
+                style="
+                  margin:12px 0 0;
+                  color:#cbd5e1;
+                  font-size:13px;
+                "
+              >
+                Secure Client Portal
               </p>
 
             </div>
@@ -238,7 +250,7 @@ export async function sendClientWelcomeEmail({
 
               </div>
 
-              <!-- FOOTER -->
+              <!-- SIGN OFF -->
 
               <p
                 style="
@@ -249,8 +261,8 @@ export async function sendClientWelcomeEmail({
                 "
               >
                 Kind regards,<br />
-                <strong>
-                  POG Advisory & Chartered Accountants Inc.
+                <strong style="color:#0f2747;">
+                  POG ADVISORY &amp; CHARTERED ACCOUNTANTS INC.
                 </strong>
               </p>
 
@@ -275,7 +287,8 @@ export async function sendClientWelcomeEmail({
                   line-height:1.5;
                 "
               >
-                This email was sent by POG Advisory & Chartered Accountants Inc.
+                This email was sent by
+                POG ADVISORY &amp; CHARTERED ACCOUNTANTS INC.
                 <br />
                 Please do not reply to this automated email.
               </p>
