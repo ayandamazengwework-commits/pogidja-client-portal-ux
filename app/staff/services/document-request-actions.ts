@@ -5,9 +5,17 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/send-email'
 
-export async function createDocumentRequest(
-  formData: FormData
-) {
+interface RequestDocumentsInput {
+  serviceId: string
+  clientId: string
+  documents: string
+}
+
+export async function requestDocuments({
+  serviceId,
+  clientId,
+  documents,
+}: RequestDocumentsInput) {
   const supabase = await createClient()
 
   const {
@@ -15,42 +23,44 @@ export async function createDocumentRequest(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    throw new Error('Unauthorized')
+    throw new Error('Not authenticated')
   }
 
-  const serviceId = String(
-    formData.get('service_id') ?? ''
-  )
-
-  const clientId = String(
-    formData.get('client_id') ?? ''
-  )
-
-  const title = String(
-    formData.get('title') ?? ''
-  )
-
-  const description = String(
-    formData.get('description') ?? ''
-  )
-
   if (!serviceId) {
-    throw new Error('Service is required')
+    throw new Error('Service ID is required')
   }
 
   if (!clientId) {
-    throw new Error('Client is required')
+    throw new Error('Client ID is required')
   }
 
-  if (!title) {
-    throw new Error('Document title is required')
+  if (!documents.trim()) {
+    throw new Error('Please enter the documents required')
   }
 
-  /*
-  ==========================================================
-  GET SERVICE + CLIENT INFORMATION
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // GET CLIENT
+  // ---------------------------------------------------
+
+  const {
+    data: client,
+    error: clientError,
+  } = await supabase
+    .from('clients')
+    .select(`
+      id,
+      profile_id
+    `)
+    .eq('id', clientId)
+    .single()
+
+  if (clientError || !client) {
+    throw new Error('Client not found')
+  }
+
+  // ---------------------------------------------------
+  // GET SERVICE
+  // ---------------------------------------------------
 
   const {
     data: service,
@@ -60,10 +70,7 @@ export async function createDocumentRequest(
     .select(`
       id,
       title,
-      client:clients(
-        id,
-        profile_id
-      )
+      client_id
     `)
     .eq('id', serviceId)
     .single()
@@ -72,112 +79,26 @@ export async function createDocumentRequest(
     throw new Error('Service not found')
   }
 
-  const clientProfileId =
-    service.client?.profile_id
-
-  if (!clientProfileId) {
+  if (service.client_id !== clientId) {
     throw new Error(
-      'Client profile not found'
+      'This service does not belong to the selected client'
     )
   }
 
-  /*
-  ==========================================================
-  CREATE DOCUMENT REQUEST
-  ==========================================================
-  */
-
-  const {
-    data: documentRequest,
-    error: documentError,
-  } = await supabase
-    .from('document_requests')
-    .insert({
-      service_id: serviceId,
-      client_id: clientId,
-      title,
-      description,
-      created_by: user.id,
-    })
-    .select()
-    .single()
-
-  if (documentError) {
-    throw new Error(
-      documentError.message
-    )
-  }
-
-  /*
-  ==========================================================
-  ACTIVITY LOG
-  ==========================================================
-  */
-
-  await supabase
-    .from('activity_logs')
-    .insert({
-      user_id: user.id,
-      client_id: clientId,
-      role: 'staff',
-      action: 'Requested Document',
-      description:
-        `${title} requested for ${service.title}`,
-      entity_type: 'service',
-      entity_id: serviceId,
-    })
-
-  /*
-  ==========================================================
-  CLIENT NOTIFICATION
-  ==========================================================
-  */
-
-  const {
-    error: notificationError,
-  } = await supabase
-    .from('notifications')
-    .insert({
-      user_id: clientProfileId,
-
-      title: 'New Document Required',
-
-      message:
-        `${title} is required for your ${service.title} service.`,
-
-      type: 'document',
-
-      link:
-        `/portal/cases/${serviceId}`,
-
-      read: false,
-    })
-
-  if (notificationError) {
-    console.error(
-      'DOCUMENT NOTIFICATION FAILED:',
-      notificationError
-    )
-  }
-
-  /*
-  ==========================================================
-  GET CLIENT EMAIL
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // GET CLIENT PROFILE
+  // ---------------------------------------------------
 
   const {
     data: profile,
     error: profileError,
   } = await supabase
     .from('profiles')
-    .select(
-      'email, first_name'
-    )
-    .eq(
-      'id',
-      clientProfileId
-    )
+    .select(`
+      email,
+      first_name
+    `)
+    .eq('id', client.profile_id)
     .single()
 
   if (profileError) {
@@ -187,11 +108,127 @@ export async function createDocumentRequest(
     )
   }
 
-  /*
-  ==========================================================
-  EMAIL CLIENT
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // SPLIT DOCUMENTS
+  // ---------------------------------------------------
+
+  const requestedDocuments = documents
+    .split('\n')
+    .map((document) => document.trim())
+    .filter(Boolean)
+
+  if (requestedDocuments.length === 0) {
+    throw new Error(
+      'Please enter at least one document'
+    )
+  }
+
+  // ---------------------------------------------------
+  // CREATE DOCUMENT REQUESTS
+  // ---------------------------------------------------
+
+  const documentRows = requestedDocuments.map(
+    (document) => ({
+      service_id: serviceId,
+      client_id: clientId,
+      title: document,
+      description:
+        `Document requested for ${service.title}`,
+      required: true,
+      uploaded: false,
+      uploaded_at: null,
+      uploaded_document: null,
+      created_by: user.id,
+    })
+  )
+
+  const {
+    data: createdDocuments,
+    error: documentError,
+  } = await supabase
+    .from('document_requests')
+    .insert(documentRows)
+    .select()
+
+  if (documentError) {
+    throw new Error(documentError.message)
+  }
+
+  console.log(
+    'DOCUMENT REQUESTS CREATED:',
+    createdDocuments?.length ?? 0
+  )
+
+  // ---------------------------------------------------
+  // PORTAL NOTIFICATION
+  // ---------------------------------------------------
+
+  const { error: notificationError } =
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: client.profile_id,
+
+        title: 'Documents Requested',
+
+        message:
+          `Your advisor has requested ${
+            requestedDocuments.length
+          } document${
+            requestedDocuments.length === 1
+              ? ''
+              : 's'
+          } for ${service.title}.`,
+
+        type: 'documents',
+
+        link:
+          `/portal/cases/${serviceId}`,
+
+        read: false,
+      })
+
+  if (notificationError) {
+    console.error(
+      'DOCUMENT REQUEST NOTIFICATION FAILED:',
+      notificationError
+    )
+  }
+
+  // ---------------------------------------------------
+  // ACTIVITY LOG
+  // ---------------------------------------------------
+
+  const { error: activityError } =
+    await supabase
+      .from('activity_logs')
+      .insert({
+        user_id: user.id,
+
+        role: 'staff',
+
+        client_id: clientId,
+
+        action: 'Requested Documents',
+
+        description:
+          requestedDocuments.join(', '),
+
+        entity_type: 'service',
+
+        entity_id: serviceId,
+      })
+
+  if (activityError) {
+    console.error(
+      'DOCUMENT REQUEST ACTIVITY LOG FAILED:',
+      activityError
+    )
+  }
+
+  // ---------------------------------------------------
+  // EMAIL CLIENT
+  // ---------------------------------------------------
 
   if (profile?.email) {
     try {
@@ -199,12 +236,11 @@ export async function createDocumentRequest(
         to: profile.email,
 
         subject:
-          `Document Required - ${service.title}`,
+          `Documents Required - ${service.title}`,
 
         html: `
 <!DOCTYPE html>
 <html>
-
   <body
     style="
       margin:0;
@@ -244,7 +280,8 @@ export async function createDocumentRequest(
             line-height:1.3;
           "
         >
-          POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+          POG ADVISORY AND
+          CHARTERED ACCOUNTANTS INC.
         </h1>
 
         <p
@@ -282,11 +319,12 @@ export async function createDocumentRequest(
             line-height:1.6;
           "
         >
-          A new document has been requested
-          for your accounting service.
+          Your advisor has requested
+          additional documents for your
+          accounting service.
         </p>
 
-        <!-- DOCUMENT -->
+        <!-- SERVICE -->
 
         <div
           style="
@@ -307,7 +345,7 @@ export async function createDocumentRequest(
               text-transform:uppercase;
             "
           >
-            Document Required
+            Service
           </p>
 
           <p
@@ -317,50 +355,52 @@ export async function createDocumentRequest(
               font-weight:bold;
             "
           >
-            ${title}
+            ${service.title}
           </p>
-
-          ${
-            description
-              ? `
-                <p
-                  style="
-                    margin:14px 0 0;
-                    color:#475569;
-                    line-height:1.6;
-                  "
-                >
-                  ${description}
-                </p>
-              `
-              : ''
-          }
 
         </div>
 
-        <!-- SERVICE -->
+        <!-- DOCUMENTS -->
 
         <div
           style="
-            margin:20px 0;
-            padding:16px;
-            background:#eff6ff;
-            border-radius:10px;
+            margin:24px 0;
+            padding:20px;
+            background:#f8fafc;
+            border-radius:12px;
+            border:1px solid #e2e8f0;
           "
         >
 
           <p
             style="
-              margin:0;
-              color:#475569;
-              font-size:14px;
+              margin:0 0 12px;
+              color:#64748b;
+              font-size:12px;
+              font-weight:bold;
+              text-transform:uppercase;
             "
           >
-            Service:
-            <strong>
-              ${service.title}
-            </strong>
+            Documents Required
           </p>
+
+          <ul
+            style="
+              margin:0;
+              padding-left:20px;
+              color:#334155;
+              line-height:1.8;
+            "
+          >
+
+            ${requestedDocuments
+              .map(
+                (document) =>
+                  `<li>${document}</li>`
+              )
+              .join('')}
+
+          </ul>
 
         </div>
 
@@ -370,8 +410,9 @@ export async function createDocumentRequest(
             line-height:1.6;
           "
         >
-          Please log into your secure client portal
-          to upload the requested document.
+          Please log into your secure client
+          portal to upload the requested
+          documents.
         </p>
 
         <!-- BUTTON -->
@@ -384,7 +425,9 @@ export async function createDocumentRequest(
         >
 
           <a
-            href="${process.env.NEXT_PUBLIC_SITE_URL}/portal/cases/${serviceId}"
+            href="${
+              process.env.NEXT_PUBLIC_SITE_URL
+            }/portal/cases/${serviceId}"
             style="
               display:inline-block;
               padding:14px 24px;
@@ -395,7 +438,7 @@ export async function createDocumentRequest(
               font-weight:bold;
             "
           >
-            Upload Document
+            Upload Documents
           </a>
 
         </div>
@@ -409,8 +452,10 @@ export async function createDocumentRequest(
           "
         >
           Kind regards,<br />
+
           <strong>
-            POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+            POG ADVISORY AND
+            CHARTERED ACCOUNTANTS INC.
           </strong>
         </p>
 
@@ -419,21 +464,15 @@ export async function createDocumentRequest(
     </div>
 
   </body>
-
 </html>
         `,
       })
 
       console.log(
-        'DOCUMENT REQUEST EMAIL SENT'
+        'DOCUMENT REQUEST EMAIL SENT:',
+        profile.email
       )
     } catch (error) {
-      /*
-      Email failure should NOT
-      prevent the document request
-      from being created.
-      */
-
       console.error(
         'DOCUMENT REQUEST EMAIL FAILED:',
         error
@@ -441,25 +480,30 @@ export async function createDocumentRequest(
     }
   }
 
-  /*
-  ==========================================================
-  REFRESH PAGES
-  ==========================================================
-  */
+  // ---------------------------------------------------
+  // REFRESH PAGES
+  // ---------------------------------------------------
 
   revalidatePath(
     `/staff/services/${serviceId}`
   )
 
   revalidatePath(
+    '/staff/services'
+  )
+
+  revalidatePath(
     `/portal/cases/${serviceId}`
   )
 
-  revalidatePath(
-    '/portal'
-  )
+  revalidatePath('/portal')
 
-  revalidatePath(
-    '/portal/notifications'
-  )
+  revalidatePath('/portal/documents')
+
+  revalidatePath('/portal/notifications')
+
+  return {
+    success: true,
+    count: requestedDocuments.length,
+  }
 }
