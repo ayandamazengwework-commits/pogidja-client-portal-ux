@@ -16,33 +16,23 @@ export async function requestDocuments({
   clientId,
   documents,
 }: RequestDocumentsInput) {
+  const supabase = await createClient()
+
   console.log('========================================')
   console.log('DOCUMENT REQUEST STARTED')
   console.log('SERVICE ID:', serviceId)
   console.log('CLIENT ID:', clientId)
   console.log('========================================')
 
-  const supabase = await createClient()
-
-  // ---------------------------------------------------
-  // AUTH
-  // ---------------------------------------------------
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log('STAFF USER:', user?.id ?? null)
+  console.log('STAFF USER:', user?.id)
 
   if (!user) {
     throw new Error('Not authenticated')
   }
-
-  // ---------------------------------------------------
-  // VALIDATION
-  // ---------------------------------------------------
-
-  const cleanedDocuments = documents.trim()
 
   if (!serviceId) {
     throw new Error('Service ID is required')
@@ -52,12 +42,12 @@ export async function requestDocuments({
     throw new Error('Client ID is required')
   }
 
-  if (!cleanedDocuments) {
+  if (!documents.trim()) {
     throw new Error('Please enter the documents required')
   }
 
   // ---------------------------------------------------
-  // GET CLIENT
+  // CLIENT
   // ---------------------------------------------------
 
   const {
@@ -65,7 +55,10 @@ export async function requestDocuments({
     error: clientError,
   } = await supabase
     .from('clients')
-    .select('id, profile_id')
+    .select(`
+      id,
+      profile_id
+    `)
     .eq('id', clientId)
     .single()
 
@@ -76,12 +69,8 @@ export async function requestDocuments({
     throw new Error('Client not found')
   }
 
-  if (!client.profile_id) {
-    throw new Error('Client profile not found')
-  }
-
   // ---------------------------------------------------
-  // GET SERVICE
+  // SERVICE
   // ---------------------------------------------------
 
   const {
@@ -89,7 +78,11 @@ export async function requestDocuments({
     error: serviceError,
   } = await supabase
     .from('services')
-    .select('id, title, client_id')
+    .select(`
+      id,
+      title,
+      client_id
+    `)
     .eq('id', serviceId)
     .single()
 
@@ -100,18 +93,14 @@ export async function requestDocuments({
     throw new Error('Service not found')
   }
 
-  // ---------------------------------------------------
-  // VERIFY CLIENT BELONGS TO SERVICE
-  // ---------------------------------------------------
-
   if (service.client_id !== clientId) {
     throw new Error(
-      'Client does not belong to this service'
+      'This service does not belong to the selected client'
     )
   }
 
   // ---------------------------------------------------
-  // GET CLIENT PROFILE
+  // CLIENT PROFILE
   // ---------------------------------------------------
 
   const {
@@ -119,43 +108,76 @@ export async function requestDocuments({
     error: profileError,
   } = await supabase
     .from('profiles')
-    .select('email, first_name')
+    .select(`
+      email,
+      first_name
+    `)
     .eq('id', client.profile_id)
     .single()
 
   console.log('CLIENT PROFILE:', profile)
   console.log('CLIENT PROFILE ERROR:', profileError)
 
-  if (profileError) {
-    console.error(
-      'CLIENT PROFILE FETCH FAILED:',
-      profileError
+  // ---------------------------------------------------
+  // CREATE DOCUMENT REQUESTS
+  // ---------------------------------------------------
+  //
+  // The database stores each requested document as its
+  // own row using:
+  //
+  // title
+  // description
+  // required
+  // uploaded
+  // created_by
+  //
+  // The textarea can contain multiple documents, one
+  // per line. We create one request per line.
+  // ---------------------------------------------------
+
+  const requestedDocuments = documents
+    .split('\n')
+    .map((document) => document.trim())
+    .filter(Boolean)
+
+  if (requestedDocuments.length === 0) {
+    throw new Error(
+      'Please enter at least one document'
     )
   }
 
-  // ---------------------------------------------------
-  // SAVE DOCUMENT REQUEST
-  // ---------------------------------------------------
+  console.log(
+    'DOCUMENTS TO CREATE:',
+    requestedDocuments
+  )
 
-  console.log('CREATING DOCUMENT REQUEST...')
+  const documentRows = requestedDocuments.map(
+    (document) => ({
+      service_id: serviceId,
+      client_id: clientId,
+      title: document,
+      description: `Document requested for ${service.title}`,
+      required: true,
+      uploaded: false,
+      uploaded_at: null,
+      uploaded_document: null,
+      created_by: user.id,
+    })
+  )
+
+  console.log('CREATING DOCUMENT REQUESTS...')
 
   const {
-    data: documentRequest,
+    data: createdDocuments,
     error: documentError,
   } = await supabase
     .from('document_requests')
-    .insert({
-      service_id: serviceId,
-      client_id: clientId,
-      requested_documents: cleanedDocuments,
-      status: 'Pending',
-    })
+    .insert(documentRows)
     .select()
-    .single()
 
   console.log(
-    'DOCUMENT REQUEST:',
-    documentRequest
+    'CREATED DOCUMENT REQUESTS:',
+    createdDocuments
   )
 
   console.log(
@@ -171,9 +193,7 @@ export async function requestDocuments({
   // PORTAL NOTIFICATION
   // ---------------------------------------------------
 
-  console.log(
-    'CREATING CLIENT PORTAL NOTIFICATION...'
-  )
+  console.log('CREATING PORTAL NOTIFICATION...')
 
   const {
     error: notificationError,
@@ -185,7 +205,9 @@ export async function requestDocuments({
       title: 'Documents Requested',
 
       message:
-        `Your advisor has requested additional documents for ${service.title}.`,
+        `Your advisor has requested ${requestedDocuments.length} document${
+          requestedDocuments.length === 1 ? '' : 's'
+        } for ${service.title}.`,
 
       type: 'documents',
 
@@ -195,28 +217,27 @@ export async function requestDocuments({
       read: false,
     })
 
+  console.log(
+    'NOTIFICATION ERROR:',
+    notificationError
+  )
+
+  /*
+   * Notification failure should not undo the
+   * document request.
+   */
   if (notificationError) {
     console.error(
       'DOCUMENT REQUEST NOTIFICATION FAILED:',
       notificationError
-    )
-
-    /*
-    We do NOT throw here.
-
-    The document request has already been created.
-    A notification failure should not make staff
-    think the document request failed.
-    */
-  } else {
-    console.log(
-      'CLIENT PORTAL NOTIFICATION CREATED'
     )
   }
 
   // ---------------------------------------------------
   // ACTIVITY LOG
   // ---------------------------------------------------
+
+  console.log('CREATING ACTIVITY LOG...')
 
   const {
     error: activityError,
@@ -232,21 +253,22 @@ export async function requestDocuments({
       action: 'Requested Documents',
 
       description:
-        `Requested documents for ${service.title}: ${cleanedDocuments}`,
+        requestedDocuments.join(', '),
 
       entity_type: 'service',
 
       entity_id: serviceId,
     })
 
+  console.log(
+    'ACTIVITY LOG ERROR:',
+    activityError
+  )
+
   if (activityError) {
     console.error(
       'DOCUMENT REQUEST ACTIVITY LOG FAILED:',
       activityError
-    )
-  } else {
-    console.log(
-      'DOCUMENT REQUEST ACTIVITY LOG CREATED'
     )
   }
 
@@ -291,8 +313,6 @@ export async function requestDocuments({
       "
     >
 
-      <!-- HEADER -->
-
       <div
         style="
           background:#0f2747;
@@ -318,12 +338,10 @@ export async function requestDocuments({
             font-size:14px;
           "
         >
-          Client Portal
+          Document Request
         </p>
 
       </div>
-
-      <!-- CONTENT -->
 
       <div
         style="
@@ -335,7 +353,6 @@ export async function requestDocuments({
           style="
             margin-top:0;
             font-size:22px;
-            color:#0f172a;
           "
         >
           Hello ${profile.first_name ?? 'Client'},
@@ -347,12 +364,9 @@ export async function requestDocuments({
             line-height:1.6;
           "
         >
-          Your POG Advisory advisor requires
-          additional documents to continue processing
-          your service.
+          Your advisor at POG Advisory has requested
+          additional documents for your service.
         </p>
-
-        <!-- SERVICE -->
 
         <div
           style="
@@ -366,11 +380,9 @@ export async function requestDocuments({
 
           <p
             style="
-              margin:0 0 8px;
+              margin:0 0 10px;
               font-size:13px;
               color:#64748b;
-              text-transform:uppercase;
-              letter-spacing:0.05em;
             "
           >
             SERVICE
@@ -378,51 +390,41 @@ export async function requestDocuments({
 
           <p
             style="
-              margin:0;
+              margin:0 0 24px;
               font-size:18px;
               font-weight:bold;
-              color:#0f172a;
             "
           >
             ${service.title}
           </p>
-
-        </div>
-
-        <!-- DOCUMENTS -->
-
-        <div
-          style="
-            margin:24px 0;
-            padding:20px;
-            background:#ffffff;
-            border-radius:12px;
-            border:1px solid #e2e8f0;
-          "
-        >
 
           <p
             style="
               margin:0 0 12px;
               font-size:13px;
               color:#64748b;
-              text-transform:uppercase;
-              letter-spacing:0.05em;
             "
           >
             DOCUMENTS REQUIRED
           </p>
 
-          <div
+          <ul
             style="
+              margin:0;
+              padding-left:20px;
               color:#334155;
-              line-height:1.7;
-              white-space:pre-wrap;
-              font-size:15px;
+              line-height:1.8;
             "
           >
-            ${cleanedDocuments}
-          </div>
+
+            ${requestedDocuments
+              .map(
+                (document) =>
+                  `<li>${document}</li>`
+              )
+              .join('')}
+
+          </ul>
 
         </div>
 
@@ -432,11 +434,9 @@ export async function requestDocuments({
             line-height:1.6;
           "
         >
-          Please log into your POG Advisory Client Portal
-          and upload the requested documents.
+          Please log into your POG Advisory Client
+          Portal to upload the requested documents.
         </p>
-
-        <!-- BUTTON -->
 
         <div
           style="
@@ -461,17 +461,6 @@ export async function requestDocuments({
           </a>
 
         </div>
-
-        <p
-          style="
-            color:#64748b;
-            font-size:14px;
-            line-height:1.6;
-          "
-        >
-          If you have already submitted these documents,
-          you can ignore this email.
-        </p>
 
         <p
           style="
@@ -500,18 +489,13 @@ export async function requestDocuments({
       )
 
     } catch (error) {
-      /*
-      Email failure must NOT undo the
-      document request.
-      */
-
       console.error(
         'DOCUMENT REQUEST EMAIL FAILED:',
         error
       )
     }
   } else {
-    console.warn(
+    console.log(
       'NO CLIENT EMAIL FOUND - EMAIL NOT SENT'
     )
   }
@@ -529,15 +513,11 @@ export async function requestDocuments({
   )
 
   revalidatePath(
-    `/staff/clients/${clientId}`
+    `/portal/cases/${serviceId}`
   )
 
   revalidatePath(
     '/portal'
-  )
-
-  revalidatePath(
-    `/portal/cases/${serviceId}`
   )
 
   revalidatePath(
@@ -550,11 +530,14 @@ export async function requestDocuments({
 
   console.log('========================================')
   console.log('DOCUMENT REQUEST COMPLETED')
-  console.log('REQUEST ID:', documentRequest?.id)
+  console.log(
+    'DOCUMENT COUNT:',
+    requestedDocuments.length
+  )
   console.log('========================================')
 
   return {
     success: true,
-    documentRequestId: documentRequest?.id,
+    count: requestedDocuments.length,
   }
 }
