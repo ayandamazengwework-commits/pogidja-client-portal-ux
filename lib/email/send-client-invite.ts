@@ -15,13 +15,11 @@ export async function sendClientInvite({
     to: email,
 
     subject:
-      'Welcome to the POG ADVISORY Client Portal',
+      'Welcome to the POG ADVISORY AND CHARTERED ACCOUNTANTS INC. Client Portal',
 
     html: `
 <!DOCTYPE html>
-
 <html>
-
   <body
     style="
       margin:0;
@@ -62,7 +60,8 @@ export async function sendClientInvite({
             font-weight:700;
           "
         >
-          POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+          POG ADVISORY AND
+          CHARTERED ACCOUNTANTS INC.
         </h1>
 
         <p
@@ -103,8 +102,8 @@ export async function sendClientInvite({
             line-height:1.7;
           "
         >
-          Your accountant has created your secure
-          client portal account.
+          Your secure client portal account has
+          been created by your accountant.
         </p>
 
         <p
@@ -115,10 +114,11 @@ export async function sendClientInvite({
             line-height:1.7;
           "
         >
-          Your portal gives you one secure place to
-          manage your accounting services, submit
-          documents, communicate with your advisor,
-          view invoices and keep track of your progress.
+          Your client portal gives you one secure
+          place to manage your accounting services,
+          submit documents, communicate with your
+          advisor, view invoices and monitor the
+          progress of your services.
         </p>
 
         <!-- LOGIN DETAILS -->
@@ -274,10 +274,10 @@ export async function sendClientInvite({
             "
           >
             Your personal information can only be
-            updated by your accountant. If any of your
-            details need to be changed, please contact
-            your accountant through the secure client
-            portal.
+            updated by your accountant. If any of
+            your details need to be changed, please
+            contact your accountant through the
+            secure client portal.
           </p>
 
         </div>
@@ -308,8 +308,10 @@ export async function sendClientInvite({
           "
         >
           Kind regards,<br />
+
           <strong style="color:#0f2747;">
-            POG ADVISORY AND CHARTERED ACCOUNTANTS INC.
+            POG ADVISORY AND
+            CHARTERED ACCOUNTANTS INC.
           </strong>
         </p>
 
@@ -343,7 +345,6 @@ export async function sendClientInvite({
     </div>
 
   </body>
-
 </html>
     `,
   })
