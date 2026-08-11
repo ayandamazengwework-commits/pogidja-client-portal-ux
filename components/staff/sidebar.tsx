@@ -117,10 +117,6 @@ export function StaffSidebar({
           className="h-auto w-full max-w-[190px] object-contain"
         />
 
-        <p className="mt-2 text-sm text-slate-500">
-          Staff Workspace
-        </p>
-
       </div>
 
       {/* ====================================================== */}
