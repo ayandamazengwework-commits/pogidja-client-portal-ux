@@ -74,12 +74,12 @@ export default async function StaffLayout({
       <StaffSidebar profile={profile} />
 
       {/* Main Application Area */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
 
-        {/* Top Navigation */}
+        {/* Topbar */}
         <StaffTopbar profile={profile} />
 
-        {/* Page Content */}
+        {/* Main Content */}
         <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {children}
         </main>
