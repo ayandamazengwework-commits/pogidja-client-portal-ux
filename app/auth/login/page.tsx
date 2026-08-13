@@ -5,7 +5,9 @@ import {
 } from 'react'
 
 import Image from 'next/image'
+
 import Link from 'next/link'
+
 import {
   useRouter,
 } from 'next/navigation'
@@ -14,12 +16,12 @@ import {
   Loader2,
   KeyRound,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react'
 
 import {
   sendClientOTP,
 } from '@/app/auth/actions'
-
 
 import {
   Alert,
@@ -84,6 +86,7 @@ export default function LoginPage() {
     ) {
 
       setLoading(false)
+
       setError(
         result.error
       )
@@ -105,21 +108,52 @@ export default function LoginPage() {
   }
 
 
+
   return (
+
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-6 py-10">
 
 
+      {/* BACKGROUND EFFECTS */}
+
       <div className="absolute inset-0 overflow-hidden">
 
-        <div className="absolute -left-40 -top-40 h-[420px] w-[420px] rounded-full bg-blue-200/40 blur-[140px]" />
+        <div
+          className="
+            absolute
+            -left-40
+            -top-40
+            h-[420px]
+            w-[420px]
+            rounded-full
+            bg-blue-200/40
+            blur-[140px]
+          "
+        />
 
-        <div className="absolute -bottom-40 -right-40 h-[420px] w-[420px] rounded-full bg-blue-400/20 blur-[160px]" />
+        <div
+          className="
+            absolute
+            -bottom-40
+            -right-40
+            h-[420px]
+            w-[420px]
+            rounded-full
+            bg-blue-400/20
+            blur-[160px]
+          "
+        />
 
       </div>
 
 
+
+      {/* MAIN CONTENT */}
+
       <div className="relative z-10 w-full max-w-5xl">
 
+
+        {/* LOGO + HEADING */}
 
         <div className="mb-5 flex flex-col items-center">
 
@@ -134,12 +168,28 @@ export default function LoginPage() {
           />
 
 
-          <h1 className="mt-2 text-center text-3xl font-bold text-slate-900 sm:text-4xl">
+          <h1
+            className="
+              mt-2
+              text-center
+              text-3xl
+              font-bold
+              text-slate-900
+              sm:text-4xl
+            "
+          >
             Client Portal
           </h1>
 
 
-          <p className="mt-2 max-w-xl text-center text-slate-600">
+          <p
+            className="
+              mt-2
+              max-w-xl
+              text-center
+              text-slate-600
+            "
+          >
             Secure access to your accounting services,
             tax documents, compliance requests and
             client communication.
@@ -149,12 +199,35 @@ export default function LoginPage() {
         </div>
 
 
-        <div className="mx-auto w-full max-w-2xl rounded-3xl border border-white/60 bg-white/90 p-6 shadow-[0_30px_80px_rgba(30,136,229,0.18)] backdrop-blur-xl sm:p-8">
-                    {error && (
+
+        {/* LOGIN CARD */}
+
+        <div
+          className="
+            mx-auto
+            w-full
+            max-w-2xl
+            rounded-3xl
+            border
+            border-white/60
+            bg-white/90
+            p-6
+            shadow-[0_30px_80px_rgba(30,136,229,0.18)]
+            backdrop-blur-xl
+            sm:p-8
+          "
+        >
+
+
+          {/* ERROR */}
+
+          {error && (
+
             <Alert
               variant="destructive"
               className="mb-5"
             >
+
               <AlertCircle className="h-4 w-4" />
 
               <AlertDescription>
@@ -162,15 +235,20 @@ export default function LoginPage() {
               </AlertDescription>
 
             </Alert>
+
           )}
 
 
+
+          {/* LOGIN FORM */}
 
           <form
             onSubmit={continueLogin}
             className="space-y-5"
           >
 
+
+            {/* CLIENT REFERENCE */}
 
             <div>
 
@@ -183,14 +261,27 @@ export default function LoginPage() {
 
 
                 <KeyRound
-                  className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    h-5
+                    w-5
+                    -translate-y-1/2
+                    text-slate-400
+                  "
                 />
 
 
                 <Input
                   id="reference"
                   placeholder="POG-XXXX-XXXX"
-                  className="h-14 rounded-xl pl-12 uppercase"
+                  className="
+                    h-14
+                    rounded-xl
+                    pl-12
+                    uppercase
+                  "
                   value={reference}
                   onChange={(e) =>
                     setReference(
@@ -204,8 +295,15 @@ export default function LoginPage() {
               </div>
 
 
-              <p className="mt-3 text-sm text-slate-500">
-                Your Client Reference can be found in your POG Advisory welcome email.
+              <p
+                className="
+                  mt-3
+                  text-sm
+                  text-slate-500
+                "
+              >
+                Your Client Reference can be found
+                in your POG Advisory welcome email.
               </p>
 
 
@@ -213,16 +311,38 @@ export default function LoginPage() {
 
 
 
+            {/* CONTINUE BUTTON */}
+
             <Button
               type="submit"
               disabled={loading}
-              className="h-14 w-full rounded-xl bg-gradient-to-r from-[#2196F3] to-[#1565C0] text-lg font-semibold shadow-lg transition-all hover:-translate-y-0.5"
+              className="
+                h-14
+                w-full
+                rounded-xl
+                bg-gradient-to-r
+                from-[#2196F3]
+                to-[#1565C0]
+                text-lg
+                font-semibold
+                shadow-lg
+                transition-all
+                hover:-translate-y-0.5
+                hover:shadow-xl
+              "
             >
 
               {loading && (
+
                 <Loader2
-                  className="mr-2 h-5 w-5 animate-spin"
+                  className="
+                    mr-2
+                    h-5
+                    w-5
+                    animate-spin
+                  "
                 />
+
               )}
 
 
@@ -232,7 +352,6 @@ export default function LoginPage() {
             </Button>
 
 
-
           </form>
 
 
@@ -240,20 +359,87 @@ export default function LoginPage() {
 
 
 
-        <div className="mt-6 flex flex-col items-center gap-3 text-center">
+        {/* FOOTER LINKS */}
+
+        <div
+          className="
+            mt-6
+            flex
+            flex-col
+            items-center
+            gap-4
+            text-center
+          "
+        >
 
 
-          <p className="text-sm text-slate-500">
-            Your portal access is secured through email verification.
+          <p
+            className="
+              text-sm
+              text-slate-500
+            "
+          >
+            Your portal access is secured
+            through email verification.
           </p>
 
 
+
+          {/* STAFF LOGIN */}
+
           <Link
             href="/auth/staff-login"
-            className="font-medium text-slate-600 transition hover:text-[#1E88E5]"
+            className="
+              font-medium
+              text-slate-600
+              transition
+              hover:text-[#1E88E5]
+            "
           >
             Staff Login
           </Link>
+
+
+
+          {/* VISIT WEBSITE */}
+
+          <a
+            href="https://www.pogadvisory.co.za"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+              inline-flex
+              h-11
+              items-center
+              justify-center
+              gap-2
+              rounded-xl
+              border
+              border-slate-200
+              bg-white/80
+              px-6
+              text-sm
+              font-semibold
+              text-slate-700
+              shadow-sm
+              backdrop-blur-sm
+              transition-all
+              duration-200
+              hover:-translate-y-0.5
+              hover:border-[#2196F3]
+              hover:bg-white
+              hover:text-[#1565C0]
+              hover:shadow-md
+            "
+          >
+
+            Visit Website
+
+            <ExternalLink
+              className="h-4 w-4"
+            />
+
+          </a>
 
 
         </div>
@@ -264,6 +450,7 @@ export default function LoginPage() {
 
 
     </div>
+
   )
 
 }
