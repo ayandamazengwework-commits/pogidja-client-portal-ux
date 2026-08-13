@@ -16,7 +16,7 @@ import {
   Loader2,
   KeyRound,
   AlertCircle,
-  ExternalLink,
+  ArrowUpRight,
 } from 'lucide-react'
 
 import {
@@ -111,10 +111,27 @@ export default function LoginPage() {
 
   return (
 
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 px-6 py-10">
+    <div
+      className="
+        relative
+        flex
+        min-h-screen
+        items-center
+        justify-center
+        overflow-hidden
+        bg-gradient-to-br
+        from-slate-50
+        via-blue-50
+        to-slate-100
+        px-6
+        py-10
+      "
+    >
 
 
-      {/* BACKGROUND EFFECTS */}
+      {/* =====================================================
+          BACKGROUND
+      ===================================================== */}
 
       <div className="absolute inset-0 overflow-hidden">
 
@@ -148,15 +165,112 @@ export default function LoginPage() {
 
 
 
-      {/* MAIN CONTENT */}
+      {/* =====================================================
+          CONTENT
+      ===================================================== */}
 
-      <div className="relative z-10 w-full max-w-5xl">
+      <div
+        className="
+          relative
+          z-10
+          w-full
+          max-w-5xl
+        "
+      >
 
 
-        {/* LOGO + HEADING */}
+        {/* =================================================
+            LOGO HEADER
+        ================================================= */}
 
-        <div className="mb-5 flex flex-col items-center">
+        <div
+          className="
+            relative
+            mb-5
+            flex
+            flex-col
+            items-center
+          "
+        >
 
+
+          {/* VISIT WEBSITE
+              Positioned beside the logo area */}
+
+          <a
+            href="https://pogidja.co.za/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+              absolute
+              right-0
+              top-2
+              hidden
+              items-center
+              gap-1.5
+              text-sm
+              font-semibold
+              text-[#1565C0]
+              transition-all
+              duration-200
+              hover:gap-2
+              hover:text-[#2196F3]
+              sm:inline-flex
+              md:right-4
+            "
+          >
+
+            <span>
+              Visit Website
+            </span>
+
+            <ArrowUpRight
+              className="
+                h-4
+                w-4
+                transition-transform
+                duration-200
+                group-hover:translate-x-0.5
+                group-hover:-translate-y-0.5
+              "
+            />
+
+          </a>
+
+
+          {/* MOBILE WEBSITE LINK */}
+
+          <a
+            href="https://pogidja.co.za/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="
+              mb-2
+              inline-flex
+              items-center
+              gap-1.5
+              text-sm
+              font-semibold
+              text-[#1565C0]
+              transition-colors
+              hover:text-[#2196F3]
+              sm:hidden
+            "
+          >
+
+            <span>
+              Visit Website
+            </span>
+
+            <ArrowUpRight
+              className="h-4 w-4"
+            />
+
+          </a>
+
+
+
+          {/* LOGO */}
 
           <Image
             src="/ChatGPT Image Jul 18, 2026, 05_10_52 PM.png"
@@ -164,9 +278,17 @@ export default function LoginPage() {
             width={320}
             height={320}
             priority
-            className="h-auto w-52 sm:w-60 md:w-64"
+            className="
+              h-auto
+              w-52
+              sm:w-60
+              md:w-64
+            "
           />
 
+
+
+          {/* TITLE */}
 
           <h1
             className="
@@ -181,6 +303,9 @@ export default function LoginPage() {
             Client Portal
           </h1>
 
+
+
+          {/* DESCRIPTION */}
 
           <p
             className="
@@ -200,7 +325,9 @@ export default function LoginPage() {
 
 
 
-        {/* LOGIN CARD */}
+        {/* =================================================
+            LOGIN CARD
+        ================================================= */}
 
         <div
           className="
@@ -240,7 +367,7 @@ export default function LoginPage() {
 
 
 
-          {/* LOGIN FORM */}
+          {/* FORM */}
 
           <form
             onSubmit={continueLogin}
@@ -257,8 +384,12 @@ export default function LoginPage() {
               </Label>
 
 
-              <div className="relative mt-2">
-
+              <div
+                className="
+                  relative
+                  mt-2
+                "
+              >
 
                 <KeyRound
                   className="
@@ -291,7 +422,6 @@ export default function LoginPage() {
                   required
                 />
 
-
               </div>
 
 
@@ -302,16 +432,15 @@ export default function LoginPage() {
                   text-slate-500
                 "
               >
-                Your Client Reference can be found
-                in your POG Advisory welcome email.
+                Your Client Reference can be found in
+                your POG Advisory welcome email.
               </p>
-
 
             </div>
 
 
 
-            {/* CONTINUE BUTTON */}
+            {/* CONTINUE */}
 
             <Button
               type="submit"
@@ -345,9 +474,7 @@ export default function LoginPage() {
 
               )}
 
-
               Continue
-
 
             </Button>
 
@@ -359,7 +486,9 @@ export default function LoginPage() {
 
 
 
-        {/* FOOTER LINKS */}
+        {/* =================================================
+            BOTTOM
+        ================================================= */}
 
         <div
           className="
@@ -367,11 +496,10 @@ export default function LoginPage() {
             flex
             flex-col
             items-center
-            gap-4
+            gap-3
             text-center
           "
         >
-
 
           <p
             className="
@@ -379,13 +507,10 @@ export default function LoginPage() {
               text-slate-500
             "
           >
-            Your portal access is secured
-            through email verification.
+            Your portal access is secured through
+            email verification.
           </p>
 
-
-
-          {/* STAFF LOGIN */}
 
           <Link
             href="/auth/staff-login"
@@ -399,51 +524,7 @@ export default function LoginPage() {
             Staff Login
           </Link>
 
-
-
-          {/* VISIT WEBSITE */}
-
-          <a
-            href="https://www.pogadvisory.co.za"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="
-              inline-flex
-              h-11
-              items-center
-              justify-center
-              gap-2
-              rounded-xl
-              border
-              border-slate-200
-              bg-white/80
-              px-6
-              text-sm
-              font-semibold
-              text-slate-700
-              shadow-sm
-              backdrop-blur-sm
-              transition-all
-              duration-200
-              hover:-translate-y-0.5
-              hover:border-[#2196F3]
-              hover:bg-white
-              hover:text-[#1565C0]
-              hover:shadow-md
-            "
-          >
-
-            Visit Website
-
-            <ExternalLink
-              className="h-4 w-4"
-            />
-
-          </a>
-
-
         </div>
-
 
 
       </div>
